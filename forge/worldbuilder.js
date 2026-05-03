@@ -1,7 +1,3 @@
-// Worldbuilder WebUI — main script / controller
-// State, persistence, and history are defined in state.js (loaded before this file).
-
-// --- PWA Install ---
 let _pwaInstallPrompt = null;
 
 // Tracks point-marker layers that have native dragging enabled during move mode.
@@ -26,9 +22,6 @@ window.addEventListener('appinstalled', () => {
 });
 
 
-
-// fetchJson, loadAllData, loadCustomIcons, taxonomy helpers, performGlobalSearch,
-// and migrateState are defined in data.js (loaded before this file).
 
 /**
  * Shows a modal with a text input field and calls onConfirm with the entered value.
@@ -329,8 +322,6 @@ function toggleMapFullscreen() {
     }, 350);
   }
 }
-// ─── Fullscreen toolbar idle-hide ─────────────────────────────────────────
-
 let _fsIdleTimer = null;
 let _fsMouseMoveBound = null;
 
@@ -344,7 +335,6 @@ function _fsResetIdle() {
   }, 3000);
 }
 
-// ─── Map Rotation (fullscreen mode only) ──────────────────────────────────
 // Cycles: 0° → +90° → 180° → -90° → 0°
 const MAP_ROTATION_STEPS = [0, 90, 180, -90];
 let mapRotationAngle = 0;
@@ -373,18 +363,14 @@ function resetMapRotation() {
   }
 }
 window.toggleMapRotation = toggleMapRotation;
-// ──────────────────────────────────────────────────────────────────────────
-
 function updateToolbarForRole() {
   const isPlayer = (role === 'player');
 
-  // History & map load
   ['#undoBtn', '#redoBtn', '#loadMapBtn'].forEach(id => {
     const btn = $(id);
     if (btn) btn.disabled = isPlayer;
   });
 
-  // Creation tools (also guarded in debouncedSetMode, but disable for clear UX)
   ['#modePinBtn', '#modeAreaBtn', '#modeLineBtn', '#modeTextBtn', '#modeMoveBtn'].forEach(id => {
     const btn = $(id);
     if (btn) btn.disabled = isPlayer;
@@ -396,7 +382,6 @@ function updateToolbarForRole() {
     if (btn) btn.disabled = isPlayer;
   });
 
-  // KISS: hide overlay sub-controls when no overlay is loaded
   syncOverlayButtons();
 }
 
@@ -427,7 +412,6 @@ function toggleFreeMove() {
 function createNewEncyclopediaFolder() {
   showInputModal('New Encyclopedia Folder', 'Folder name', 'New Folder', (folderName) => {
     recordState();
-    // Phase B.2: lore folders live in state.folders with mapId: null
     state.folders.push({ id: 'efld-' + uid(), name: folderName, mapId: null });
     markEntityDirty('meta');
     refreshEncyclopediaView();
@@ -437,7 +421,6 @@ function createNewEncyclopediaFolder() {
 
 // Returns true if targetFolderId is a descendant of ancestorFolderId (circular nesting guard)
 function _isEncFolderDescendant(ancestorId, targetId) {
-  // Phase B.2: lore folders live in state.folders with mapId == null
   let cur = state.folders.find(f => f.mapId == null && f.id === targetId);
   while (cur) {
     if (cur.id === ancestorId) return true;
@@ -553,7 +536,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const isNewUser = !meta && !oldState;
 
     if (meta) {
-      // Per-entity format — Phase A uses unified 'article-{id}' keys.
+      // Per-entity format — uses unified 'article-{id}' keys.
       // Falls back to legacy 'feature-*' / 'encyclopedia-*' keys for worlds
       // that haven't run the migration yet (first open after upgrade).
       const allObjKeys       = await idbGetAllKeys('objects');
@@ -603,7 +586,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       state.articles = [...(state.features || []), ...(state.encyclopedia || [])];
       syncArticleViews();
 
-      // Mark everything dirty for the migration save
       markEntityDirty('meta');
       state.articles.forEach(a => markEntityDirty('article', a.id));
       state.maps.forEach(m => markEntityDirty('map', m.id));
@@ -697,13 +679,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (err) {
     console.error("Critical Startup Error:", err);
-    // Try to initialize minimal UI so the user can at least see a blank screen or an alert
     try { initUI(); } catch (e) {}
     showAlertModal('Critical Error', 'The application failed to initialize correctly. This is usually caused by blocked browser storage or a private browsing session. Your data may not be saved.');
   }
 });
-
-// ─── Sample World Onboarding ──────────────────────────────────────────────────
 
 async function _loadDemoWorld() {
   setLoadingState(true, 'Loading Aethermoor…');
@@ -763,8 +742,6 @@ if (loadLS('showWelcome', false) && !loadLS('hideWelcomePermanently', false)) {
   localStorage.removeItem('showWelcome');
 }
 
-// --- Core Logic ---
-
 /**
  * Renders the entire application UI based on the current state.
  * This is the single source of truth for all UI updates.
@@ -772,15 +749,12 @@ if (loadLS('showWelcome', false) && !loadLS('hideWelcomePermanently', false)) {
 async function render(options = {}) {
   const { full = false } = options;
 
-  // These are "heavy" operations only done on a full refresh.
-  // refreshAtlasTree() internally calls refreshEncyclopediaView() for the unified world panel.
   if (full) {
     await refreshAtlasTree();
     await syncAllLayers();
   }
 
   updateToolbarForRole();
-  // These are "light" operations that now run on EVERY render
   refreshBreadcrumbs();
   updateSelectionStyles();
 }
@@ -827,7 +801,6 @@ function showAlertModal(title, text) {
 window.showAlertModal = showAlertModal;
 window.showConfirmationModal = showConfirmationModal;
 
-// ── Lightbox ─────────────────────────────────────────────────────────────────
 function showLightbox(url) {
   const existing = document.getElementById('ttLightbox');
   if (existing) existing.remove();
@@ -1131,7 +1104,6 @@ const setupFeatureButton = (btnId, geometryType, mode) => {
   });
 };
 
-// Re-add the event listeners for your tools, using the new function.
 $('#modePointerBtn').addEventListener('click', () => debouncedSetMode('pointer'));
 $('#modeMoveBtn').addEventListener('click', () => debouncedSetMode('move'));
 setupFeatureButton('#modePinBtn', 'point', 'add-marker');
@@ -1654,8 +1626,6 @@ function renameMap(mapId, newName) {
   }
 }
 
-// --- State Modifiers ---
-
 function toggleFeatureVisibility(featureId) {
   const feature = state.features.find(f => f.id === featureId);
   if (feature) {
@@ -1677,8 +1647,6 @@ function toggleEncyclopediaEntryVisibility(entryId) {
     debouncedSave();
   }
 }
-
-// --- History Management Functions ---
 
 function undo() {
   if (undoStack.length === 0) return;
@@ -1770,8 +1738,6 @@ function redo() {
   }
   debouncedSetMode('pointer');
 }
-// --- Atlas & Navigation Functions ---
-
 /**
  * Creates a new map and, if an image is provided, sets it.
  * @param {string} newMapName - The name of the new map.
@@ -2347,7 +2313,6 @@ async function navigateToMap(mapId, options = {}) {
   setLoadingState(true, "Loading Map..."); // <--- START LOADING
 
   try {
-    // Clear selections and panel
     hideInfoPanel(false);
     multiSelectedIds.clear();
     selectedId = mapId;
@@ -2356,7 +2321,6 @@ async function navigateToMap(mapId, options = {}) {
     debouncedSave();
     selectedBlockId = null;
 
-    // Manage Breadcrumb Trail & Collapsed Nodes
     const trail = [];
     let currentMapId = mapId;
     while (currentMapId) {
@@ -2370,7 +2334,6 @@ async function navigateToMap(mapId, options = {}) {
     }
     trail.forEach(id => collapsedNodes.delete(id));
 
-    // Get Map Data
     let activeMap = state.maps.find(m => m.id === mapId);
 
     // Fallback if the requested map is missing
@@ -2389,12 +2352,9 @@ async function navigateToMap(mapId, options = {}) {
 
     // Read saved viewport before initMap resets it via fitBounds
     const savedView = loadLS(`mapView-${mapId}`, null);
-
-    // Initialize Leaflet
     initMap(activeMap);
     syncMapBackground();
 
-    // Load Base Image
     let loadedBase = false;
     if (activeMap.imageKey) {
       const url = await resolveImageUrl(activeMap.imageKey);
@@ -2404,17 +2364,14 @@ async function navigateToMap(mapId, options = {}) {
       }
     }
 
-    // If no base image, fit bounds to dimensions
     if (!loadedBase) {
       map.fitBounds([[0, 0], [activeMap.height, activeMap.width]]);
     }
 
-    // Restore saved viewport (overrides fitBounds default)
     if (savedView?.center && typeof savedView.zoom === 'number') {
       map.setView([savedView.center.lat, savedView.center.lng], savedView.zoom, { animate: false });
     }
 
-    // Load Overlay Image
     if (activeMap.overlayKey) {
       const url2 = await resolveImageUrl(activeMap.overlayKey);
       if (url2) {
@@ -2426,14 +2383,10 @@ async function navigateToMap(mapId, options = {}) {
 
     window.updateFogLayer(); // Sync Fog Layer
 
-    // Update UI
     render({ full: true }); // Full render is okay here because map context changed entirely
     debouncedSetMode('pointer');
 
-    // Explicitly highlight the map in the Atlas
     highlightItemInAtlas(mapId);
-
-    // Show the Unified Content Panel for the map
     if (!options.skipInfoPanel) {
       showInfoPanel(mapId, 'map');
     }
@@ -2454,7 +2407,6 @@ async function navigateToMap(mapId, options = {}) {
   }
 }
 
-// --- Project Action Functions ---
 function updateBlockData(ownerId, blockId, newData) {
   if (!ownerId || !blockId) return;
 
@@ -3050,7 +3002,6 @@ function sanitizeForPlayer(full) {
 
 
 function deleteEncyclopediaFolder(folderId) {
-  // Phase B.2: lore folders live in state.folders with mapId == null
   const folder = state.folders.find(f => f.mapId == null && f.id === folderId);
   if (!folder) return;
 
@@ -3751,8 +3702,6 @@ function setAppShellScaled(active) {
   document.body.classList.toggle('modal-open-scale', active);
 }
 window.setAppShellScaled = setAppShellScaled;
-
-// --- Recent Projects ---
 
 async function captureProjectThumbnail() {
   const activeMap = state.maps.find(m => m.id === state.activeMapId);
@@ -5267,8 +5216,6 @@ function _initDocumentClickDelegate() {
   });
 }
 
-// ─── Google Drive UI ──────────────────────────────────────────────────────────
-
 function _onDriveStatusChange(isConnected, userInfo) {
   renderDriveHub(isConnected, userInfo);
 }
@@ -5492,10 +5439,6 @@ async function openDriveFilePicker() {
   container.appendChild(list);
 }
 
-// ===========================================================================
-// COMMAND PALETTE (Phase H)
-// ===========================================================================
-
 const CP_COMMANDS = [
   // Create
   { id: 'cmd-new-article',  label: 'New Article',             icon: 'plus',               group: 'Create',   shortcut: null },
@@ -5596,7 +5539,7 @@ function renderCpResults(query) {
     iconEl.innerHTML = getIconHTMLSync(iconEl.dataset.icon, 'currentColor');
   });
 
-  // Wire event listeners (no inline handlers per shared.md rule 1)
+  // Wire event listeners
   container.querySelectorAll('.cp-item[data-cp-index]').forEach(itemEl => {
     const idx = parseInt(itemEl.dataset.cpIndex, 10);
     itemEl.addEventListener('click', () => executeCpItem(_cpItems[idx]));

@@ -1,5 +1,3 @@
-// image-search.js — Image search modal + pluggable provider system.
-//
 // Provider abstraction: window.IMAGE_SEARCH_PROVIDERS is a map of provider id
 // → { id, label, description, enabled, search(query, opts) }.
 // Each provider returns a normalized result shape so the modal renderer
@@ -14,7 +12,6 @@
 // this in state.assetMeta keyed by IDB asset key, so Commons-sourced assets
 // retain their CC-BY attribution wherever they're surfaced.
 
-// ─── Normalized result shape ─────────────────────────────────────────────────
 // {
 //   id: string,                    // unique within provider (URL or page id)
 //   title: string,                 // human-readable title
@@ -33,7 +30,6 @@
 //   providerLabel: string          // 'Wikimedia Commons'
 // }
 
-// ─── Wikimedia Commons provider ──────────────────────────────────────────────
 const WIKIMEDIA_API = 'https://commons.wikimedia.org/w/api.php';
 
 // MediaWiki extmetadata License values map to a known short label + deed URL.
@@ -148,7 +144,6 @@ window.IMAGE_SEARCH_PROVIDERS = {
   //   unsplash: { ..., search: searchUnsplash }, // requires API key
 };
 
-// ─── Modal ───────────────────────────────────────────────────────────────────
 let _activeImageSearch = null; // tracks the in-flight search to cancel stale renders
 
 function renderProviderTabs(container, currentId, onSelect) {

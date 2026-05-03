@@ -1,6 +1,3 @@
-// block-editor.js - Block rendering, editing, backlinks, and color picker
-// Depends on: utils.js, state.js, data.js, ui.js, inspector.js
-
 const PRESET_COLORS = [
   '#000000', '#222034', '#45283c', '#663931', '#8f563b', '#df7126', '#d9a066', '#eec39a',
   '#fbf236', '#99e550', '#6abe30', '#37946e', '#4b692f', '#524b24', '#323c39', '#3f3f74',
@@ -13,8 +10,6 @@ const PURIFY_CONFIG = {
   ADD_ATTR: ['data-notation', 'data-wiki-name'],
   ADD_TAGS: ['button']
 };
-
-// --- Slash Command Palette ---
 
 const SLASH_COMMANDS = [
   { type: 'TextField',     label: 'Text',          icon: 'text-align-left',   desc: 'Rich markdown text' },
@@ -120,7 +115,6 @@ document.addEventListener('mousedown', (e) => {
   if (_slashPalette && !_slashPalette.contains(e.target)) _closeSlashPalette();
 });
 
-// --- Block Renderer (edit + view mode) ---
 async function renderBlock(block) {
   const isSelected = (block.blockId === selectedBlockId);
   // Determine the owner item (feature or encyclopedia)
@@ -778,7 +772,6 @@ async function renderBlock(block) {
   return wrapper;
 }
 
-// --- Block Deletion ---
 function deleteBlock(ownerId, blockId, ownerType = 'feature') {
   recordState();
   const item = state.features.find(f => f.id === ownerId) || 
@@ -798,7 +791,6 @@ function deleteBlock(ownerId, blockId, ownerType = 'feature') {
   debouncedSave();
 }
 
-// --- Block View Mode Renderer ---
 async function renderBlockViewMode(block) {
   let innerHTML = '';
   switch (block.type) {
@@ -1027,7 +1019,6 @@ async function renderBlockViewMode(block) {
   return innerHTML;
 }
 
-// --- Backlinks ---
 function findBacklinks(targetId) {
   const backlinks = [];
   for (const feature of state.features) {
@@ -1051,7 +1042,6 @@ function findBacklinks(targetId) {
   return backlinks;
 }
 
-// --- Custom Colors ---
 function updateCustomColor(index, newColor) {
   if (state.customColors[index]) {
     recordState();
@@ -1070,7 +1060,6 @@ function removeCustomColor(index) {
   }
 }
 
-// --- Color Picker ---
 function openColorPicker(feature, propertyName, onSelectCallback) {
   const modal = $('#colorPickerModal');
   const presetGrid = $('#presetColorGrid');
@@ -1183,7 +1172,6 @@ function openColorPicker(feature, propertyName, onSelectCallback) {
   if (window.openSideSheet) window.openSideSheet(modal); else modal.classList.remove('hidden');
 }
 
-// --- Window Exports ---
 window.openColorPicker = openColorPicker;
 window.findBacklinks = findBacklinks;
 window.deleteBlock = deleteBlock;

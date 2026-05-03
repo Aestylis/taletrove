@@ -1,6 +1,3 @@
-// state.js — Application state, persistence, and history
-
-// ─── State & Data ────────────────────────────────────────────────────────────
 
 const APP_VERSION = '0.6.0-alpha';
 let TAXONOMY = {};
@@ -93,11 +90,6 @@ function saveCollapsedState() {
 }
 window.saveCollapsedState = saveCollapsedState;
 
-// Phase A — state.articles is the single backing store for all entities.
-// state.features and state.encyclopedia are derived plain arrays, rebuilt by
-// syncArticleViews() after every mutation. All consumers can continue to read
-// state.features / state.encyclopedia (backward compat); new code reads state.articles.
-
 /**
  * Rebuilds the derived silo views from state.articles.
  * Must be called after every mutation to state.articles.
@@ -126,7 +118,6 @@ let isRestoringState = false;
 
 const UI_SVG_CACHE = {};
 
-// ─── Persistence ─────────────────────────────────────────────────────────────
 
 const _dirtyKeys = new Set();
 let _backlinkIndex = null; // backlink cache — null means needs rebuild
@@ -285,8 +276,6 @@ async function flushSave() {
 }
 window.flushSave = flushSave;
 
-// ─── History ─────────────────────────────────────────────────────────────────
-
 function recordState() {
   if (isRestoringState) return;
 
@@ -298,10 +287,6 @@ function recordState() {
   redoStack = [];
   if (undoStack.length > historyLimit) undoStack.shift();
 }
-
-// ─── Backlink index cache ─────────────────────────────────────────────────────
-// _backlinkIndex declared near _dirtyKeys above; null = needs rebuild.
-// markEntityDirty() resets it; getBacklinks() rebuilds lazily.
 
 function _rebuildBacklinkIndex() {
   _backlinkIndex = new Map();

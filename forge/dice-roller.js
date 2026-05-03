@@ -1,7 +1,5 @@
-// TaleTrove 3D Dice Roller
-// DiceBox loaded from CDN — no local assets required.
-// To run fully offline, download @3d-dice/dice-box@1.1.4 and place it at forge/dice-box/
-// then change the import below back to "./dice-box/dice-box.es.min.js" and the assetPath accordingly.
+// Offline: download @3d-dice/dice-box@1.1.4, place at forge/dice-box/, swap import to
+// "./dice-box/dice-box.es.min.js" and set assetPath to the local path instead.
 import DiceBox from "https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.4/dist/dice-box.es.min.js";
 
 const DICE_BOX_ASSET_PATH = 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.4/dist/assets/';
@@ -22,8 +20,6 @@ async function initDice() {
     try {
         await diceBox.init();
         isReady = true;
-        
-        // Ensure container is at top level
         const diceBoxEl = document.getElementById('dice-box');
         if (diceBoxEl) document.body.appendChild(diceBoxEl);
     } catch (err) {
@@ -50,11 +46,7 @@ window.rollDice = async (notation) => {
         if (diceBox.clear) diceBox.clear();
         
         const currentTheme = settings.diceTheme || "default";
-        
-        // Pre-load theme configuration
         await diceBox.loadTheme(currentTheme);
-        
-        // Apply configuration
         await diceBox.updateConfig({
             theme: currentTheme,
             themeColor: settings.diceColor || "#ff7a1a"
@@ -69,8 +61,6 @@ window.rollDice = async (notation) => {
                 window.showToast(`Roll Result: ${total} (${notation})`);
             }
         }
-        
-        // Hide after some time
         setTimeout(() => {
             diceBoxEl.classList.remove('is-visible');
             diceBoxEl.style.pointerEvents = 'none';

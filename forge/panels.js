@@ -1,7 +1,3 @@
-// panels.js - Left sidebar panel views: Atlas tree, Encyclopedia, Assets, panel tabs, and context menus
-// Depends on: utils.js, state.js, data.js, ui.js
-
-// --- Drag-scroll + drop-target tracking ---
 // forceFallback:true uses pointer events (not HTML5 drag), so wheel events are not
 // blocked. We also fix a SortableJS bug: with forceFallback, onEnd's evt.to reports
 // the source container instead of the nested drop target. onMove's evt.to IS correct
@@ -37,7 +33,6 @@ function _detachDragScroll() {
   }
 }
 
-// --- Shared Helpers ---
 function buildPanelEmptyState(iconName, heading, sub, cta = null) {
   const children = [
     el('div', { class: 'panel-empty-icon', style: `-webkit-mask-image: url('ui-icons/${iconName}.svg'); mask-image: url('ui-icons/${iconName}.svg');` }),
@@ -52,7 +47,6 @@ function buildPanelEmptyState(iconName, heading, sub, cta = null) {
   return el('div', { class: 'panel-empty-state' }, children);
 }
 
-// --- Selection Highlighting ---
 function updateSelectionStyles() {
   if (!window.allLayers) return; // Prevents error if map isn't loaded yet
 
@@ -133,7 +127,6 @@ function updateSelectionStyles() {
   });
 }
 
-// --- Atlas Tree ---
 let isAtlasRefreshing = false;
 let _atlasScrollHandler = null;
 let activeTags = new Set();  // currently selected tag filters
@@ -814,7 +807,6 @@ async function refreshAtlasTree() {
 }
 }
 
-// --- Assets View ---
 const ASSETS_PER_PAGE = 24;
 let _assetPage = 0;
 let _cachedAssetKeys = null;
@@ -999,7 +991,6 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// --- Encyclopedia Entry Item Builder ---
 async function buildEncyclopediaEntryItem(entry) {
   const iconHtml = await getSidebarIconHTML(entry);
 
@@ -1080,7 +1071,6 @@ async function buildEncyclopediaEntryItem(entry) {
   return item;
 }
 
-// --- Encyclopedia View ---
 let isEncyclopediaRefreshing = false;
 async function refreshEncyclopediaView() {
   if (isEncyclopediaRefreshing) return;
@@ -1259,7 +1249,6 @@ async function refreshEncyclopediaView() {
 }
 }
 
-// --- Sessions View ---
 let isSessionsRefreshing = false;
 
 async function refreshSessionsView() {
@@ -1322,7 +1311,6 @@ async function refreshSessionsView() {
   }
 }
 
-// --- Breadcrumbs ---
 function refreshBreadcrumbs() {
   const container = $('#breadcrumbContainer');
   if (!container) return;
@@ -1395,10 +1383,8 @@ function refreshBreadcrumbs() {
   }
 }
 
-// --- Compact Mode ---
 let panelCompact = loadLS('panelCompact') === true;
 
-// --- Sidebar Filter Mode ---
 let sidebarFilterMode = loadLS('sidebarFilterMode', 'global'); // 'global' | 'local'
 
 function updateSidebarFilterBtn() {
@@ -1430,7 +1416,6 @@ function updateCompactModeBtn() {
   btn.innerHTML = getIconHTMLSync('list', 'currentColor');
 }
 
-// --- Collapse/Expand All ---
 let activePrimaryTab = 'atlas';
 
 function updateCollapseExpandAllBtn() {
@@ -1450,7 +1435,6 @@ function updateCollapseExpandAllBtn() {
   btn.title = hasSomeCollapsed ? 'Expand All' : 'Collapse All';
 }
 
-// --- Primary Panel Tabs (Atlas / Encyclopedia / Assets) ---
 function setupPrimaryPanelTabs() {
   const atlasTab = $('#atlasTabBtn');
   const encyclopediaTab = $('#encyclopediaTabBtn');
@@ -1595,7 +1579,6 @@ function setupPrimaryPanelTabs() {
   }
 }
 
-// --- Atlas Context Menu ---
 function showAtlasContextMenu(e, type, id, name) {
   e.preventDefault();
   e.stopPropagation();
@@ -1858,7 +1841,6 @@ function expandToItem(id) {
   }
 }
 
-// --- Window Exports ---
 window.refreshAtlasTree = refreshAtlasTree;
 window.expandToItem = expandToItem;
 

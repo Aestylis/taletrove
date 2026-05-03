@@ -1,16 +1,12 @@
-// google-drive.js — Google Drive integration (client-side only, no backend)
-// Uses Google Identity Services (GIS) token model.
-// User worlds are saved to the user's own Google Drive — TaleTrove never
-// touches a server. Only files created by this app are visible (drive.file scope).
+// Google Drive integration — client-side only, no backend.
+// Uses Google Identity Services (GIS) token model; drive.file scope only
+// (app can only see files it created — never the user's full Drive).
 //
 // SETUP:
 //   1. Go to https://console.cloud.google.com/apis/credentials
 //   2. Create an OAuth 2.0 Web Application credential
 //   3. Add your app's origin(s) to Authorized JavaScript Origins
 //   4. Copy the Client ID and paste it below
-//
-// Depends on: utils.js (el), worldbuilder.js (showAlertModal, showToast)
-// Load order: after worldbuilder.js, before initEventListeners
 
 const GOOGLE_CLIENT_ID = ''; // ← paste your OAuth 2.0 Client ID here (see SETUP comment above)
 
@@ -24,8 +20,6 @@ let _tokenExpiry     = 0;
 let _userInfo        = null;   // { name, email, picture }
 let _onStatusChange  = null;   // callback(isConnected, userInfo)
 let _pendingAction   = null;   // action to run after sign-in completes
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
 
 function initGoogleDrive(onStatusChange) {
   _onStatusChange = onStatusChange;
@@ -50,15 +44,12 @@ function initGoogleDrive(onStatusChange) {
     callback: _handleTokenResponse,
   });
 
-  // Auth is intentionally lazy — tokens are only requested when the user
-  // clicks a Drive action (save / open). If they previously connected,
-  // restore the UI-connected state so Drive buttons are visible, but don't
-  // request a token until they actually use Drive.
+  // Tokens are requested on-demand (save/open click), not at init.
+  // Restore connected UI state from localStorage so buttons appear, but
+  // don't request a token until the user actually triggers a Drive action.
   const wasConnected = localStorage.getItem('drive_connected') === '1';
   _onStatusChange?.(wasConnected, null);
 }
-
-// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 function _handleTokenResponse(response) {
   if (response.error) {
@@ -73,7 +64,6 @@ function _handleTokenResponse(response) {
     _onStatusChange?.(false, null);
     return;
   }
-  // Verify the user actually granted the required scope before proceeding
   if (!google.accounts.oauth2.hasGrantedAllScopes(response, DRIVE_SCOPE)) {
     _pendingAction = null;
     setLoadingState(false);
@@ -102,7 +92,7 @@ async function _fetchUserInfo() {
     console.error('[Drive] Failed to fetch user info:', e);
     localStorage.setItem('drive_connected', '1');
     _onStatusChange?.(true, null);
-    // Token is still valid for Drive even if userinfo fails — fire pending action anyway
+    // userinfo failure doesn't invalidate the access token — proceed with pending action
     if (_pendingAction) { const fn = _pendingAction; _pendingAction = null; fn(); }
   }
 }
@@ -143,8 +133,6 @@ function _requireAuth(afterAuth) {
   return false;
 }
 
-// ─── Drive API Helpers ────────────────────────────────────────────────────────
-
 async function _driveRequest(path, options = {}) {
   const url = path.startsWith('http') ? path : `${DRIVE_API}${path}`;
   const res = await fetch(url, {
@@ -165,11 +153,8 @@ async function _findFile(name) {
   return data.files?.[0] || null;
 }
 
-// ─── Save to Drive ────────────────────────────────────────────────────────────
-
 async function saveToDrive(worldName, trvBlob) {
   if (!_requireAuth(() => saveToDrive(worldName, trvBlob))) {
-    // Auth popup opened — keep overlay with a waiting message
     setLoadingState(true, 'Waiting for Google sign-in…');
     return;
   }
@@ -199,8 +184,6 @@ async function saveToDrive(worldName, trvBlob) {
   }
 }
 
-// ─── List Drive Files ─────────────────────────────────────────────────────────
-
 async function listDriveFiles() {
   if (!_requireAuth(() => window.openDriveFilePicker())) return [];
   try {
@@ -217,8 +200,6 @@ async function listDriveFiles() {
   }
 }
 
-// ─── Load from Drive ─────────────────────────────────────────────────────────
-
 async function loadFromDrive(fileId) {
   if (!isGoogleConnected()) return null;
   try {
@@ -230,8 +211,6 @@ async function loadFromDrive(fileId) {
     return null;
   }
 }
-
-// ─── Public API ───────────────────────────────────────────────────────────────
 
 window.googleDrive = {
   init:          initGoogleDrive,

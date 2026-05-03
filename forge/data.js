@@ -1,15 +1,8 @@
-// data.js — Data loading, taxonomy queries, state migration, and search
-// Depends on: utils.js (idbGetAllKeys), state.js (TAXONOMY, ICON_MANIFEST, etc.)
-
-// ─── Fetch Helper ─────────────────────────────────────────────────────────────
-
 async function fetchJson(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
   return res.json();
 }
-
-// ─── Data Loaders ─────────────────────────────────────────────────────────────
 
 async function loadAllData() {
   try {
@@ -31,8 +24,6 @@ async function loadCustomAssets() {
   CUSTOM_ICON_MANIFEST = allKeys.filter(key => key.startsWith('ci-')).sort();
   CUSTOM_SHAPE_MANIFEST = allKeys.filter(key => key.startsWith('cs-')).sort();
 }
-
-// ─── Taxonomy Queries ─────────────────────────────────────────────────────────
 
 const getTaxonomyItem = (type) => TAXONOMY[type];
 
@@ -64,8 +55,6 @@ const getTypesByCategory = (domain, category, geometryType) => {
   }
   return types;
 };
-
-// ─── Global Search ────────────────────────────────────────────────────────────
 
 function performGlobalSearch(query) {
   const results = [];
@@ -129,7 +118,6 @@ function performGlobalSearch(query) {
   return results;
 }
 
-// ─── Starter Templates ────────────────────────────────────────────────────────
 // Seeds built-in layout templates once. Templates already present (by id) are
 // skipped, so user deletions are respected and new starters added in future
 // versions appear automatically.
@@ -163,7 +151,6 @@ async function seedStarterTemplates() {
 }
 window.seedStarterTemplates = seedStarterTemplates;
 
-// ─── State Migration ──────────────────────────────────────────────────────────
 // Runs once at startup to bring saved data up to the current schema.
 // Returns true if any changes were made (so the caller can trigger a save).
 
@@ -191,7 +178,6 @@ function migrateState() {
     needsSave = true;
   }
 
-  // Collapse all maps not on the active map trail
   const activeMapTrail = [];
   let currentId = state.activeMapId;
   while (currentId) {
@@ -201,12 +187,10 @@ function migrateState() {
   }
   state.maps.forEach(m => { if (!activeMapTrail.includes(m.id)) collapsedNodes.add(m.id); });
 
-  // Add folderId to maps
   state.maps.forEach(m => {
     if (m.folderId === undefined) { m.folderId = null; needsSave = true; }
   });
 
-  // Add/fix grid to maps
   state.maps.forEach(m => {
     if (m.grid === undefined) {
       m.grid = { enabled: false, type: 'square', size: 50, color: '#FFFFFF', opacity: 0.5, width: 1 };
@@ -235,7 +219,6 @@ function migrateState() {
     }
   });
 
-  // Add visibleToPlayers to maps
   state.maps.forEach(m => {
     if (m.visibleToPlayers === undefined) { m.visibleToPlayers = true; needsSave = true; }
   });
@@ -243,7 +226,6 @@ function migrateState() {
   // Backfill stable world identity (used for recent projects history)
   if (!settings.worldId) { settings.worldId = uid(); needsSave = true; }
 
-  // Backfill dice settings
   if (settings.diceColor === undefined) { settings.diceColor = '#ff7a1a'; needsSave = true; }
   if (settings.diceTheme === undefined) { settings.diceTheme = 'default'; needsSave = true; }
 
@@ -265,7 +247,6 @@ function migrateState() {
     needsSave = true;
   }
 
-  // Backfill feature fields
   state.features.forEach(f => {
     if (!f.mapId) { f.mapId = state.activeMapId; needsSave = true; }
     if (!f.customData) { f.customData = {}; needsSave = true; }
@@ -335,7 +316,6 @@ function migrateState() {
     });
   });
 
-  // Add parentId to maps
   state.maps.forEach(m => {
     if (m.parentId === undefined) { m.parentId = null; needsSave = true; }
     if (m.blocks === undefined) { m.blocks = []; needsSave = true; }
@@ -420,7 +400,6 @@ function migrateState() {
     needsSave = true;
   }
 
-  // ── Phase B.2: Merge encyclopediaFolders into unified state.folders[] ────────
   // mapId: null marks a folder as world-scope (lore). Atlas folders always have a non-null mapId.
   // Idempotent: if encyclopediaFolders is already empty, this is a no-op.
   if (state.encyclopediaFolders && state.encyclopediaFolders.length > 0) {
@@ -434,7 +413,6 @@ function migrateState() {
     needsSave = true;
   }
 
-  // ── Phase A: Stamp _silo and migrate to article-{id} IDB key format ─────────
   // _silo distinguishes atlas features ('atlas') from lore entries ('lore') in
   // the unified getAllArticles() view. Marking entities dirty here causes
   // _performSave to write them under the new 'article-{id}' key. The old

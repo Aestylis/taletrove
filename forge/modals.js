@@ -1,11 +1,6 @@
-// modals.js - Modal dialogs, toasts, and overlay UI components
-// Depends on: utils.js, state.js, data.js, ui.js
-
-// --- Bug Reporter Config ---
 const GH_OWNER = 'Aestylis';
 const GH_REPO  = 'taletrove-feedback';
 
-// --- Side-Sheet lifecycle helpers ---
 // Side-sheets always stay in the layout (display:flex !important overrides .hidden).
 // Toggling .is-open fires the transition reliably — same technique as #infoPanel.
 function openSideSheet(overlay) {
@@ -30,7 +25,6 @@ function closeSideSheet(overlay) {
 window.openSideSheet = openSideSheet;
 window.closeSideSheet = closeSideSheet;
 
-// --- Toast Notification System (queue, max 3, error/success variants) ---
 // Aligned with NN/g "Status, Not Action" + Stripe Spring Principle
 const TOAST_MAX     = 3;
 const TOAST_DURATION = 6000;
@@ -99,7 +93,6 @@ function hideToast() {
   container.querySelectorAll('.toast-item').forEach(_dismissToast);
 }
 
-// --- Calendar Helpers ---
 function getMoonPhaseIcon(phaseValue, color = 'var(--muted)') {
   const svgHeader = `<svg viewBox="0 0 100 100" fill="${color}" stroke="none" xmlns="http://www.w3.org/2000/svg">`;
   const svgFooter = `</svg>`;
@@ -157,7 +150,6 @@ function getDayForRelativeDate(year, monthName, week, weekday) {
 }
 
 
-// --- Help Sheet Shortcuts ---
 function populateShortcutsModal() {
   const groups = [
     {
@@ -222,7 +214,6 @@ function populateShortcutsModal() {
   });
 }
 
-// --- News Side-Sheet ---
 function populateNewsModal(newsData) {
   const sheetBody = $('#newsSheetBody');
   if (!sheetBody) return;
@@ -288,7 +279,6 @@ function populateNewsModal(newsData) {
   if (firstUnread) firstUnread.classList.add('is-expanded');
 }
 
-// --- Calendar Modal ---
 async function showCalendarModal() {
   const modal = $('#calendarModal');
   const contentEl = $('#calendarModalContent');
@@ -809,7 +799,6 @@ async function showCalendarModal() {
 
 window.showCalendarModal = showCalendarModal;
 
-// --- Timeline Modal ---
 let timelineBaseZoom = 1.0; // set per-render so reset returns to initial spread
 
 function applyTimelineZoom() {
@@ -1262,7 +1251,7 @@ async function showGlobalTimeline() {
 }
 
 
-// --- Settings Modals ---
+
 
 function openGeneralSettingsModal() { openSettingsHub('general'); }
 function openCalendarSettingsModal() { openSettingsHub('calendar'); }
@@ -1759,7 +1748,6 @@ function saveDiceSettings() {
   showToast('Dice settings saved.');
 }
 
-// --- Icon Context Menu ---
 function showIconContextMenu(e, iconKey) {
   e.preventDefault();
   e.stopPropagation();
@@ -1794,7 +1782,6 @@ function showIconContextMenu(e, iconKey) {
   setTimeout(() => { document.body.addEventListener('click', closeMenu, { once: true, capture: true }); }, 0);
 }
 
-// --- Block Chooser Modal ---
 async function showBlockChooserModal(x, y, ownerId, ownerType = 'feature') {
   const existingModal = document.getElementById('blockChooserModal');
   if (existingModal) existingModal.remove();
@@ -1873,7 +1860,6 @@ async function showBlockChooserModal(x, y, ownerId, ownerType = 'feature') {
   }, 0);
 }
 
-// --- Feature Creator Modal ---
 function showFeatureCreatorModal(x, y, geometryType) {
   // Remove any existing chooser modal first
   const existingModal = document.getElementById('featureCreatorModal');
@@ -1967,7 +1953,6 @@ function showFeatureCreatorModal(x, y, geometryType) {
   }, 0);
 }
 
-// --- Initialize Modals ---
 const HUB_PANE_IDS = {
   world:     'hubPaneWorld',
   open:      'hubPaneOpen',
@@ -2513,8 +2498,6 @@ function initModals() {
   initBugReporter();
 }
 
-// --- Template Manager ---
-
 let currentEditingTemplateId = null;
 
 /**
@@ -2653,7 +2636,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// --- Coat of Arms Modal ---
 async function openCoatOfArmsModal(feature) {
   const SHIELD_OPTIONS = [
     { label: 'Heater',      value: 'heater' },
@@ -2970,8 +2952,6 @@ function showCustomPromptModal(title, contentEl, onConfirm) {
   document.body.appendChild(modal);
 }
 
-// --- Bug Reporter ---
-
 function openBugReporter() {
   const modal = $('#bugReportModal');
   if (!modal) return;
@@ -3101,7 +3081,6 @@ function initBugReporter() {
   $('#knownIssuesRefreshBtn')?.addEventListener('click', _loadKnownIssues);
 }
 
-// --- Window Exports ---
 window.openTemplateManager = openTemplateManager;
 window.showGlobalTimeline = showGlobalTimeline;
 window.openSettingsHub = openSettingsHub;

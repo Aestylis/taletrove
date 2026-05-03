@@ -1,6 +1,3 @@
-// map.js - Handles Leaflet map initialization, layers, and feature rendering
-
-// --- Map State Variables (declared but not initialized) ---
 let map;
 let bounds;
 let allLayers;
@@ -40,13 +37,11 @@ const rightClickCancelHandler = function(e) {
 };
 document.addEventListener('mousedown', rightClickCancelHandler, true); // capture: true
 
-// --- Map Initialization Function ---
 async function initMap(mapObject) {
   if (map) {
     map.remove();
   }
   
-  // Reset map-level caches
   layerById.clear();
   
   bounds = [
@@ -65,12 +60,10 @@ async function initMap(mapObject) {
     renderer: L.svg({ padding: 0.5 }) // Increase padding to prevent clipping during zoom
   });
 
-  // Create a dedicated pane for the fog layer so it doesn't interfere with the standard overlayPane
   map.createPane('fogPane');
   map.getPane('fogPane').style.zIndex = 450; // Between overlayPane (400) and shadowPane (500)
   map.getPane('fogPane').style.pointerEvents = 'none'; // Initially non-interactive
 
-  // Create a dedicated pane for permanent labels so they are always on top
   map.createPane('labelsPane');
   map.getPane('labelsPane').style.zIndex = 550; // Below markers (600)
   map.getPane('labelsPane').style.pointerEvents = 'none';
@@ -269,7 +262,6 @@ async function initMap(mapObject) {
       saveLS('mapZoomCollapsed', newState);
     };
 
-    // Configure slider range based on map bounds
     zoomSlider.min = map.getMinZoom();
     zoomSlider.max = map.getMaxZoom();
     zoomSlider.value = map.getZoom();
@@ -288,24 +280,19 @@ async function initMap(mapObject) {
       map.setZoom(parseFloat(e.target.value));
     };
 
-    // Keep slider in sync with map (scroll wheel, double-click, etc)
     map.on('zoomend', () => {
       zoomSlider.value = map.getZoom();
     });
   }
 
-  // Re-run label collision detection after every pan/zoom — labels reposition in screen space.
   map.on('zoomend moveend', scheduleCollisionDetection);
 
-  // Assign map objects to window so other modules can access them after initialization.
   window.map = map;
   window.allLayers = allLayers;
   window.labelLayer = labelLayer;
   window.gridLayer = gridLayer;
   window.updateGridLayer = updateGridLayer;
 }
-
-// --- Map & Layer Functions ---
 
 function updateGridLayer() {
   const activeMap = state.maps.find(m => m.id === state.activeMapId);
@@ -314,7 +301,6 @@ function updateGridLayer() {
   const gridSettings = activeMap.grid;
   const isFullscreen = document.body.classList.contains('map-fullscreen-mode');
 
-  // The grid should only be visible if it's enabled AND we are in fullscreen mode.
   const shouldBeVisible = gridSettings.enabled && isFullscreen;
 
   if (shouldBeVisible) {
@@ -330,7 +316,6 @@ function updateGridLayer() {
       gridLayer = null;
     }
   }
-  // Keep the global reference in sync
   window.gridLayer = gridLayer;
 }
 
@@ -374,7 +359,6 @@ function applyMapURL(url, width, height) {
   map.fitBounds(bounds);
   mapObjectUrl = url;
 
-  // Re-hook image rotation observer onto the new overlay element.
   _refreshImageRotationObserver();
 }
 
@@ -457,7 +441,6 @@ function setMapImageRotation(degrees) {
 }
 window.setMapImageRotation = setMapImageRotation;
 window.getMapImageRotationDeg = () => _imageRotationDeg;
-// ─────────────────────────────────────────────────────────────────────────
 function applyOverlayURL(url, activeMap) {
   if (overlayImageOverlay) map.removeLayer(overlayImageOverlay);
   if (url) {
@@ -1131,7 +1114,6 @@ function updateLabelsFor(id, tempLatLng = null) {
   if (role === 'player' && !f.visibleToPlayers) labelLayer.removeLayer(m);
 }
 
-// --- Label Collision Detection ---
 // Post-render greedy pass: shift overlapping labels downward so they don't stack.
 // Best-effort; resets on every map render/zoom so stale offsets never accumulate.
 // HIG: labels should never compete with each other; spatial clarity is paramount.
@@ -1273,8 +1255,6 @@ async function onFeatureClick(feat, layer, ev) {
   const type = (feat.kind === 'entry' || feat._silo === 'lore') ? 'encyclopedia' : 'feature';
   if (window.enterPeekMode) window.enterPeekMode(feat.id, type);
 }
-
-// ─── Radial Menu (Unified for all features) ───────────────────────────────────
 
 let _radialDismissHandler = null;
 let _radialKeyHandler = null;

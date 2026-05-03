@@ -1,12 +1,8 @@
-// app/armoria.js — Heraldry generation using Azgaar's Armoria library (bundled locally)
-// ES module. Requires: app/armoria/armoria.bundle.js + app/armoria/charges/*.svg
-
 import armoriaLib from './armoria/armoria.bundle.js';
 
 const { draw, setChargesBasePath, generate } = armoriaLib;
 
-// Configure charges path dynamically — mirrors the dice-box pattern so sub-path
-// hosting works without hardcoding a URL.
+// Sub-path hosting requires runtime base detection — no hardcoded URL.
 const _base = (() => {
   let p = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
   if (!p.endsWith('/')) p += '/';
@@ -14,7 +10,6 @@ const _base = (() => {
 })();
 setChargesBasePath(_base + 'armoria/charges/');
 
-// Standard heraldic tinctures → hex colours
 const TINCTURES = {
   argent:   '#f0ede0',
   or:       '#d4af37',
@@ -28,18 +23,8 @@ const TINCTURES = {
   tenné:    '#cd6600',
 };
 
-/**
- * Generate a deterministic coat of arms SVG and return it as a Data URL.
- * Using a Data URL provides total CSS/ID isolation, preventing collisions
- * between multiple SVGs on the same page.
- *
- * @param {string|number} seed   Deterministic seed — pass a feature ID or any string.
- * @param {object}  [opts]
- * @param {number}  [opts.size=256]     Internal SVG resolution (higher = crisper)
- * @param {string}  [opts.shield]       Shield shape override (default: 'heater')
- * @param {object}  [opts.colors]       Custom tincture → hex overrides
- * @returns {Promise<string>}  SVG Data URL (data:image/svg+xml;base64,...)
- */
+// Returns a Data URL (not raw SVG) — base64 encoding prevents CSS/ID collisions
+// when multiple coats of arms appear on the same page.
 export async function generateCoatOfArms(seed, { size = 256, shield = 'heater', colors } = {}) {
   const numericSeed = typeof seed === 'number' ? seed : _hashSeed(seed);
   const _savedRandom = Math.random;
@@ -48,10 +33,7 @@ export async function generateCoatOfArms(seed, { size = 256, shield = 'heater', 
   coa.shield = shield; 
   const tinctures = { ...TINCTURES, ...(colors || {}) };
   
-  // Draw the SVG markup
   const svgMarkup = await draw("coa-isolated", coa, size, tinctures);
-  
-  // Convert to Base64 Data URL for document-level isolation
   const base64 = btoa(unescape(encodeURIComponent(svgMarkup)));
   return `data:image/svg+xml;base64,${base64}`;
 }

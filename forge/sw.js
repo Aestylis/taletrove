@@ -41,7 +41,6 @@ const STATIC_ASSETS = [
   './data/news.json',
 ];
 
-// Install: Cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -52,7 +51,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -69,11 +67,10 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: Strategy - Stale-While-Revalidate for local, Cache-First for CDNs
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // For CDNs (Leaflet, DOMPurify, Marked, etc.), use Cache-First
+  // CDNs: cache-first. Local: stale-while-revalidate.
   const isCDN = url.hostname.includes('unpkg.com') ||
                 url.hostname.includes('cdn.jsdelivr.net') ||
                 url.hostname.includes('cdnjs.cloudflare.com') ||
@@ -100,7 +97,6 @@ self.addEventListener('fetch', (event) => {
       })
     );
   } else {
-    // For local assets, use Stale-While-Revalidate
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {

@@ -1,5 +1,3 @@
-// ui.js - Handles DOM manipulation, inspector, popups, and other UI components
-
 // Validate a CSS color value to prevent injection via imported data.
 // Allows: hex colors, rgb/rgba/hsl/hsla functional notations, CSS named keywords,
 // and CSS custom property references (var(--token-name)).
@@ -26,7 +24,6 @@ function evictCustomIconUrl(iconKey) {
 }
 window.evictCustomIconUrl = evictCustomIconUrl;
 
-// --- UI State Variables ---
 let asideHidden, rightPanelHidden, siteTheme, showCats, toolbarPos, infoPanelFeatureId;
 let cropper = null;
 let infoPanelSortable = null;
@@ -38,7 +35,6 @@ const debouncedRefreshEncyclopediaView = debounce(() => refreshEncyclopediaView(
 let loadingTimeout;
 
 
-// --- UI Initialization Function ---
 function initUI() {
   asideHidden = loadLS('asideHidden', true);
   rightPanelHidden = loadLS('rightPanelHidden', true);
@@ -134,8 +130,6 @@ function initUI() {
     roleToggle.checked = role === 'player';
   }
 }
-
-// --- UI Functions ---
 
 let _uiIconSet = null; // lazy Set for O(1) lookups — populated on first call
 
@@ -579,8 +573,6 @@ function setShowCats(next) {
   document.body.classList.toggle('no-cats', !showCats);
 }
 
-// ─── Appearance System ────────────────────────────────────────────────────────
-
 const PRESET_THEMES = [
   // Dark — ordered darkest → lightest background
   { id: 'default',      label: 'Nocturne',    mode: 'dark',  bg: '#0f0f12', card: '#242429', panel: '#1c1c21', accent: '#ff7a1a', defaultBodyFont: 'inter',        defaultHeadingFont: 'cormorant'  },
@@ -683,7 +675,6 @@ function applyToolbarPos() {
 
 
 
-// --- Pin Flyout ---
 async function showPinFlyout(x, y) {
   const existingFlyout = document.getElementById('pinFlyout');
   if (existingFlyout) existingFlyout.remove();
@@ -781,7 +772,6 @@ function showSaved() {
   }
 }
 
-// --- Window Exports ---
 window.setLoadingState = setLoadingState;
 window.highlightItemInAtlas = highlightItemInAtlas;
 window.highlightItemInEncyclopedia = highlightItemInEncyclopedia;

@@ -1,14 +1,6 @@
-// utils.js - Shared helper functions
-
 const $ = sel => document.querySelector(sel);
 const uid = () => (crypto?.randomUUID?.() || ('id-' + Math.random().toString(36).slice(2)));
 
-/**
- * Returns a unique name by appending an incrementing number if the name exists in the list.
- * @param {string} baseName - The name to check.
- * @param {Array<string>} existingNames - List of names already in use.
- * @returns {string}
- */
 function getUniqueName(baseName, existingNames) {
   let name = baseName;
   let counter = 2;
@@ -52,21 +44,15 @@ const escapeHtml = (str) => {
   return str?.replace(/[&<>'"]/g, s => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" }[s]));
 };
 
-// Normalize a string for diacritic-insensitive, case-insensitive search.
-// "España" and "espana" collapse to the same key — apply to BOTH query and haystack.
+// Apply to both query and haystack — "España" and "espana" must collapse to the same key.
 const normalizeForSearch = (s) => (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 window.normalizeForSearch = normalizeForSearch;
 
-// ─── Calendar arithmetic (Rata Die) ────────────────────────────────────────
-// Convert any structured date {era, year, month, day} to an "absolute day
-// number" — a single integer day count from Year 1 Day 1 (= 1). All temporal
-// arithmetic — day-of-week, moon phase, durations — collapses to integer math
-// on this number, instead of nested loops over month_len[].
-//
-// Anchor: Year 1, months[0], Day 1  →  abs = 1
-// (parseSortableDate uses a different anchor offset by +year_len; both are
-// monotonic, so both work as sort keys, but the anchor here is the one that
-// makes dayOfWeek/moonPhase line up with cal.first_day and cal.lunar_shf.)
+// Rata Die arithmetic: structured date → single integer day count from Year 1 Day 1.
+// All temporal math (day-of-week, moon phase, durations) collapses to integer ops
+// instead of nested month_len[] loops.
+// parseSortableDate offsets by +year_len for backward compat with persisted sort keys;
+// use toAbsoluteDay directly when you need dayOfWeek/moonPhase to align with cal.first_day.
 
 function getDaysBeforeMonth(monthIdx, cal) {
   if (!cal?.months || !cal.month_len) return 0;
@@ -120,15 +106,8 @@ function moonPhase(abs, moonName, cal) {
   return t / cycle;
 }
 
-/**
- * Returns a sortable numeric value for a date (either a structured dateData object or a legacy string).
- * Uses high-precision math to ensure correct ordering across eras and years.
- *
- * Note: this returns toAbsoluteDay(d) + year_len. The +year_len offset is kept
- * for backward compatibility with persisted sortableDate values used in
- * timeline rendering. New code that needs day-of-week or moon-phase math
- * should use toAbsoluteDay / dayOfWeek / moonPhase directly.
- */
+// Returns toAbsoluteDay + year_len. The offset preserves backward compat with
+// sortableDate values already persisted in world data.
 function parseSortableDate(d) {
   if (!d) return 0;
   if (typeof d === 'string') d = parseLegacyTimelineDate(d);
@@ -138,7 +117,6 @@ function parseSortableDate(d) {
     return toAbsoluteDay(d, cal) + (cal.year_len || 360);
   }
 
-  // Fallback for simple/missing calendars
   const year = parseInt(d.year) || 1;
   const month = d.month || '';
   const day = parseInt(d.day) || 1;
@@ -155,16 +133,11 @@ window.dayOfWeek         = dayOfWeek;
 window.moonPhase         = moonPhase;
 window.getDaysBeforeMonth = getDaysBeforeMonth;
 
-/**
- * Parses a legacy string date into a structured dateData object.
- * e.g. "Year 12, Month 3, Day 1" or "12-3-1"
- */
 function parseLegacyTimelineDate(str) {
   if (!str || typeof str !== 'string') return { year: 1, month: '', day: 1, era: '' };
   
   const d = { year: 1, month: '', day: 1, era: '' };
 
-  // Try to find month name first (most reliable part of the string)
   if (window.settings?.donjonCalendar?.months) {
     for (const m of window.settings.donjonCalendar.months) {
       if (str.toLowerCase().includes(m.toLowerCase())) {
@@ -177,9 +150,8 @@ function parseLegacyTimelineDate(str) {
   const matches = str.match(/(\d+)/g);
   if (matches) {
     if (matches[0]) d.year = parseInt(matches[0], 10);
-    // If we have a second number and haven't found a month name, it might be the month or day
     if (matches[1]) {
-        if (!d.month) d.day = parseInt(matches[1], 10); // Assume Year-Day if no month found
+        if (!d.month) d.day = parseInt(matches[1], 10); // no month name found — treat second number as day
         else d.day = parseInt(matches[1], 10);
     }
   }
@@ -203,8 +175,7 @@ const el = (tag, attrs = {}, children = []) => {
     else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
     else if (k === "text") n.textContent = v;
     else if (k === "innerHTML") n.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(v) : v;
-    // Handle boolean properties like 'disabled' and 'checked' correctly.
-    else if (n[k] !== undefined && typeof n[k] === 'boolean') {
+    else if (n[k] !== undefined && typeof n[k] === 'boolean') { // boolean props need assignment, not setAttribute
       n[k] = !!v;
     }
     else n.setAttribute(k, v);
@@ -217,12 +188,6 @@ const el = (tag, attrs = {}, children = []) => {
   return n;
 };
 
-/**
- * Compresses an image to a target file size if it exceeds a threshold.
- * @param {Blob|File} file - The source image file.
- * @param {Object} options - Compression options.
- * @returns {Promise<Blob>} - The compressed image as a Blob.
- */
 async function compressImage(file, { maxWidth = 2048, maxHeight = 2048, quality = 0.8 } = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -258,9 +223,6 @@ async function compressImage(file, { maxWidth = 2048, maxHeight = 2048, quality 
   });
 }
 
-/**
- * Handles common image processing logic: warning for large files and compressing.
- */
 async function processImageUpload(file, { maxSizeMB = 5, targetSizeMB = 2 } = {}) {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
@@ -287,20 +249,17 @@ window.processImageUpload = processImageUpload;
 function sortableToYear(sortableDate, monthsInYear = 12, daysInMonth = 30) {
   if (sortableDate <= 0) return 1;
 
-  // Check for Donjon calendar first
   if (settings.donjonCalendar && settings.donjonCalendar.year_len > 0) {
     const daysInYear = settings.donjonCalendar.year_len;
     return Math.floor((sortableDate - 1) / daysInYear) + 1;
   }
 
-  // Fallback to simple calendar
   const daysInYear = monthsInYear * daysInMonth;
   const year = Math.floor((sortableDate - 1) / daysInYear) + 1;
   return year;
 }
 
-// --- IndexedDB ---
-// Cached connection promise – avoids opening a new connection on every operation.
+// Cached connection promise — one open connection shared across all operations.
 let _idbPromise = null;
 function idbOpen() {
   if (!_idbPromise) {
@@ -358,7 +317,7 @@ async function idbGetObject(key) {
 }
 async function idbClear() {
   const db = await idbOpen();
-  // Phase 1: Collect snapshot blobs to preserve (read-only cursor — reliable & atomic)
+  // Collect recent-snapshot-* blobs before clearing — they survive world import/reset.
   const snapshots = await new Promise((resolve, reject) => {
     const result = new Map();
     const tx = db.transaction('files', 'readonly');
@@ -374,7 +333,6 @@ async function idbClear() {
     };
     cursorReq.onerror = () => reject(cursorReq.error);
   });
-  // Phase 2: Clear both stores, then restore snapshots in one atomic transaction
   return new Promise((resolve, reject) => {
     const tx = db.transaction(['files', 'objects'], 'readwrite');
     tx.oncomplete = () => resolve();
@@ -386,28 +344,25 @@ async function idbClear() {
     snapshots.forEach((blob, key) => filesStore.put(blob, key));
   });
 }
-// Cache of IDB key → blob URL to prevent a new object URL being created on every
-// call (which would leak memory because old URLs are never revoked).
+// Blob URL cache — reuse existing object URLs rather than creating new ones on every
+// render, which would leak memory since old URLs are never automatically revoked.
 const _blobUrlCache = new Map();
-const MAX_BLOB_CACHE_SIZE = 200; // Cap to prevent memory bloat
+const MAX_BLOB_CACHE_SIZE = 200;
 
 async function resolveImageUrl(src) {
   if (!src) return undefined;
   if (src.startsWith('http')) return src;
-  // data: URIs are rejected — images are stored as blobs in IDB, never as inline data URIs.
-
   if (src.startsWith('img-') || src.startsWith('bg-img-') || src.startsWith('banner-') || src.startsWith('ci-')) {
     if (_blobUrlCache.has(src)) return _blobUrlCache.get(src);
     
     let blob = await idbGet(src);
     if (!blob) return undefined;
 
-    // Custom icons are often stored without a proper mime type; force SVG if generic.
+    // Custom icons land without a mime type when saved from older versions — force SVG.
     if (src.startsWith('ci-') && blob && blob.size > 0 && (!blob.type || blob.type === '' || blob.type === 'application/octet-stream')) {
       blob = new Blob([blob], { type: 'image/svg+xml' });
     }
     
-    // Evict oldest entry if at capacity
     if (_blobUrlCache.size >= MAX_BLOB_CACHE_SIZE) {
       const oldestKey = _blobUrlCache.keys().next().value;
       const oldestUrl = _blobUrlCache.get(oldestKey);
@@ -423,7 +378,6 @@ async function resolveImageUrl(src) {
   return undefined;
 }
 
-// Call this when an image is deleted from IDB to free the associated blob URL.
 function revokeBlobUrl(src) {
   const url = _blobUrlCache.get(src);
   if (url) {
@@ -448,14 +402,8 @@ async function idbHas(key) {
   try { return !!(await idbGet(key)); } catch { return false; }
 }
 
-/**
- * Estimates the total size of the project including JSON state and all IDB files.
- * @returns {Promise<number>} - Size in bytes.
- */
 async function calculateProjectSize() {
   let size = 0;
-  
-  // 1. JSON State (Settings + State)
   try {
     const jsonString = JSON.stringify({ settings: window.settings, state: window.state });
     size += new TextEncoder().encode(jsonString).length;
@@ -463,7 +411,6 @@ async function calculateProjectSize() {
     console.warn("Could not estimate JSON size", e);
   }
 
-  // 2. IndexedDB Files (Blobs)
   try {
     const db = await idbOpen();
     const tx = db.transaction('files', 'readonly');
@@ -486,7 +433,7 @@ async function calculateProjectSize() {
           resolve();
         }
       };
-      req.onerror = () => resolve(); // Graceful failure
+      req.onerror = () => resolve();
     });
   } catch (e) {
     console.warn("Could not estimate IDB size", e);
@@ -611,7 +558,6 @@ function createMultiSelect(options, selectedValues, onchange, placeholder = 'Sel
 
   container.appendChild(selectedItemsContainer);
 
-  // Clicking the container opens the dropdown; clicks on remove buttons are ignored.
   container.addEventListener('click', (e) => {
     if (e.target.closest('.multiselect-remove-btn')) return;
     openDropdown();
@@ -623,7 +569,6 @@ function createMultiSelect(options, selectedValues, onchange, placeholder = 'Sel
   return container;
 }
 
-// --- Crypto Helpers for Password-Protected Projects ---
 const PBKDF2_ITERATIONS = 100000;
 const SALT_SIZE = 16;
 const IV_SIZE = 12;
@@ -661,7 +606,7 @@ async function encryptData(data, password) {
     data
   );
   
-  // Output in TEN2 format (chunked). Here, we write the entire payload as a single chunk.
+  // TEN2 format: magic(4) + salt(16) + iv(12) + chunkLen(4) + ciphertext
   const result = new Uint8Array(4 + 16 + 16 + encrypted.byteLength);
   result.set(new TextEncoder().encode("TEN2"), 0);
   result.set(salt, 4);
@@ -676,7 +621,7 @@ async function decryptData(data, password) {
   const magic = new TextDecoder().decode(new Uint8Array(data.slice(0, 4)));
   
   if (magic === "TENC") {
-    // Legacy single-blob format (Alpha 3 early)
+    // Legacy single-blob format — v0.3.0-alpha early builds
     const salt = new Uint8Array(data.slice(4, 20));
     const iv = new Uint8Array(data.slice(20, 32));
     const ciphertext = new Uint8Array(data.slice(32));
@@ -688,7 +633,6 @@ async function decryptData(data, password) {
     );
     return new Uint8Array(decrypted);
   } else if (magic === "TEN2") {
-    // Chunked streaming format
     const salt = new Uint8Array(data.slice(4, 20));
     const key = await deriveKey(password, salt);
     

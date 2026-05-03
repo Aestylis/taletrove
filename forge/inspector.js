@@ -1,9 +1,5 @@
-// inspector.js - Selection panel: properties inspectors and info panel
-// Depends on: utils.js, state.js, data.js, ui.js, panels.js
-
 let _currentPanelId = null;
 
-// Phase E: Article Mode state
 let articleViewMode = false;
 let articleViewId = null;
 let articleViewType = 'feature';
@@ -161,8 +157,6 @@ async function updateHeroTitle(item) {
 }
 window.updateHeroTitle = updateHeroTitle;
 
-// --- Encyclopedia Inspector ---
-
 /**
  * Builds the "Mentioned In" section for the inspector.
  * @param {string} name - The name of the entity.
@@ -202,8 +196,6 @@ function buildBacklinksSection(name, id, parentElement) {
   parentElement.appendChild(section);
 }
 
-// --- Tag Chip Input ---
-// Shared by both encyclopedia and atlas inspectors.
 // @ tags are excluded — they're auto-managed by map placement and shown in renderRelationshipTags.
 function buildTagChipInput(entity, entityType) {
   const getPlain  = () => (entity.tags || []).filter(t => !t.startsWith('@'));
@@ -275,9 +267,6 @@ function buildTagChipInput(entity, entityType) {
   return container;
 }
 
-// --- Shared Helper: buildLinkedMapsSection ---
-// Shows chip list of linked maps + a searchable select to add more.
-// Works for both features (point geometry) and encyclopedia entries with a mapId.
 async function buildLinkedMapsSection(article, form) {
   form.appendChild(el('hr', { class: 'form-divider' }));
   const linkedMapsLabel = el('div', { class: 'form-label', text: 'Linked Maps' });
@@ -321,8 +310,6 @@ async function buildLinkedMapsSection(article, form) {
   form.appendChild(el('div', { class: 'full-width' }, [linkedMapsLabel, linkedMapsContainer, addMapSelect]));
 }
 
-// --- Shared Helper: buildPinStyleSection ---
-// Renders marker size, pin shape, pin color, icon shape, icon color pickers.
 // onMap=false skips the map-specific controls (size, shape, pin color) so
 // off-map encyclopedia entries can still pick their icon.
 async function buildPinStyleSection(article, taxonomyItem, form, { onMap = true } = {}) {
@@ -443,9 +430,6 @@ function buildCoaBlock(article, silo, form) {
   }
 }
 
-// --- Unified Article Properties Inspector ---
-// Handles both 'feature' (Atlas) and 'encyclopedia' (Lore) entities.
-// silo: 'feature' | 'encyclopedia'
 async function buildArticlePropertiesInspector(article, container, silo) {
   const form = el('div', { class: 'form' });
   container.appendChild(form);
@@ -1277,7 +1261,6 @@ async function buildArticlePropertiesInspector(article, container, silo) {
   buildBacklinksSection(displayName, article.id, container);
 }
 
-// --- Feature UI Sync ---
 async function updateSingleFeatureUI(feature) {
   const atlasRow = document.querySelector(`.feature-row[data-fid="${feature.id}"]`);
   if (atlasRow) {
@@ -1357,13 +1340,12 @@ function showHeroPopover(anchorEl, items) {
     }
   });
 
-  // Dismiss on any outside click (delayed so this click doesn't self-dismiss)
+  // Delay so this click doesn't immediately self-dismiss
   setTimeout(() => {
     document.addEventListener('click', () => popover.remove(), { once: true, capture: true });
   }, 0);
 }
 
-// --- Map Properties Inspector ---
 function buildMapPropertiesInspector(map, parentElement) {
   const form = el('div', { class: 'form' });
 
@@ -1385,7 +1367,6 @@ function buildMapPropertiesInspector(map, parentElement) {
 
   const mapImageBtn = el('button', { class: 'ghost full-width', text: 'Load Map Image...' });
   mapImageBtn.onclick = () => {
-    // This global variable is used by the file input's event listener
     targetMapIdForUpload = map.id;
     $('#mapImageFile').click();
   };
@@ -1432,15 +1413,11 @@ function buildMapPropertiesInspector(map, parentElement) {
   buildBacklinksSection(map.name, map.id, parentElement);
 }
 
-// --- Info Panel (hide/show) ---
-
-// --- Block Inspector ---
 function buildBlockInspector(feature, block) {
   const body = $('#inspectorContent');
   const header = $('#inspectorHeader');
-  body.innerHTML = ''; // Clear the inspector body
+  body.innerHTML = '';
 
-  // Local helper: reads from #inspectorContent and saves block data.
   function updateStateFromBlockInspector() {
     const f = state.features.find(x => x.id === selectedId);
     const b = f?.blocks.find(bl => bl.blockId === selectedBlockId);
@@ -1561,7 +1538,6 @@ function createSwitch(id, checked, onchange) {
   ]);
 }
 
-// --- Universal Links Section ---
 const LINK_TYPES = [
   { value: 'located-in',  label: 'Located in' },
   { value: 'territory',   label: 'Territory' },
@@ -1928,7 +1904,6 @@ async function buildLinksSection(entity, entityType, parentElement) {
 }
 
 
-// --- Canvas Block Renderer ---
 async function renderCanvasBlocks(wrapper, blocksToRender) {
   if (blocksToRender.length > 0) {
     for (const block of blocksToRender) {
@@ -1948,7 +1923,6 @@ async function renderCanvasBlocks(wrapper, blocksToRender) {
   }
 }
 
-// --- Empty Inspector State ---
 // Shown when nothing is selected but the panel was already open.
 // Aligned with M3 "Persistent panels show placeholder content" +
 // HIG "Preserve Mental Models" — panel stays visible, content changes.
@@ -2001,7 +1975,6 @@ function showEmptyInspectorState() {
 }
 window.showEmptyInspectorState = showEmptyInspectorState;
 
-// --- Info Panel (show) ---
 // Request ID: each call gets a unique ID. If a newer call starts while this one
 // is awaiting, the older one checks and bails — preventing stale content races.
 let _infoPanelReqId = 0;
@@ -2039,7 +2012,6 @@ async function showInfoPanel(id, type = 'feature') {
   const contentEl = $('#contentContainer');
   contentEl.innerHTML = '';
 
-  // Trigger fade-in animation for new entity selection
   contentEl.classList.remove('panel-entering');
   void contentEl.offsetWidth; // force reflow so animation re-fires
   contentEl.classList.add('panel-entering');
@@ -2379,8 +2351,6 @@ async function showInfoPanel(id, type = 'feature') {
 }
 
 
-// --- Phase E: Article Mode ---
-
 async function enterArticleMode(id, type = 'feature') {
   preferredReadingLevel = 'article';
   // Exit peek mode if active
@@ -2437,8 +2407,6 @@ function exitArticleMode() {
   window.hideInfoPanel();
 }
 
-// --- Peek Mode ---
-
 async function enterPeekMode(id, type = 'feature') {
   preferredReadingLevel = 'peek';
   // Exit full article mode if active
@@ -2492,8 +2460,6 @@ function exitPeekMode() {
   document.body.classList.remove('peek-mode');
   window.hideInfoPanel();
 }
-
-// --- Properties Side-Sheet ---
 
 let propertiesSheetId = null;
 let propertiesSheetType = 'feature';
@@ -2571,7 +2537,6 @@ function closePropertiesSheet() {
   propertiesSheetType = 'feature';
 }
 
-// --- Window Exports ---
 window.buildBlockInspector = buildBlockInspector;
 window.updateSingleFeatureUI = updateSingleFeatureUI;
 window.enterArticleMode = enterArticleMode;
