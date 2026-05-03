@@ -1,0 +1,144 @@
+{
+  "generic-person": {
+    "kind": "entry",
+    "domain": "Lore",
+    "category": "Characters",
+    "name": "Person",
+    "type": "Character",
+    "geometry": "point",
+    "spatial": true,
+    "icon": "person",
+    "iconColor": "#ffd166",
+    "pinShape": "blank",
+    "schema": [
+      {
+        "name": "Biography",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-item": {
+    "kind": "entry",
+    "domain": "Lore",
+    "category": "Items",
+    "name": "Thing",
+    "type": "Item",
+    "geometry": "point",
+    "spatial": true,
+    "icon": "chest",
+    "iconColor": "#ff3ea5",
+    "pinShape": "blank",
+    "schema": [
+      {
+        "name": "Description",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-pin": {
+    "kind": "feature",
+    "domain": "Points of Interest",
+    "category": "Geography",
+    "name": "Place (Pin)",
+    "geometry": "point",
+    "pinShape": "marker",
+    "icon": "pin",
+    "iconColor": "#ff7a1a",
+    "schema": [
+      {
+        "name": "Description",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-area": {
+    "kind": "feature",
+    "domain": "Geography",
+    "category": "Areas",
+    "name": "Place (Area)",
+    "geometry": "polygon",
+    "iconColor": "#ff7a1a",
+    "fillOpacity": 0.2,
+    "schema": [
+      {
+        "name": "Description",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-line": {
+    "kind": "feature",
+    "domain": "Geography",
+    "category": "Paths",
+    "name": "Place (Line)",
+    "geometry": "polyline",
+    "iconColor": "#ff7a1a",
+    "weight": 3,
+    "schema": [
+      {
+        "name": "Description",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-document": {
+    "kind": "entry",
+    "domain": "Lore",
+    "category": "Documents",
+    "name": "Document",
+    "type": "Document",
+    "geometry": "point",
+    "spatial": false,
+    "icon": "note",
+    "iconColor": "#c9a96e",
+    "schema": [
+      {
+        "name": "Content",
+        "type": "textarea",
+        "isPrimary": true
+      },
+      {
+        "name": "GM Notes",
+        "type": "textarea",
+        "gmOnly": true
+      }
+    ]
+  },
+  "generic-text": {
+    "kind": "feature",
+    "domain": "Utility",
+    "category": "Labels",
+    "name": "Text Label",
+    "geometry": "text"
+  }
+}

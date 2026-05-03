@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy – TaleTrove</title>
+  <meta name="description" content="TaleTrove is local–first. Your worlds never leave your device. Read our full privacy policy.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="forge/TaleTrove.svg" type="image/svg+xml">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 400;
+      background: #0c0a07;
+      color: rgba(232,220,200,.85);
+      line-height: 1.65;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: .85em;
+      color: rgba(201,168,108,.9);
+      background: rgba(201,168,108,.08);
+      padding: .1em .4em;
+      border-radius: 3px;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.5rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      pointer-events: none;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: 1.75rem; font-weight: 400; letter-spacing: .06em;
+      color: #fff; pointer-events: auto;
+      text-shadow: 0 1px 6px rgba(0,0,0,.9), 0 2px 20px rgba(0,0,0,.7);
+      text-decoration: none; font-family: 'Cormorant Garamond', serif;
+    }
+    .nav-logo img { width: 36px; height: 36px; filter: drop-shadow(0 1px 6px rgba(0,0,0,.9)); }
+    .nav-launch {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .22em;
+      color: rgba(232,220,200,.95); pointer-events: auto;
+      padding: .5rem 1.25rem;
+      border: 1px solid rgba(232,220,200,.55); border-radius: 2px;
+      background: rgba(12,10,7,.35);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background .2s, border-color .2s;
+      text-decoration: none;
+      text-shadow: 0 1px 8px rgba(0,0,0,.9);
+    }
+    .nav-launch:hover { background: rgba(232,220,200,.1); border-color: rgba(232,220,200,.8); }
+
+    /* Background art */
+    .hero-art {
+      position: fixed; inset: -5%; z-index: 0;
+      background-image: url('art/lively_tavern.png');
+      background-size: cover; background-position: center 25%;
+      filter: blur(4px) saturate(0.7) brightness(0.32);
+    }
+
+    .hero {
+      position: relative; z-index: 1;
+      padding: 140px 2rem 3.5rem;
+      text-align: center;
+    }
+    .hero-content {
+      position: relative;
+    }
+    .hero-label {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .22em;
+      color: rgba(201,168,108,.7);
+      margin-bottom: .85rem;
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 300;
+      color: rgba(232,220,200,.95);
+      letter-spacing: -.02em;
+      line-height: 1.05;
+    }
+
+    .content {
+      max-width: 720px; margin: 0 auto; padding: 5rem 2rem 6rem;
+    }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .18em;
+      color: rgba(201,168,108,.7);
+      text-decoration: none;
+      margin-bottom: 3.5rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: rgba(201,168,108,1); }
+
+    section {
+      margin-bottom: 3rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid rgba(232,220,200,.07);
+    }
+    section:last-child {
+      border-bottom: none;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 400;
+      color: rgba(232,220,200,.9);
+      margin-bottom: 1.25rem;
+      display: flex; align-items: baseline; gap: .75rem;
+      line-height: 1.2;
+    }
+    h2 .num {
+      font-family: 'Inter', sans-serif;
+      font-size: .65rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .15em;
+      color: rgba(201,168,108,.8);
+      border: 1px solid rgba(201,168,108,.35);
+      padding: .2rem .55rem; border-radius: 100px;
+      white-space: nowrap; flex-shrink: 0; margin-top: .1rem;
+    }
+
+    p {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem; font-weight: 400;
+      line-height: 1.8;
+      color: rgba(232,220,200,.55);
+      margin-bottom: 1.25rem;
+    }
+    p:last-child { margin-bottom: 0; }
+
+    .glance-box {
+      background: rgba(232,220,200,.03);
+      border: 1px solid rgba(232,220,200,.07);
+      border-radius: 8px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+    .glance-box h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 400;
+      color: rgba(201,168,108,1);
+      margin-bottom: 1.5rem;
+    }
+
+    ul {
+      list-style: none;
+      margin: .75rem 0 1rem;
+      display: flex; flex-direction: column; gap: .75rem;
+    }
+    li {
+      display: flex; align-items: flex-start; gap: .75rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem; font-weight: 400;
+      line-height: 1.6;
+      color: rgba(232,220,200,.55);
+    }
+    li::before {
+      content: '—';
+      flex-shrink: 0;
+      color: rgba(201,168,108,.6);
+    }
+
+    a:not(.back-link):not(.nav-logo):not(.nav-launch):not(.footer-links a):not(footer a) {
+      color: rgba(201,168,108,.85);
+      text-decoration: none;
+      transition: text-decoration .2s;
+    }
+    a:not(.back-link):not(.nav-logo):not(.nav-launch):not(.footer-links a):not(footer a):hover {
+      text-decoration: underline;
+    }
+
+    strong {
+      color: rgba(232,220,200,.85);
+      font-weight: 600;
+    }
+
+    main {
+      position: relative; z-index: 1;
+    }
+
+    footer {
+      position: relative; z-index: 1;
+      background: #0c0a07;
+      border-top: 1px solid rgba(232,220,200,.07);
+      padding: 1.5rem 2.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'Inter', sans-serif;
+      font-size: .72rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .18em;
+      color: rgba(232,220,200,.25);
+    }
+    .footer-links {
+      display: flex; align-items: center; gap: 2rem;
+    }
+    .footer-links a {
+      color: rgba(232,220,200,.25);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: rgba(232,220,200,.55); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1.25rem 1.25rem; }
+      .content { padding: 4rem 1.25rem 5rem; }
+      footer { flex-direction: column; gap: 1.25rem; text-align: center; }
+      .footer-links { flex-direction: column; gap: .75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav aria-label="Main navigation">
+    <a class="nav-logo" href="index.html">
+      <img src="forge/TaleTrove.svg" alt="TaleTrove">
+      TaleTrove
+    </a>
+    <a class="nav-launch" href="/forge/">Launch App</a>
+  </nav>
+
+  <div class="hero" aria-hidden="false">
+    <div class="hero-art" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-label">Legal</div>
+      <h1>Privacy Policy</h1>
+      <div style="font-family: 'Inter', sans-serif; font-size: .68rem; text-transform: uppercase; letter-spacing: .15em; color: rgba(232,220,200,.4); margin-top: 1rem;">Last Updated: April 2, 2026</div>
+    </div>
+  </div>
+
+  <main>
+    <div class="content">
+      <a href="index.html" class="back-link">← Back</a>
+
+      <article>
+        <p>TaleTrove (“we,” “us,” or “our”) operates the taletrove.app website and application (the “Service”). This Privacy Policy explains how we handle your information when you use the Service.</p>
+
+        <p>By accessing or using the Service, you agree to the practices described in this Privacy Policy. Because TaleTrove is a local–first application, our privacy model is significantly different from traditional cloud–based services.</p>
+
+        <div class="glance-box">
+          <h3>Privacy at a Glance</h3>
+          <ul>
+            <li><strong>Local–First by Design.</strong> We collect the absolute minimum data needed to deliver the application to your browser.</li>
+            <li><strong>Your content is yours.</strong> Your world data is stored locally on your device. We do not have access to your maps, lore, or characters.</li>
+            <li><strong>No User Accounts.</strong> We do not require or maintain user accounts, passwords, or personal profiles.</li>
+            <li><strong>No AI Training.</strong> We do not use your content to train artificial intelligence or machine learning models.</li>
+            <li><strong>No Third–Party AI Access.</strong> Your data is never shared with AI providers.</li>
+            <li><strong>Privacy–focused infrastructure.</strong> We use Cloudflare for secure delivery and protection, which logs minimal technical data for security purposes.</li>
+            <li><strong>No Ads.</strong> There are no advertisements inside the product.</li>
+            <li><strong>You’re in control.</strong> You can delete all your data at any time by clearing your browser storage.</li>
+          </ul>
+        </div>
+
+        <section>
+          <h2><span class="num">§1</span> Information We Collect</h2>
+          <p><strong>Information You Provide to Us</strong></p>
+          <p>Because TaleTrove does not use accounts, you do not provide us with an email address or personal identity. The only "User Content" (text, images, maps) you provide is stored locally in your browser's IndexedDB. We never receive or store this content on our servers.</p>
+          
+          <p><strong>Information Collected Automatically</strong></p>
+          <p>When you access the Service, standard technical details are automatically logged by our infrastructure providers (Cloudflare) to facilitate the delivery of the app:</p>
+          <ul>
+            <li>IP address</li>
+            <li>Browser type and version</li>
+            <li>Operating system information</li>
+            <li>Timestamp of access</li>
+          </ul>
+          <p>This information is used strictly to operate, secure, and maintain the Service.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§2</span> How We Use Your Information</h2>
+          <p>We use the limited technical information we collect to:</p>
+          <ul>
+            <li>Deliver and maintain the Service</li>
+            <li>Identify and block malicious traffic or automated attacks</li>
+            <li>Understand general usage patterns (e.g., which version of the app is being loaded)</li>
+            <li>Respond to support requests via email</li>
+          </ul>
+          <p>We do not sell personal information or technical data.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§3</span> Storage Technologies</h2>
+          <p>TaleTrove uses <strong>IndexedDB</strong> and <strong>LocalStorage</strong> to save your worldbuilding data directly on your device. This data remains in your browser and is not accessible to us. If you clear your browser's site data for TaleTrove, this information will be permanently deleted unless you have exported a backup.</p>
+          <p>We do not use invasive tracking cookies or cross–site advertising trackers.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§4</span> Third–Party Services</h2>
+          <p>We rely on limited third–party services to operate the Service:</p>
+          <ul>
+            <li><strong>Cloudflare.</strong> Used for secure routing, SSL, and DDoS protection. Cloudflare processes the technical logs mentioned in §1.</li>
+            <li><strong>Google Drive (Optional).</strong> If you explicitly choose to enable Google Drive sync, the application will interact with Google's APIs. We do not receive your Google credentials or your world files; they are transmitted directly between your browser and Google.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2><span class="num">§5</span> Artificial Intelligence and Machine Learning</h2>
+          <p>TaleTrove does not use User Content to train artificial intelligence or machine learning models. Furthermore, we do not provide your data to third–party AI providers for training or inference.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§6</span> Data Retention</h2>
+          <p>Technical logs (IP addresses, etc.) are retained by our infrastructure providers for a limited period necessary for security auditing and then deleted. User Content is retained on your device for as long as you choose to keep it in your browser storage.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§7</span> Data Security</h2>
+          <p>We use industry–standard measures to protect the delivery of the Service, including encrypted connections (HTTPS). However, because your data is stored locally, the security of your User Content depends on the security of your own device and browser.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§8</span> Your Rights and Choices</h2>
+          <p>You have full control over your data. You can:</p>
+          <ul>
+            <li><strong>Access and Export.</strong> Use the "Export Project" feature to download your data at any time.</li>
+            <li><strong>Delete.</strong> Clear your browser's local storage or use the internal "Delete Project" tools to remove data from your device.</li>
+            <li><strong>Opt–out.</strong> Simply stop using the Service; no account remains behind.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2><span class="num">§9</span> Changes to This Policy</h2>
+          <p>We may update this Privacy Policy from time to time to reflect changes in our practices or the Service. The “Last Updated” date will reflect the most recent revisions.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§10</span> Children’s Privacy</h2>
+          <p>TaleTrove is not intended for use by children under the age of 13. Because the Service does not require user accounts or collect personal information, we do not knowingly solicit or collect data from children. If you believe a child under 13 has used the Service in a manner that involves the transmission of personal information to us (such as via a support email), please contact us immediately.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§11</span> Contact Us</h2>
+          <p>If you have questions about this Privacy Policy or our privacy practices, contact us at: <a href="mailto:support@taletrove.app">support@taletrove.app</a>.</p>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 TaleTrove. Built for storytellers.</span>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="https://ko-fi.com/aestylis" target="_blank" rel="noopener">Support on Ko-fi</a>
+    </div>
+  </footer>
+
+</body>
+</html>

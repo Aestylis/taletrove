@@ -1,0 +1,54 @@
+# TaleTrove — Local Development Gitignore
+
+# World Data (Keep these on NVMe but out of Git to avoid massive repo bloat)
+*.wbundle
+*.trv
+# Exception: shipping sample world for first-run onboarding
+!forge/Examples/SampleWorld.trv
+
+# Ad-hoc debug/reference screenshots (not source assets)
+/*.png
+/forge/Screenshot*.png
+/forge/lk-*.png
+/forge/playwright-*.png
+/forge/ss-current.png
+/forge/ss-atlas-full.png
+/forge/ss-atlas-map.png
+
+# Dev scratch files
+/compare_landing.js
+/competitive-analysis.md
+/LegendKeeper_Changelog.txt
+/calendrical_calculations.pdf
+ccswitch.sh
+
+# Session memory (Claude .remember/ directory)
+.remember/
+
+# Bundled third-party assets — install locally to run offline (see docs/SETUP.md)
+/forge/dice-box/
+
+# Playwright MCP session artifacts
+.playwright-mcp/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Editors & Tools
+.vscode/
+.idea/
+*.swp
+*.bak
+.claude/
+
+# Temporary / Log files
+*.log
+npm-debug.log*
+
+# Node modules
+node_modules/
+
+# Playwright test artifacts
+playwright-report/
+test-results/

@@ -1,0 +1,54 @@
+{
+  "name": "TaleTrove",
+  "short_name": "TaleTrove",
+  "version": "0.6.0-alpha",
+  "description": "Free, local-first worldbuilding app for writers and GMs. Create maps, lore, and timelines with total privacy.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
+  "orientation": "any",
+  "shortcuts": [
+    {
+      "name": "Add Pin",
+      "short_name": "Add Pin",
+      "description": "Open TaleTrove and activate the pin tool",
+      "url": "./index.html?action=add-pin",
+      "icons": [{ "src": "ui-icons/map-pin.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Open World",
+      "short_name": "Open World",
+      "description": "Open TaleTrove to load a world file",
+      "url": "./index.html?action=open-world",
+      "icons": [{ "src": "ui-icons/folder.svg", "sizes": "any" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "TaleTrove.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+    "tavern": {
+        "pattern": "The {adjectives} {nouns}",
+        "adjectives": [
+            "Golden", "Stumbling", "Salty", "Gilded", "Whispering", "Singing", "Bloody", "Tipsy", "Rusty", "Crooked",
+            "Jolly", "Black", "Crimson", "Laughing", "Broken", "Brazen", "Drowned", "Burnt", "Drunken", "Smoldering",
+            "Silver", "Brass", "Copper", "Honeyed", "Thirsty", "Sly", "Sleepy", "Wandering", "Howling", "Dusty",
+            "Mossy", "Stormy", "Moonlit", "Starry", "Lucky", "Wicked", "Weeping", "Grinning", "Raucous", "Rowdy",
+            "Cozy", "Snug", "Hidden"
+        ],
+        "nouns": [
+            "Flagon", "Serpent", "Goat", "Goblin", "Dragon", "Maiden", "Kettle", "Crow", "Kraken", "Anchor",
+            "Whale", "Sailor", "Lantern", "Oak", "Anvil", "Hammer", "Fox", "Hound", "Pike", "Mermaid",
+            "Siren", "Harp", "Lion", "Stag", "Boar", "Wolf", "Wheel", "Compass", "Gull", "Reef",
+            "Cask", "Mug", "Tankard", "Barrel", "Bell", "Bridge", "Gate", "Oar", "Net", "Crown",
+            "Thistle", "Thorn", "Rose", "Bee", "Badger", "Spoon"
+        ]
+    },
+    "city": {
+        "pattern": "{prefixes}{suffixes}",
+        "prefixes": [
+            "Silver", "Iron", "West", "Dragon", "North", "Port", "Bryn", "East", "South", "High", "Low", "White",
+            "Black", "Red", "Gold", "Storm", "Star", "Stone", "River", "Lake", "Oak", "Ash", "Thorn", "Wolf",
+            "Raven", "Sun", "Moon", "Mist", "Grey", "New", "Old", "Green", "Winter", "Summer", "Spring", "Autumn"
+        ],
+        "suffixes": [
+            "wood", "gard", "fall", "port", "wick", "dale", "crest", "ford", "mouth", "gate", "haven", "reach",
+            "helm", "watch", "view", "brook", "bridge", "shire", "hold", "keep", "ridge", "field", "burn",
+            "borough", "barrow", "rock", "stone", "peak", "ward", "market", "meadow", "heath", "moor", "bay", "point"
+        ]
+    },
+    "location": {
+        "pattern": "The {adjectives} {nouns}",
+        "adjectives": [
+            "Forgotten", "Sunken", "Lost", "Ancient", "Whispering", "Shadowy", "Ruined", "Hidden", "Cursed", "Sacred",
+            "Forbidden", "Crumbling", "Shattered", "Overgrown", "Frozen", "Burning", "Barren", "Haunted", "Deserted", "Secret",
+            "Drowned", "Misty", "Windswept", "Stormbound", "Moonlit", "Starlit", "Twilight", "Eldritch", "Primeval", "Timeless",
+            "Gloomy", "Iridescent", "Ashen", "Hushed", "Veiled"
+        ],
+        "nouns": [
+            "Ruin", "Temple", "Grove", "Cave", "Monolith", "Spire", "Crypt", "Catacomb", "Fortress", "Keep",
+            "Citadel", "Shrine", "Sanctum", "Labyrinth", "Quarry", "Oasis", "Reef", "Isle", "Fen", "Marsh",
+            "Mire", "Ridge", "Summit", "Valley", "Pass", "Bridge", "Gate", "Watchtower", "Beacon", "Archive",
+            "Library", "Observatory", "Vault", "Tomb", "Arena", "Bazaar", "Warrens", "Sewers", "Aqueduct"
+        ]
+    },
+    "person-male": {
+        "pattern": "{first} {last}",
+        "first": [
+            "Alaric", "Borin", "Cedric", "Darian", "Erik", "Finnian", "Gareth", "Hagan", "Ivor", "Joric",
+            "Kaelan", "Loric", "Merek", "Nevin", "Orin", "Perrin", "Quinn", "Roric", "Stellan", "Torvin",
+            "Ulric", "Valerius", "Willem", "Xander", "Yoric", "Zane"
+        ],
+        "last": [
+            "Blackwood", "Stonehand", "Riverwind", "Ironhide", "Swiftfoot", "Oakhaven", "Greycastle", "Stormcaller",
+            "Firebeard", "Shadowblade", "Winterfell", "Brightwater", "Deepwood", "Stoutmantle", "Frostfang", "Goldfeather"
+        ]
+    },
+    "person-female": {
+        "pattern": "{first} {last}",
+        "first": [
+            "Aela", "Brienne", "Cara", "Daelia", "Elara", "Faye", "Gwen", "Helena", "Isolde", "Jessa",
+            "Kaelen", "Lyra", "Moira", "Nia", "Oriana", "Petra", "Quilla", "Rhiannon", "Seraphina", "Tamsin",
+            "Ulla", "Vespera", "Wren", "Xylia", "Yara", "Zara"
+        ],
+        "last": [
+            "Silverwood", "Sunhollow", "Brightmoon", "Ironhand", "Whisperwind", "Oakhaven", "Stonebridge", "Stormcaller",
+            "Fireheart", "Shadowend", "Winterose", "Starfall", "Deepwood", "Truearrow", "Frostflower", "Goldleaf"
+        ]
+    },
+    "monster": {
+        "pattern": "The {adjectives} {nouns}",
+        "adjectives": [
+            "Grasping", "Howling", "Shadow", "Molten", "Abyssal", "Vexing", "Grave", "Caustic", "Shrieking", "Gibbering",
+            "Chittering", "Corrosive", "Skeletal", "Spectral", "Dire", "Goliath", "Colossal", "Ancient", "Primal"
+        ],
+        "nouns": [
+            "Horror", "Fiend", "Beast", "Lurker", "Devourer", "Stalker", "Crawler", "Goliath", "Behemoth", "Terror",
+            "Spine", "Maw", "Ooze", "Wretch", "Gargant", "Specter", "Revenant"
+        ]
+    },
+    "organization": {
+        "pattern": "{adjectives} {nouns}",
+        "adjectives": [
+            "The Gilded", "The Veiled", "The Crimson", "The Ebon", "The Silvern", "The Azure", "The Obsidian", "The Adamant",
+            "The Final", "The Ashen", "The Twilight", "The Forgotten", "The Broken", "The Golden", "The Iron"
+        ],
+        "nouns": [
+            "Hand", "Circle", "Order", "Syndicate", "Covenant", "Cabal", "Legion", "Vanguard", "Serpent", "Dragon",
+            "Coin", "Chain", "Key", "Rose", "Thorn", "Company", "Compact"
+        ]
+    },
+    "npc-archetype": {
+        "pattern": "{traits} {professions} with {quirks}",
+        "traits": [
+            "A grumpy", "A cheerful", "A paranoid", "A scholarly", "A weary", "A boastful", "A mysterious", "A nervous",
+            "A stoic", "A flamboyant", "A cynical", "A pious", "A greedy", "A soft-spoken", "A scarred", "A wide-eyed"
+        ],
+        "professions": [
+            "blacksmith", "herbalist", "mercenary", "scribe", "innkeeper", "cartographer", "thief", "noble",
+            "priest", "hunter", "sailor", "apothecary", "gravedigger", "bounty hunter", "minstrel", "watchman"
+        ],
+        "quirks": [
+            "a missing finger", "a heavy stutter", "a golden monocle", "a pet rat", "a silver pocket watch",
+            "a distinct limp", "a collection of keys", "a habit of humming", "a permanent scowl", "a velvet cloak",
+            "smelling of lavender", "bright blue eyes", "ink-stained fingers", "a notched sword", "a secret tattoo"
+        ]
+    },
+    "settlement-hook": {
+        "pattern": "{hooks}",
+        "hooks": [
+            "The local wells have all run dry overnight.",
+            "A famous bard disappeared while staying at the local inn.",
+            "Strange lights are seen nightly in the nearby abandoned tower.",
+            "The town's livestock is being found with strange, runic marks.",
+            "A mysterious merchant is selling items that grant wishes, for a price.",
+            "Every resident has had the exact same dream for three nights.",
+            "The statues in the town square have begun to move.",
+            "A dense, unnatural fog has surrounded the village for a week.",
+            "The town bell rings every hour, but the bell-tower is empty.",
+            "A local child has begun speaking a forgotten, ancient language.",
+            "The harvest was plentiful, but everything tastes of copper.",
+            "An earthquake revealed a set of stairs beneath the tavern.",
+            "The shadows of the villagers are detached and wandering.",
+            "A massive, sleeping beast has blocked the only road in.",
+            "All the birds in the area have suddenly stopped singing."
+        ]
+    },
+    "env-detail": {
+        "pattern": "{details}",
+        "details": [
+            "The air here is thick with the scent of ozone and pine.",
+            "Ghostly whispers echo from the crumbling stone walls.",
+            "Strange, bioluminescent fungi pulse with a rhythmic blue light.",
+            "Gravity feels slightly weaker here, making footsteps feel light.",
+            "The ground is covered in a layer of fine, crystalline frost.",
+            "The trees here grow in perfect, geometric patterns.",
+            "A persistent, low-frequency hum vibrates through the soles of your boots.",
+            "The water in the stream flows backwards against the wind.",
+            "Everything here is cast in a permanent, golden twilight glow.",
+            "The wind sounds like a distant choir mourning a lost king.",
+            "Tiny, metallic beetles scurry between the obsidian pebbles.",
+            "The scent of old parchment and woodsmoke lingers in the air.",
+            "Mirrors here reflect the room as it looked a century ago.",
+            "A fine, silver mist clings to the ground even in direct sunlight.",
+            "The silence here is so absolute it makes your ears ring."
+        ]
+    }
+}

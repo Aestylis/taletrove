@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service - TaleTrove</title>
+  <meta name="description" content="TaleTrove terms of service. Your worlds, your data, your rules.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="forge/TaleTrove.svg" type="image/svg+xml">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 400;
+      background: #0c0a07;
+      color: rgba(232,220,200,.85);
+      line-height: 1.65;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: .85em;
+      color: rgba(201,168,108,.9);
+      background: rgba(201,168,108,.08);
+      padding: .1em .4em;
+      border-radius: 3px;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.5rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      pointer-events: none;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: 1.75rem; font-weight: 400; letter-spacing: .06em;
+      color: #fff; pointer-events: auto;
+      text-shadow: 0 1px 6px rgba(0,0,0,.9), 0 2px 20px rgba(0,0,0,.7);
+      text-decoration: none; font-family: 'Cormorant Garamond', serif;
+    }
+    .nav-logo img { width: 36px; height: 36px; filter: drop-shadow(0 1px 6px rgba(0,0,0,.9)); }
+    .nav-launch {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .22em;
+      color: rgba(232,220,200,.95); pointer-events: auto;
+      padding: .5rem 1.25rem;
+      border: 1px solid rgba(232,220,200,.55); border-radius: 2px;
+      background: rgba(12,10,7,.35);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background .2s, border-color .2s;
+      text-decoration: none;
+      text-shadow: 0 1px 8px rgba(0,0,0,.9);
+    }
+    .nav-launch:hover { background: rgba(232,220,200,.1); border-color: rgba(232,220,200,.8); }
+
+    /* Background art — fixed, always behind everything */
+    .hero-art {
+      position: fixed; inset: -5%; z-index: 0;
+      background-image: url('art/Obelisk.png');
+      background-size: cover; background-position: center 25%;
+      filter: blur(4px) saturate(0.7) brightness(0.32);
+    }
+
+    /* Hero title — in normal flow, sits below the nav */
+    .hero {
+      position: relative; z-index: 1;
+      padding: 140px 2rem 3.5rem;
+      text-align: center;
+    }
+    .hero-content {
+      position: relative;
+    }
+    .hero-label {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .22em;
+      color: rgba(201,168,108,.7);
+      margin-bottom: .85rem;
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 300;
+      color: rgba(232,220,200,.95);
+      letter-spacing: -.02em;
+      line-height: 1.05;
+    }
+
+    /* Content */
+    .content {
+      max-width: 720px; margin: 0 auto; padding: 5rem 2rem 6rem;
+    }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .18em;
+      color: rgba(201,168,108,.7);
+      text-decoration: none;
+      margin-bottom: 3.5rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: rgba(201,168,108,1); }
+
+    section {
+      margin-bottom: 3rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid rgba(232,220,200,.07);
+    }
+    section:last-child {
+      border-bottom: none;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 400;
+      color: rgba(232,220,200,.9);
+      margin-bottom: 1rem;
+      display: flex; align-items: baseline; gap: .75rem;
+      line-height: 1.2;
+    }
+    h2 .num {
+      font-family: 'Inter', sans-serif;
+      font-size: .65rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .15em;
+      color: rgba(201,168,108,.8);
+      border: 1px solid rgba(201,168,108,.35);
+      padding: .2rem .55rem; border-radius: 100px;
+      white-space: nowrap; flex-shrink: 0; margin-top: .1rem;
+    }
+
+    p {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem; font-weight: 400;
+      line-height: 1.8;
+      color: rgba(232,220,200,.55);
+      margin-bottom: 1rem;
+    }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      list-style: none;
+      margin: .75rem 0 1rem;
+      display: flex; flex-direction: column; gap: .65rem;
+    }
+    li {
+      display: flex; align-items: flex-start; gap: .75rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem; font-weight: 400;
+      line-height: 1.8;
+      color: rgba(232,220,200,.55);
+    }
+    li::before {
+      content: '';
+      flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(201,168,108,.7);
+      margin-top: .65rem;
+    }
+
+    a:not(.back-link):not(.nav-logo):not(.nav-launch):not(.footer-links a):not(footer a) {
+      color: rgba(201,168,108,.85);
+      text-decoration: none;
+      transition: text-decoration .2s;
+    }
+    a:not(.back-link):not(.nav-logo):not(.nav-launch):not(.footer-links a):not(footer a):hover {
+      text-decoration: underline;
+    }
+
+    strong {
+      color: rgba(232,220,200,.85);
+      font-weight: 600;
+    }
+
+    main {
+      position: relative; z-index: 1;
+    }
+
+    /* Footer */
+    footer {
+      position: relative; z-index: 1;
+      background: #0c0a07;
+      border-top: 1px solid rgba(232,220,200,.07);
+      padding: 1.5rem 2.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'Inter', sans-serif;
+      font-size: .72rem; font-weight: 400;
+      text-transform: uppercase; letter-spacing: .18em;
+      color: rgba(232,220,200,.25);
+    }
+    .footer-links {
+      display: flex; align-items: center; gap: 2rem;
+    }
+    .footer-links a {
+      color: rgba(232,220,200,.25);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: rgba(232,220,200,.55); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1.25rem 1.25rem; }
+      .content { padding: 4rem 1.25rem 5rem; }
+      footer { flex-direction: column; gap: 1.25rem; text-align: center; }
+      .footer-links { flex-direction: column; gap: .75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav aria-label="Main navigation">
+    <a class="nav-logo" href="index.html">
+      <img src="forge/TaleTrove.svg" alt="TaleTrove">
+      TaleTrove
+    </a>
+    <a class="nav-launch" href="/forge/">Launch App</a>
+  </nav>
+
+  <div class="hero" aria-hidden="false">
+    <div class="hero-art" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-label">Legal</div>
+      <h1>Terms of Service</h1>
+      <div style="font-family: 'Inter', sans-serif; font-size: .68rem; text-transform: uppercase; letter-spacing: .15em; color: rgba(232,220,200,.4); margin-top: 1rem;">Last Updated: April 2, 2026</div>
+    </div>
+  </div>
+
+  <main>
+    <div class="content">
+      <a href="index.html" class="back-link">← Back</a>
+
+      <article>
+
+        <section>
+          <h2><span class="num">§1</span> Acceptance of Terms</h2>
+          <p>TaleTrove (the "Platform") is a browser–based worldbuilding application provided to you (the "User") free of charge. By accessing or using the Platform, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must cease all use of the Platform immediately.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§2</span> Nature of Service</h2>
+          <p>TaleTrove is a "local–first" application. It is designed to function entirely within your web browser. All User Content – including maps, lore, characters, and associated metadata – is stored locally on your device using IndexedDB technology. We do not operate central servers for the storage of your creative work, and your data is never transmitted to us.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§3</span> Ownership of User Content</h2>
+          <p>You retain full and exclusive ownership of all content you create, upload, or store within the Platform ("User Content"). TaleTrove makes no claim of ownership or intellectual property rights over your User Content. Because the Platform operates locally, we have no technical means to access, monitor, or retrieve your data.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§4</span> Data Responsibility and Backups</h2>
+          <p>As the Platform stores data locally, you are solely responsible for the preservation and security of your User Content. Clearing your browser cache, uninstalling your browser, or hardware failure may result in the permanent loss of your data. We strongly advise the regular use of the <strong>Export Backup (.trv)</strong> feature to maintain external copies of your work. TaleTrove shall not be held liable for any data loss, regardless of the cause.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§5</span> Google Drive Integration</h2>
+          <p>The Platform provides an optional integration with Google Drive. By enabling this feature, you authorize the Platform to interact with your Google Drive account under the <code>drive.file</code> scope – the most restrictive access level available. This allows the Platform to access only the specific files it creates. Your world data is transmitted directly between your browser and Google’s servers; we do not intercept, process, or store this data. Your use of this feature is also subject to <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Google’s Terms of Service</a>.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§6</span> Acceptable Use</h2>
+          <p>You agree to use the Platform only for lawful purposes. You are prohibited from using TaleTrove to create, store, or manage content that:</p>
+          <ul>
+            <li>Violates any local, state, national, or international law.</li>
+            <li>Infringes upon the intellectual property, privacy, or publicity rights of any third party.</li>
+            <li>Contains material that is defamatory, obscene, or intended to harass or harm individuals.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2><span class="num">§7</span> Intellectual Property</h2>
+          <p>Excluding User Content, all rights, title, and interest in the Platform – including its source code, user interface, brand assets, and design – remain the exclusive property of TaleTrove and its creators. You are granted a limited, non–exclusive, non–transferable license to use the Platform for personal worldbuilding purposes.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§8</span> Disclaimer of Warranties</h2>
+          <p>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON–INFRINGEMENT. WE DO NOT GUARANTEE THAT THE PLATFORM WILL BE UNINTERRUPTED, SECURE, OR ERROR–FREE.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§9</span> Limitation of Liability</h2>
+          <p>IN NO EVENT SHALL TALETROVE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF DATA OR PROFITS) ARISING OUT OF THE USE OR INABILITY TO USE THE PLATFORM, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. YOUR SOLE REMEDY FOR DISSATISFACTION WITH THE PLATFORM IS TO STOP USING IT.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§10</span> Governing Law and Changes</h2>
+          <p>These terms shall be governed by the laws of the jurisdiction in which the Platform's creators reside, without regard to conflict of law principles. We reserve the right to modify these Terms of Service at any time. Continued use of the Platform following such modifications constitutes your acceptance of the revised terms.</p>
+        </section>
+
+        <section>
+          <h2><span class="num">§11</span> Contact</h2>
+          <p>Inquiries regarding these Terms of Service should be directed to <a href="mailto:support@taletrove.app">support@taletrove.app</a>.</p>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 TaleTrove. Built for storytellers.</span>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="https://ko-fi.com/aestylis" target="_blank" rel="noopener">Support on Ko-fi</a>
+    </div>
+  </footer>
+
+</body>
+</html>

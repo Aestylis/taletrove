@@ -1,0 +1,18 @@
+[
+  {
+    "id": "alpha-6",
+    "date": "2026-03-24",
+    "title": "Alpha 6: Session Layer",
+    "summary": "GM session tracking, YouTube embeds, a unified left panel, and a round of UX polish.",
+    "tags": ["Sessions", "GM"],
+    "content": "<h4>Session tracking for GMs</h4><p>The left panel now has a dedicated <strong>SESSIONS</strong> section. Log play sessions directly from the panel, no article required. Atlas, Lore, and Sessions share one scrollable list.</p><h4>What's new</h4><ul><li><strong>Sessions panel:</strong> Create and manage play session records in the left panel. GM-only.</li><li><strong>YouTube embeds:</strong> Paste a YouTube URL into an Embed block for an inline player. Good for ambience playlists stored inside your world.</li><li><strong>Bug reporter:</strong> Use the bug icon in the nav rail to report issues or request features. Opens a pre-filled GitHub Issues form.</li><li><strong>Appearance:</strong> Reworked theme and general settings with a live map preview.</li><li><strong>UX cleanup:</strong> Tutorial steps, toolbar overlay menu, settings layout, and icon picker all tidied up.</li><li><strong>Sample world:</strong> Aethermoor updated with richer articles, coat-of-arms areas, and a complete session log.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
+    "id": "alpha-5",
+    "date": "2026-03-12",
+    "title": "Welcome to TaleTrove Alpha",
+    "summary": "TaleTrove is feature-complete for the Alpha. Build your world, explore its connections, and let us know what you think.",
+    "tags": ["Welcome", "Alpha"],
+    "content": "<h4>Your world is ready to be built.</h4><p>Welcome to TaleTrove - a local-first world-building atlas for game masters, writers, and world-builders. Everything you create lives on your device. No accounts, no subscriptions, no cloud required.</p><h4>What's here</h4><ul><li><strong>Atlas:</strong> Place pins, draw regions, and trace routes on any map image. Every feature can hold rich notes, images, and linked lore.</li><li><strong>Encyclopedia:</strong> A structured library of People, Things, and Events - each one connected to the map and to each other through a typed link system.</li><li><strong>Relationships:</strong> The Relational Graph and Family Tree views show the connections in your world at a glance.</li><li><strong>Timeline:</strong> A calendar, vertical timeline, and Gantt view keep your world's history organised across any custom time system.</li><li><strong>Google Drive Sync:</strong> Back up and open worlds directly from your own Google Drive. Your data stays yours.</li><li><strong>Player Export:</strong> Share a sanitised version of your world with players, with GM-only content automatically stripped.</li><li><strong>Obsidian Import:</strong> Already have a vault? Import your notes directly from an Obsidian vault folder - markdown content, frontmatter tags, and wiki-links all carry over into the Encyclopedia.</li></ul><h4>Alpha means feedback matters</h4><p>TaleTrove is feature-complete for the Alpha outside of a small wishlist. The one big item still on the horizon is <strong>WebRTC multiplayer</strong> - real-time sharing so a whole table can explore the same world together.</p><p>Everything else is in your hands now. If something feels off, breaks, or could be better, we want to hear it. Reach us at <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a> - every report helps.</p><p>Go build something worth exploring.</p>"
+  }
+]

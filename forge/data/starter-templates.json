@@ -1,0 +1,328 @@
+[
+  {
+    "id": "ltpl-starter-player-character",
+    "name": "Player Character",
+    "isStarter": true,
+    "entityType": "encyclopedia",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-1",
+        "data": {
+          "label": "Character Info",
+          "content": "| | |\n|:---|:---|\n| **Class & Level** | |\n| **Race** | |\n| **Background** | |\n| **Alignment** | |\n| **Experience** | |"
+        }
+      },
+      {
+        "type": "Meter",
+        "blockId": "blk-spc-2",
+        "data": { "label": "Hit Points", "current": 0, "max": 10 }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-3",
+        "data": {
+          "label": "Combat",
+          "content": "| Stat | Value |\n|:---|:---|\n| **Armor Class** | |\n| **Initiative** | |\n| **Speed** | |\n| **Hit Dice** | |\n| **Proficiency Bonus** | |\n| **Passive Perception** | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-4",
+        "data": {
+          "label": "Ability Scores",
+          "content": "| | STR | DEX | CON | INT | WIS | CHA |\n|:---|:---:|:---:|:---:|:---:|:---:|:---:|\n| **Score** | | | | | | |\n| **Modifier** | | | | | | |\n| **Save** | | | | | | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-5",
+        "data": {
+          "label": "Skills",
+          "content": "| Prof | Skill | Ability | Bonus |\n|:---:|:---|:---:|:---:|\n| · | Acrobatics | DEX | |\n| · | Animal Handling | WIS | |\n| · | Arcana | INT | |\n| · | Athletics | STR | |\n| · | Deception | CHA | |\n| · | History | INT | |\n| · | Insight | WIS | |\n| · | Intimidation | CHA | |\n| · | Investigation | INT | |\n| · | Medicine | WIS | |\n| · | Nature | INT | |\n| · | Perception | WIS | |\n| · | Performance | CHA | |\n| · | Persuasion | CHA | |\n| · | Religion | INT | |\n| · | Sleight of Hand | DEX | |\n| · | Stealth | DEX | |\n| · | Survival | WIS | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-6",
+        "data": {
+          "label": "Actions & Attacks",
+          "content": "| Attack | To Hit | Damage | Type |\n|:---|:---:|:---:|:---|\n| | | {{1d6}} | |\n\n**Bonus Action:** \n\n**Reaction:** "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-7",
+        "data": {
+          "label": "Spells",
+          "content": "> [!INFO]- Spell Slots\n> | Level | Slots | Used |\n> |:---:|:---:|:---:|\n> | 1st | | |\n> | 2nd | | |\n> | 3rd | | |\n> | 4th | | |\n> | 5th | | |\n\n> [!INFO]- Prepared Spells\n> *List your prepared spells here.*"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-8",
+        "data": {
+          "label": "Traits & Features",
+          "content": "*List class features, racial traits, and feats here.*"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-9",
+        "data": {
+          "label": "Proficiencies & Languages",
+          "content": "**Armor:** \n\n**Weapons:** \n\n**Tools:** \n\n**Languages:** "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-10",
+        "data": {
+          "label": "Equipment",
+          "content": "**Currency:** CP: — SP: — EP: — GP: — PP: —\n\n| Item | Qty | Weight |\n|:---|:---:|:---:|\n| | | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-spc-11",
+        "data": {
+          "label": "Personality",
+          "content": "> [!QUOTE]\n> *Enter personality trait here.*\n\n**Ideal:** \n\n**Bond:** \n\n**Flaw:** "
+        }
+      },
+      {
+        "type": "Relationships",
+        "blockId": "blk-spc-12",
+        "data": { "links": [] }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-spc-13",
+        "data": { "tags": ["player-character"] }
+      }
+    ]
+  },
+  {
+    "id": "ltpl-starter-npc",
+    "name": "NPC",
+    "isStarter": true,
+    "entityType": "encyclopedia",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-snpc-1",
+        "data": {
+          "label": "Profile",
+          "content": "| | |\n|:---|:---|\n| **Race / Type** | |\n| **Age** | |\n| **Occupation** | |\n| **Affiliation** | |\n| **Location** | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-snpc-2",
+        "data": {
+          "label": "Personality",
+          "content": "> [!NOTE] First Impression\n> *How the party perceives this character on first meeting.*\n\n**Motivation:** \n\n**Secret:** \n\n**Voice / Mannerism:** "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-snpc-3",
+        "data": {
+          "label": "Stat Block",
+          "content": "> [!MONSTER] NPC Name\n> | AC | HP | Speed |\n> |:---:|:---:|:---:|\n> | | {{1d8+2}} | 30 ft |\n>\n> | STR | DEX | CON | INT | WIS | CHA |\n> |:---:|:---:|:---:|:---:|:---:|:---:|\n> | | | | | | |"
+        }
+      },
+      {
+        "type": "Relationships",
+        "blockId": "blk-snpc-4",
+        "data": { "links": [] }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-snpc-5",
+        "data": { "tags": ["npc"] }
+      }
+    ]
+  },
+  {
+    "id": "ltpl-starter-monster",
+    "name": "Monster",
+    "isStarter": true,
+    "entityType": "encyclopedia",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-smon-1",
+        "data": {
+          "label": "Stat Block",
+          "content": "> [!MONSTER] Monster Name\n> *Medium undead, neutral evil*\n>\n> | AC | HP | Speed |\n> |:---:|:---:|:---:|\n> | 13 | {{2d8+4}} | 30 ft |\n>\n> | STR | DEX | CON | INT | WIS | CHA |\n> |:---:|:---:|:---:|:---:|:---:|:---:|\n> | 13 | 6 | 16 | 3 | 6 | 5 |\n>\n> **Skills:** Perception +0\n> **Senses:** Darkvision 60 ft\n> **CR:** 1/4"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-smon-2",
+        "data": {
+          "label": "Actions",
+          "content": "## Traits\n\n*List passive traits here.*\n\n## Actions\n\n| Attack | Hit | Damage | Notes |\n|:---|:---:|:---:|:---|\n| Bite | +3 | {{1d6+1}} piercing | |\n\n## Reactions"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-smon-3",
+        "data": {
+          "label": "Tactics & Loot",
+          "content": "**Tactics:** *How does this creature fight? Weaknesses?*\n\n**Loot:**\n- "
+        }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-smon-4",
+        "data": { "tags": ["monster"] }
+      }
+    ]
+  },
+  {
+    "id": "ltpl-starter-session-log",
+    "name": "Session Log",
+    "isStarter": true,
+    "entityType": "encyclopedia",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-ssl-1",
+        "data": {
+          "label": "Summary",
+          "content": "*One-paragraph recap of what happened this session. Write it while the session is fresh.*"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-ssl-2",
+        "data": {
+          "label": "Notes",
+          "content": "## What Happened\n\n## Key Information Learned\n\n## Open Questions\n- "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-ssl-3",
+        "data": {
+          "label": "Combat Tracker",
+          "content": "> [!INFO]- Initiative\n> | Character | Roll | HP | Status |\n> |:---|:---:|:---:|:---|\n> | | | | |"
+        }
+      },
+      {
+        "type": "Timeline",
+        "blockId": "blk-ssl-4",
+        "data": {
+          "events": [
+            {
+              "dateData": { "year": 1, "month": "", "day": 1, "era": "" },
+              "title": "Session start",
+              "description": "",
+              "source": "local",
+              "linkedId": null
+            }
+          ]
+        }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-ssl-5",
+        "data": { "tags": ["session-log"] }
+      }
+    ]
+  },
+  {
+    "id": "ltpl-starter-settlement",
+    "name": "Settlement",
+    "isStarter": true,
+    "entityType": "feature",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-sset-1",
+        "data": {
+          "label": "Overview",
+          "content": "| | |\n|:---|:---|\n| **Type** | Village / Town / City |\n| **Population** | |\n| **Government** | |\n| **Defenses** | |\n| **Notable Traits** | |"
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-sset-2",
+        "data": {
+          "label": "Districts & Landmarks",
+          "content": "*List notable areas, buildings, and landmarks.*\n\n- "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-sset-3",
+        "data": {
+          "label": "Factions & Power",
+          "content": "*Who holds power here? Guilds, noble families, criminal organisations?*\n\n- "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-sset-4",
+        "data": {
+          "label": "Rumours & Hooks",
+          "content": "> [!NOTE] What the party hears\n> \n\n- "
+        }
+      },
+      {
+        "type": "Relationships",
+        "blockId": "blk-sset-5",
+        "data": { "links": [] }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-sset-6",
+        "data": { "tags": ["settlement"] }
+      }
+    ]
+  },
+  {
+    "id": "ltpl-starter-quest",
+    "name": "Quest",
+    "isStarter": true,
+    "entityType": "encyclopedia",
+    "blocks": [
+      {
+        "type": "TextField",
+        "blockId": "blk-squest-1",
+        "data": {
+          "label": "Overview",
+          "content": "> [!NOTE] Hook\n> *The inciting incident or rumour that drew the party in.*\n\n**Goal:** \n\n**Reward:** \n\n**Deadline:** "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-squest-2",
+        "data": {
+          "label": "Leads & Clues",
+          "content": "- \n- \n- "
+        }
+      },
+      {
+        "type": "TextField",
+        "blockId": "blk-squest-3",
+        "data": {
+          "label": "Progress",
+          "content": "- [ ] \n- [ ] \n- [ ] "
+        }
+      },
+      {
+        "type": "Relationships",
+        "blockId": "blk-squest-4",
+        "data": { "links": [] }
+      },
+      {
+        "type": "Tags",
+        "blockId": "blk-squest-5",
+        "data": { "tags": ["quest"] }
+      }
+    ]
+  }
+]

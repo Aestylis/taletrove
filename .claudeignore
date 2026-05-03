@@ -1,0 +1,19 @@
+# Build artifacts & generated files
+node_modules/
+dist/
+*.min.js
+forge/data/icon-manifest.json
+forge/data/ui-icon-manifest.json
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Binary / media assets (large, not useful to read)
+forge/icons/
+forge/ui-icons/
+forge/Examples/
+
+# Legacy / archive
+.remember/

@@ -1,0 +1,38 @@
+# TaleTrove — Local Development Gitattributes
+# This file automates line-ending handling across Windows (CRLF) and Linux (LF).
+
+# Set default behavior to automatically detect text files and normalize them.
+* text=auto
+
+# Explicitly declare text files to be normalized and converted to native line endings on checkout.
+*.html text
+*.css  text
+*.js   text
+*.md   text
+*.json text
+*.svg  text
+*.xml  text
+*.txt  text
+
+# Explicitly declare binary files (don't touch line endings).
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+*.wbundle binary
+
+# Exclude dev/AI docs from git archive exports
+CLAUDE.md          export-ignore
+GEMINI.md          export-ignore
+shared.md          export-ignore
+MODAL_REVIEW.md    export-ignore
+forge/STATUS.md    export-ignore
+scripts/           export-ignore
+tests/             export-ignore
+playwright.config.js export-ignore
+package.json       export-ignore
+package-lock.json  export-ignore

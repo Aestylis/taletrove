@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      Content Security Policy
+      - script-src: allow only CDNs used by this app; unsafe-eval retained for DiceBox (Babylon.js shader compilation).
+                    challenges.cloudflare.com required for Cloudflare bot-protection challenge scripts (/cdn-cgi/challenge-platform/).
+      - style-src:  unsafe-inline is required because Leaflet injects inline styles at runtime.
+      - img-src:    blob: and data: needed for IndexedDB-backed and cropped images.
+      - connect-src: challenges.cloudflare.com required for Cloudflare challenge script sub-requests;
+                     commons.wikimedia.org + upload.wikimedia.org for the Image Search modal (Commons API + image blobs).
+      - frame-src:  YouTube and Spotify content blocks; challenges.cloudflare.com for Cloudflare Turnstile.
+      - object-src/base-uri: locked down.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://cloudflareinsights.com https://static.cloudflareinsights.com; script-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://ajax.cloudflare.com https://challenges.cloudflare.com https://accounts.google.com https://storage.ko-fi.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: http://localhost:5173 https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://ajax.cloudflare.com https://challenges.cloudflare.com https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://api.github.com https://commons.wikimedia.org https://upload.wikimedia.org; worker-src 'self' blob:; frame-src https://www.youtube.com https://open.spotify.com https://accounts.google.com https://challenges.cloudflare.com; manifest-src 'self';">
+    <title>TaleTrove</title>
+    <meta name="description" content="TaleTrove — local-first worldbuilding for GMs and storytellers. Build maps, lore, and timelines that live on your device.">
+    <meta property="og:title" content="TaleTrove">
+    <meta property="og:description" content="Local-first worldbuilding for GMs and storytellers.">
+    <meta property="og:image" content="TaleTrove.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="icon" href="TaleTrove.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+          integrity="sha384-NZLkVuBRMEeB4VeZz27WwTRvlhec30biQ8Xx7zG7JJnkvEKRg5qi6BNbEXo9ydwv" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+            integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@elfalem/leaflet-curve@0.9.2/dist/leaflet.curve.js"
+            integrity="sha384-LaYFmIm0FyTnHYr4/EnKjoYxE46YMuJf3tNfrrdsJjSUtV+cOZo0UCOHyumSJLUS" crossorigin="anonymous"></script>
+    <!-- DOMPurify – must load before any user content is rendered -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.3.1/dist/purify.min.js"
+            integrity="sha384-80VlBZnyAwkkqtSfg5NhPyZff6nU4K/qniLBL8Jnm4KDv6jZhLiYtJbhglg/i9ww" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@17.0.3/lib/marked.umd.js"
+            integrity="sha384-cYPlWZ3J0Pi4sIKo/Yy2hbXAfqi7S7h4/5xARy+4Aa2brtE1tM7Old55+Y6NkFBW" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+            integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@700&family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Space+Grotesk:wght@400;500;600&family=Nunito:wght@400;500;600&family=Ubuntu:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="worldbuilder.css?v=2026.05.03.01">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+          integrity="sha384-6LFfkTKLRlzFtgx8xsWyBdKGpcMMQTkv+dB7rAbugeJAu1Ym2q1Aji1cjHBG12Xh" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
+            integrity="sha384-jrOgQzBlDeUNdmQn3rUt/PZD+pdcRBdWd/HWRqRo+n2OR2QtGyjSaJC0GiCeH+ir" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js"
+            integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script>
+    <style>
+        .leaflet-default-icon-path {
+            background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png);
+        }
+    </style>
+</head>
+
+<body>
+    <a class="skip-link" href="#mapContainer">Skip to map</a>
+    <div id="projectActionsModal" class="modal-overlay hidden is-hub js-modal-overlay">
+        <div class="modal-content hub-content">
+
+            <!-- UNIFIED SIDEBAR -->
+            <nav class="settings-nav-rail hub-sidebar">
+                <div class="hub-sidebar-brand">
+                    <img src="TaleTrove.svg" alt="TaleTrove" class="hub-sidebar-logo">
+                    <span class="hub-sidebar-app-name">TaleTrove</span>
+                </div>
+
+                <div class="settings-nav-group">
+                    <span class="settings-nav-group-label">My World</span>
+                    <button class="settings-nav-item active" data-pane="world">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-trifold.svg'); mask-image: url('ui-icons/map-trifold.svg');"></div>
+                        <span id="hubSidebarWorldName">My World</span>
+                    </button>
+                </div>
+
+                <div class="settings-nav-group">
+                    <span class="settings-nav-group-label">Project</span>
+                    <button class="settings-nav-item" data-action="new">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/plus.svg'); mask-image: url('ui-icons/plus.svg');"></div>
+                        <span>New World</span>
+                    </button>
+                    <button class="settings-nav-item" data-pane="open">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/folder.svg'); mask-image: url('ui-icons/folder.svg');"></div>
+                        <span>Open World</span>
+                    </button>
+                    <button class="settings-nav-item" data-action="export-player">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/shield.svg'); mask-image: url('ui-icons/shield.svg');"></div>
+                        <span>Player Export</span>
+                    </button>
+                </div>
+
+                <div class="settings-nav-group">
+                    <span class="settings-nav-group-label">Settings</span>
+                    <button class="settings-nav-item" data-pane="general">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/gear.svg'); mask-image: url('ui-icons/gear.svg');"></div>
+                        <span>General</span>
+                    </button>
+                    <button class="settings-nav-item" data-pane="calendar">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/calendar-blank.svg'); mask-image: url('ui-icons/calendar-blank.svg');"></div>
+                        <span>Calendar</span>
+                    </button>
+                    <button class="settings-nav-item" data-pane="theme">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/paintbrush.svg'); mask-image: url('ui-icons/paintbrush.svg');"></div>
+                        <span>Appearance</span>
+                    </button>
+                    <button class="settings-nav-item" data-pane="templates">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/stack-simple.svg'); mask-image: url('ui-icons/stack-simple.svg');"></div>
+                        <span>Templates</span>
+                    </button>
+                    <button class="settings-nav-item" data-pane="dice">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/dice-six.svg'); mask-image: url('ui-icons/dice-six.svg');"></div>
+                        <span>3D Dice</span>
+                    </button>
+                </div>
+
+                <div class="settings-nav-spacer"></div>
+
+                <div class="settings-nav-group">
+                    <button class="settings-nav-item" data-pane="about">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/question.svg'); mask-image: url('ui-icons/question.svg');"></div>
+                        <span>About</span>
+                    </button>
+                    <a href="https://ko-fi.com/aestylis" target="_blank" rel="noopener noreferrer" class="settings-nav-item hub-kofi-nav">
+                        <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" class="hub-kofi-cup">
+                        <span>Support</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- PANE AREA -->
+            <div class="hub-pane-area">
+                <div class="hub-pane-header">
+                    <h1 class="hub-pane-title" id="hubPaneTitle">My World</h1>
+                    <button class="modal-close js-modal-close" title="Close">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                    </button>
+                </div>
+
+                <!-- MY WORLD PANE -->
+                <div class="hub-pane active" id="hubPaneWorld">
+                    <div class="project-card active" data-action="save">
+                        <div class="project-card-hero" id="hubCurrentProjectHero"></div>
+                        <div class="project-card-body">
+                            <h2 id="hubCurrentProjectName">Untitled World</h2>
+                            <p id="hubProjectSize" class="muted" style="font-size: 12px; margin-bottom: 0.5rem;"></p>
+                            <div class="project-card-actions">
+                                <button class="hub-primary-btn hub-primary-btn--ghost" data-action="export">
+                                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-bend-up-right.svg'); mask-image: url('ui-icons/arrow-bend-up-right.svg');"></div>
+                                    <span>Backup to File</span>
+                                </button>
+                                <div class="hub-actions-divider hidden" id="hubDriveDivider">or</div>
+                                <button class="hub-primary-btn hub-primary-btn--ghost hub-drive-save-btn hidden" id="hubDriveSaveBtn" data-action="drive-save" title="Back up your world to your Google Drive">
+                                    <span>Backup to Google Drive</span>
+                                </button>
+                            </div>
+                            <div id="hubDriveStatus" class="hub-drive-status hidden">
+                                <span id="hubDriveStatusEmail"></span>
+                                <button class="hub-drive-status__disconnect" data-action="drive-signout">Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                    <section id="hubRecentSection" class="hub-section hub-section--full hidden">
+                        <h3>Recent Worlds</h3>
+                        <div id="hubRecentGrid" class="hub-recent-grid"></div>
+                    </section>
+                </div>
+
+                <!-- OPEN WORLD PANE -->
+                <div class="hub-pane" id="hubPaneOpen">
+                    <div id="hubDropZone" class="hub-open-zone" data-action="load">
+                        <div class="hub-open-zone__text">
+                            <span class="hub-open-zone__title">Open World</span>
+                            <span class="hub-open-zone__hint muted">Drop a <strong>.trv</strong> or <strong>.wbundle</strong> here, or choose a source:</span>
+                        </div>
+                        <div class="hub-open-zone__actions">
+                            <button class="hub-primary-btn hub-primary-btn--ghost hub-open-zone__btn" data-action="load">
+                                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/folder.svg'); mask-image: url('ui-icons/folder.svg');"></div>
+                                <span>From File</span>
+                            </button>
+                            <div class="hub-actions-divider hidden" id="hubOpenDriveDivider">or</div>
+                            <button class="hub-primary-btn hub-primary-btn--ghost hub-open-zone__btn hidden" id="hubDriveOpenBtn" data-action="drive-open">
+                                <span>Open from Google Drive</span>
+                            </button>
+                            <div class="hub-actions-divider">or</div>
+                            <button class="hub-primary-btn hub-primary-btn--ghost hub-open-zone__btn" data-action="obsidian-import">
+                                <div class="icon-wrap"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/obsidian.svg'); mask-image: url('ui-icons/obsidian.svg');"></div></div>
+                                <span>Import from Obsidian</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS PANES -->
+                <section class="hub-pane" id="settingsPaneGeneral">
+                    <h2>General Settings</h2>
+                    <p class="muted">Configure basic map behavior and marker display.</p>
+                    <div class="general-settings-layout">
+                        <div class="general-settings-form">
+                            <div class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Default Icon Size</span>
+                                <span id="generalMarkerSizeVal" class="setting-value-badge">40px</span>
+                            </div>
+                            <input type="range" id="globalMarkerSizeIn" min="10" max="80" step="2" style="width:100%; margin: 0.5rem 0 1.75rem;">
+                            <label class="inline" style="justify-content: space-between;">
+                                <span>Show Popup on Map Click</span>
+                                <label class="switch small-switch">
+                                    <input type="checkbox" id="featureClickActionToggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </label>
+                        </div>
+                        <div class="gsp-preview" id="generalSettingsPreview">
+                            <div class="gsp-preview-label">Preview</div>
+                            <div class="gsp-map">
+                                <div class="gsp-pin" id="gspPin"></div>
+                                <div class="gsp-popup hidden" id="gspPopup">
+                                    <strong>Gloamhollow Peaks</strong>
+                                    <span>Mountain region</span>
+                                    <div class="gsp-popup-arrow"></div>
+                                </div>
+                                <div class="gsp-peek hidden" id="gspPeek">
+                                    <div class="gsp-peek-title">Gloamhollow Peaks</div>
+                                    <div class="gsp-peek-rule"></div>
+                                    <div class="gsp-peek-line"></div>
+                                    <div class="gsp-peek-line short"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="hub-pane" id="settingsPaneCalendar">
+                    <h2>Calendar Settings</h2>
+                    <div style="max-width: 480px;">
+                        <div id="calendarSettingsDynamicContent" class="form" style="margin-top: 2rem;"></div>
+                        <div class="settings-footer-actions">
+                            <button id="saveCalendarSettingsBtn" class="primary">Save Calendar Settings</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="hub-pane" id="settingsPaneDice">
+                    <h2>3D Dice Settings</h2>
+                    <div class="form" style="margin-top: 2rem; max-width: 360px;">
+                        <div class="form-label">Dice Color</div>
+                        <input type="color" id="diceColorIn" style="display: none;" aria-hidden="true">
+                        <div id="diceColorPickerContainer"></div>
+                        <div class="form-label" style="margin-top: 1.5rem;">Dice Theme</div>
+                        <select id="diceThemeSel" style="width: 100%;">
+                            <option value="default">Default</option>
+                            <option value="wooden">Wooden</option>
+                            <option value="gemstone">Gemstone</option>
+                            <option value="gemstoneMarble">Gemstone Marble</option>
+                            <option value="blueGreenMetal">Blue Green Metal</option>
+                            <option value="rust">Rust</option>
+                            <option value="rock">Rock</option>
+                            <option value="smooth">Smooth</option>
+                            <option value="diceOfRolling">Dice of Rolling</option>
+                            <option value="genesys">Genesys</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="hub-pane" id="settingsPaneTheme">
+
+                    <!-- Color Theme -->
+                    <div class="app-section">
+                        <p class="app-section-title">Color Theme</p>
+                        <p class="app-section-desc">Each theme sets the color mode automatically.</p>
+                        <div class="app-group-label">Dark</div>
+                        <div class="app-theme-grid appearance-section" id="appThemeGridDark"></div>
+                        <div class="app-group-label">Light</div>
+                        <div class="app-theme-grid appearance-section" id="appThemeGridLight"></div>
+                    </div>
+
+                    <!-- Typography -->
+                    <div class="app-section appearance-section">
+                        <p class="app-section-title">Typography</p>
+                        <p class="app-section-desc">Body font applies to all text. Heading font applies to article titles and map labels.</p>
+                        <div class="app-group-label">Body</div>
+                        <div class="app-font-grid" id="appBodyFontGrid"></div>
+                        <div class="app-group-label" style="margin-top: 1rem;">Heading</div>
+                        <div class="app-font-grid" id="appHeadingFontGrid"></div>
+                    </div>
+
+                    <!-- Map Background -->
+                    <div class="app-section appearance-section">
+                        <p class="app-section-title">Map Background</p>
+                        <p class="app-section-desc">Replaces the default tile pattern behind the map. Saved with your world.</p>
+                        <div id="appMapBgPreview" class="app-map-bg-zone">
+                            <div class="app-map-bg-zone-icon"></div>
+                            <span class="app-map-bg-zone-label">Upload background image</span>
+                        </div>
+                        <input type="file" id="appMapBgInput" accept="image/*" style="display:none;" aria-hidden="true">
+                        <button id="appMapBgClearBtn" class="ghost" style="display:none; margin-top: 0.5rem; width: 100%; font-size: 0.8rem; padding: 0.4rem 0.85rem;">Remove background image</button>
+                        <div class="app-toggle-row" style="margin-top: 0.5rem;">
+                            <div>
+                                <div class="app-toggle-label">Cat Tile Pattern</div>
+                                <div class="app-toggle-desc">Show default map background when no image is set</div>
+                            </div>
+                            <label class="switch small-switch">
+                                <input type="checkbox" id="catToggleInHub">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Custom CSS (advanced) -->
+                    <div id="themeSettingsDynamicContent" class="form appearance-section" style="margin-top: 2rem;"></div>
+                </section>
+
+                <section class="hub-pane" id="settingsPaneTemplates">
+                    <div id="templateListView">
+                        <h2>Templates</h2>
+                        <p class="muted">Manage your saved templates for placing features on the map and for content block layouts.</p>
+                        <h3 class="settings-section-heading">Feature Templates</h3>
+                        <p class="muted settings-section-sub">Saved from Atlas features — used to quickly place pins, areas, and lines on the map.</p>
+                        <div id="templateListContainer" class="template-list"></div>
+                        <h3 class="settings-section-heading">Layout Templates</h3>
+                        <p class="muted settings-section-sub">Saved from the content editor — reusable block structures for features, encyclopedia entries, and maps.</p>
+                        <div id="layoutTemplateListContainer" class="template-list"></div>
+                    </div>
+                    <div id="templateEditView" class="hidden">
+                        <h2 id="templateEditTitle">Edit Template</h2>
+                        <div id="templateEditForm" class="form" style="margin-top: 1.5rem; text-align: left;"></div>
+                        <div class="settings-footer-actions">
+                            <button id="cancelTemplateEditBtn" class="ghost">Cancel</button>
+                            <button id="saveTemplateEditBtn" class="primary">Save Changes</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="hub-pane" id="settingsPaneAbout">
+                    <div class="about-pane-header">
+                        <img src="TaleTrove.svg" alt="TaleTrove Logo" class="about-pane-logo">
+                        <div>
+                            <h2 style="margin: 0;">TaleTrove <span id="aboutHubVersion" class="version-text">v0.5.0-alpha</span></h2>
+                            <p class="muted" style="margin: 0.25rem 0 0;">© 2025 – 2026 Aestylis &bull; <a href="../privacy.html">Privacy Policy</a> &bull; <a href="../terms.html">Terms</a> &bull; <a href="mailto:support@taletrove.app">Contact</a></p>
+                        </div>
+                    </div>
+
+                    <div class="special-thanks" style="margin-top: 0.75rem;">
+                        <h3>Special Thanks</h3>
+                        <div class="thanks-scroller">
+                            <div class="thanks-content">
+                                <p><strong style="color: var(--accent);">Mar</strong> &mdash; One of TaleTrove's earliest testers and a true believer from the very beginning.</p>
+                                <p><strong style="color: var(--accent);">AcuteMuse</strong> &mdash; The bestest wife &mdash; for her endless patience, sharp ideas, and keeping me on track when I needed it most.</p>
+                                <p><strong style="color: var(--accent);">Azgaar</strong> &mdash; Creator of <a href="https://azgaar.github.io/Fantasy-Map-Generator/" target="_blank" rel="noopener noreferrer">Fantasy Map Generator</a>, one of the most impressive browser-based worldbuilding tools in the community. An inspiration.</p>
+                                <p><strong style="color: var(--accent);">Donjon</strong> &mdash; A legendary collection of free RPG generators that GMs have relied on for years. Calendars, dungeons, NPCs, treasure &mdash; it has everything.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="credits" style="margin-top: 0.5rem;">
+                        <h3>Open-Source Credits</h3>
+                        <ul>
+                            <li><a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer"><strong>Leaflet.js</strong></a> &mdash; &copy; Volodymyr Agafonkin, CloudMade &mdash; <a href="https://opensource.org/licenses/BSD-2-Clause" target="_blank" rel="noopener noreferrer">BSD-2-Clause</a></li>
+                            <li><a href="https://github.com/Leaflet/Leaflet.draw" target="_blank" rel="noopener noreferrer"><strong>Leaflet.draw</strong></a> &mdash; &copy; Leaflet.draw Contributors &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://github.com/elfalem/Leaflet.curve" target="_blank" rel="noopener noreferrer"><strong>Leaflet.curve</strong></a> &mdash; &copy; 2017 elfalem &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer"><strong>Game-icons.net</strong></a> &mdash; &copy; Lorc, Delapouite, Skoll &amp; contributors &mdash; <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a></li>
+                            <li><a href="https://commons.wikimedia.org/wiki/File:Dice_D20_SVG_Vector.svg" target="_blank" rel="noopener noreferrer"><strong>D20 Icon</strong></a> &mdash; &copy; FortAwesome (Wikimedia Commons) &mdash; <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a></li>
+                            <li><a href="https://marked.js.org/" target="_blank" rel="noopener noreferrer"><strong>Marked.js</strong></a> &mdash; &copy; Christopher Jeffrey et al. &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener noreferrer"><strong>JSZip</strong></a> &mdash; &copy; Stuart Knightley et al. &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://phosphoricons.com/" target="_blank" rel="noopener noreferrer"><strong>Phosphor Icons</strong></a> &mdash; &copy; Phosphor Icons &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://fengyuanchen.github.io/cropperjs/" target="_blank" rel="noopener noreferrer"><strong>Cropper.js</strong></a> &mdash; &copy; Fengyuan Chen &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://sortablejs.github.io/Sortable/" target="_blank" rel="noopener noreferrer"><strong>SortableJS</strong></a> &mdash; &copy; SortableJS Contributors &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://3d-dice.github.io/dice-box/" target="_blank" rel="noopener noreferrer"><strong>DiceBox</strong></a> &mdash; &copy; 3d-dice &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                            <li><a href="https://github.com/cure53/DOMPurify" target="_blank" rel="noopener noreferrer"><strong>DOMPurify</strong></a> &mdash; &copy; Dr.-Ing. Mario Heiderich, Cure53 &mdash; <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">Apache-2.0</a> / <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank" rel="noopener noreferrer">MPL-2.0</a></li>
+                            <li><a href="https://github.com/Azgaar/armoria-api" target="_blank" rel="noopener noreferrer"><strong>Armoria</strong></a> &mdash; &copy; 2021 Azgaar (Maxim Haniyeu) &mdash; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="credits" style="margin-top: 0.5rem;">
+                        <h3>Theme Inspiration</h3>
+                        <p class="muted" style="font-size: 12px; line-height: 1.6;">
+                            Color palettes inspired by community-driven themes: <strong>Dracula</strong> (Zeno Rocha et al.), <strong>One Dark</strong> (Atom team), <strong>Tokyo Night</strong> (enkia), <strong>Nord</strong> (Arctic Ice Studio), <strong>Catppuccin</strong> (Catppuccin Org), <strong>Gruvbox</strong> (morhetz), <strong>Solarized</strong> (Ethan Schoonover), <strong>GitHub Primer</strong> (GitHub), <strong>One Light</strong> (Atom team), and <strong>Rosé Pine</strong> (Rosé Pine team). Only hex color values are used — no source code from these projects is included.
+                        </p>
+                    </div>
+
+                    <div class="credits" style="margin-top: 0.5rem;">
+                        <h3>Third-Party Services</h3>
+                        <p class="muted" style="font-size: 12px; line-height: 1.6;">
+                            Google Drive™ is a trademark of Google LLC. Use of this trademark is subject to
+                            <a href="https://about.google/brand-resource-center/" target="_blank" rel="noopener noreferrer">Google Permissions</a>.
+                            TaleTrove uses the Google Drive API to save and open world files directly to your own Google Drive account.
+                            TaleTrove does not store your Google credentials or access any files beyond those it creates.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- GOOGLE DRIVE FILE PICKER (positioned absolutely over pane area) -->
+            <div id="hubViewDriveOpen" class="hub-picker-body hidden">
+                <div class="hub-picker-content">
+                    <h2 id="hubDrivePickerHeading">Worlds in Google Drive</h2>
+                    <p class="muted" style="margin: 0.25rem 0 0;">Select a world to open it in TaleTrove.</p>
+                    <div id="hubDriveFileListContainer"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content is-dialog">
+            <div class="modal-header">
+                <h3 id="confirmModalTitle">Are you sure?</h3>
+                <button id="confirmModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalText" class="muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button id="confirmModalCancelBtn" class="ghost">Cancel</button>
+                    <button id="confirmModalConfirmBtn" class="danger">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="alertModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content is-dialog">
+            <div class="modal-header">
+                <h3 id="alertModalTitle">Notice</h3>
+                <button id="alertModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="alertModalText" class="muted">Something happened.</p>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button id="alertModalConfirmBtn" class="primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="helpModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" data-persistent="true">
+        <div class="modal-content">
+            <div class="side-sheet-header">
+                <h3>Help</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="side-sheet-body" id="helpSheetBody">
+                <div class="help-tour-section">
+                    <p class="help-tour-desc">Step through all the key features of TaleTrove interactively.</p>
+                    <button id="helpTourBtn" class="help-tour-btn">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-trifold.svg'); mask-image: url('ui-icons/map-trifold.svg');"></div>
+                        Take the Tour
+                    </button>
+                </div>
+                <div class="help-shortcuts-section">
+                    <h4 class="help-section-label">Keyboard Shortcuts</h4>
+                    <div id="helpShortcutsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="bugReportModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content">
+            <div class="side-sheet-header">
+                <h3>Feedback</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="bug-sheet-tabs">
+                <button class="bug-sheet-tab active" data-tab="report">Report</button>
+                <button class="bug-sheet-tab" data-tab="known">Known Issues</button>
+            </div>
+            <div class="bug-sheet-body">
+                <div class="bug-tab-pane active" id="bugTabReport">
+                    <div class="bug-form-group">
+                        <span class="bug-form-label">Type</span>
+                        <div class="bug-type-seg">
+                            <button class="bug-type-btn active" data-type="bug">Bug</button>
+                            <button class="bug-type-btn" data-type="feature">Feature Request</button>
+                        </div>
+                    </div>
+                    <div class="bug-form-group">
+                        <label class="bug-form-label" for="bugTitleIn">Title <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="bugTitleIn" placeholder="Short description">
+                    </div>
+                    <div class="bug-form-group">
+                        <label class="bug-form-label" for="bugDescIn">Description <span style="color:var(--danger)">*</span></label>
+                        <textarea id="bugDescIn" rows="4" placeholder="What happened? What did you expect?"></textarea>
+                    </div>
+                    <div class="bug-form-group" id="bugStepsGroup">
+                        <label class="bug-form-label" for="bugStepsIn">Steps to Reproduce</label>
+                        <textarea id="bugStepsIn" rows="3" placeholder="1. Click...&#10;2. Then...&#10;3. Error appears"></textarea>
+                    </div>
+                    <div class="bug-form-group" id="bugSeverityGroup">
+                        <span class="bug-form-label">Severity</span>
+                        <div class="bug-sev-btns">
+                            <button class="bug-sev-btn" data-sev="low">Low</button>
+                            <button class="bug-sev-btn active" data-sev="medium">Medium</button>
+                            <button class="bug-sev-btn" data-sev="high">High</button>
+                            <button class="bug-sev-btn" data-sev="critical">Critical</button>
+                        </div>
+                    </div>
+                    <div class="bug-form-group">
+                        <label class="bug-form-label">App Version</label>
+                        <input type="text" id="bugVersionIn" readonly style="opacity:0.55; cursor:default;">
+                    </div>
+                    <div class="bug-submit-row">
+                        <button id="bugSubmitBtn" class="primary">Open on GitHub →</button>
+                        <span id="bugSubmitStatus"></span>
+                    </div>
+                </div>
+                <div class="bug-tab-pane" id="bugTabKnown">
+                    <div class="known-issues-toolbar">
+                        <span id="knownIssuesCount" class="muted"></span>
+                        <button id="knownIssuesRefreshBtn" class="ghost">Refresh</button>
+                    </div>
+                    <div id="knownIssuesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="addImageModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close js-modal-close" title="Close">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+            </button>
+            <h3>Add an Image</h3>
+            <p class="muted">Add an image from a local file or a web URL.</p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button id="uploadImageBtn" class="primary">Upload Image File</button>
+                <button id="addImageFromUrlBtn" class="ghost">Add from URL</button>
+            </div>
+        </div>
+    </div>
+    <div id="sampleWorldModal" class="modal-overlay hidden">
+        <div class="modal-content welcome-modal-content">
+            <img src="TaleTrove.svg" alt="TaleTrove" class="welcome-logo">
+            <h3>Welcome to TaleTrove</h3>
+            <p class="welcome-subtitle">Your local-first world-building atlas.</p>
+            <p class="muted" style="font-size: 13px; line-height: 1.6; margin: 0.75rem 0 1rem;">
+                Jump straight in with <strong>Aethermoor</strong> — a ready-made sample world with a map, lore, NPCs, and timeline — or start with a blank canvas.
+            </p>
+            <div class="modal-actions" style="flex-direction: column; gap: 0.5rem;">
+                <button class="primary" id="loadSampleWorldBtn" style="width: 100%;">Load Sample World</button>
+                <button class="ghost" id="startFreshBtn" style="width: 100%;">Start Fresh</button>
+            </div>
+            <p class="muted" style="font-size: 11px; margin-top: 1rem; text-align: center;">
+                You can always load the sample world later via <strong>Project Hub → Import</strong>.
+            </p>
+        </div>
+    </div>
+    <div id="welcomeModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content welcome-modal-content">
+            <button class="modal-close js-modal-close" title="Close">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+            </button>
+            <img src="TaleTrove.svg" alt="TaleTrove" class="welcome-logo">
+            <h3>Welcome to TaleTrove</h3>
+            <p class="welcome-subtitle">Your local-first world-building atlas.</p>
+            <p class="welcome-warning">
+                <b>Heads up:</b> Your world lives in this browser only — export your <code>.trv</code> file regularly to avoid data loss.
+            </p>
+            <div class="modal-actions welcome-actions">
+                <button class="ghost js-modal-close" id="welcomeSkipBtn">Skip for now</button>
+                <button class="primary" id="welcomeTourBtn">Take the Tour</button>
+            </div>
+            <label class="welcome-never-show">
+                <input type="checkbox" id="neverShowWelcomeChk"> Don't show this again
+            </label>
+        </div>
+    </div>
+    <header class="app-header">
+        <div class="brand">
+            <img class="logo" src="TaleTrove.svg" alt="TaleTrove Logo" id="brandLogo">
+            <div id="breadcrumbContainer" class="breadcrumb-container"></div>
+        </div>
+        <div id="noticeContainer" class="notice-container"></div>
+        <div class="global-search-wrapper">
+            <div id="globalSearchIcon" class="search-icon"></div>
+            <input type="search" id="globalSearchInput" placeholder="Search..." autocomplete="off">
+            <button id="cpShortcutHint" class="cp-shortcut-hint" aria-label="Open command palette" tabindex="-1"></button>
+            <div id="globalSearchResults" class="search-results-popover hidden"></div>
+        </div>
+        <div class="header-controls">
+            <input type="file" id="importFile" accept=".trv,.wbundle" class="sr-only">
+            <input type="file" id="mapImageFile" accept="image/*" class="sr-only">
+            <input type="file" id="overlayImageFile" accept="image/*" class="sr-only">
+            <input type="file" id="imageBlockUploadFile" accept="image/*" class="sr-only">
+            <input type="file" id="heroImageFile" accept="image/*" class="sr-only">
+            <input type="file" id="customIconFile" accept=".svg,image/svg+xml" class="sr-only">
+            <input type="file" id="donjonCalendarFile" accept=".json" class="sr-only">
+            <div class="role-toggle-wrapper" title="Switch between GM and Player view">
+                <span class="role-label gm">GM</span>
+                <label class="switch small" aria-label="Switch between GM and Player view">
+                    <input type="checkbox" id="roleToggle" aria-label="Player mode">
+                    <span class="slider round"></span>
+                </label>
+                <span class="role-label player">Player</span>
+            </div>
+            <div class="user-chip-wrapper">
+                <button id="userChip" class="user-chip" title="Your profile" aria-label="Your profile">
+                    <div class="user-avatar" id="userAvatar"></div>
+                </button>
+                <div id="userChipPopover" class="user-chip-popover hidden">
+                    <div class="user-chip-popover__preview">
+                        <div class="user-avatar" id="userAvatarPreview"></div>
+                    </div>
+                    <div class="form-label">Display Name / Alias</div>
+                    <input type="text" id="userNameInput" placeholder="e.g. Dungeon Master" maxlength="32" autocomplete="off">
+                    <div class="form-label">Avatar Color</div>
+                    <div id="userColorSwatches" class="user-color-swatches"></div>
+                    <div id="userPopoverDriveSection" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Nav rail: app-level views and user identity. Hides with the atlas panel. -->
+    <nav id="navRail" class="nav-rail" aria-label="App navigation">
+        <div class="nav-rail-top">
+            <button id="timelineBtn" class="nav-rail-btn" title="Global Timeline" aria-label="Global Timeline">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/hourglass.svg'); mask-image: url('ui-icons/hourglass.svg');"></div>
+            </button>
+            <button id="calendarBtn" class="nav-rail-btn" title="View Calendar" aria-label="View Calendar">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/calendar-dots.svg'); mask-image: url('ui-icons/calendar-dots.svg');"></div>
+            </button>
+            <button id="relationalGraphBtn" class="nav-rail-btn" title="Relational Graph" aria-label="Relational Graph">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/graph.svg'); mask-image: url('ui-icons/graph.svg');"></div>
+            </button>
+            <button id="familyTreeBtn" class="nav-rail-btn" title="Family Tree" aria-label="Family Tree">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/tree-view.svg'); mask-image: url('ui-icons/tree-view.svg');"></div>
+            </button>
+        </div>
+        <div class="nav-rail-bottom">
+            <div class="notification-bell-wrapper">
+                <button id="notificationBellBtn" class="nav-rail-btn" title="View Updates" aria-label="View Updates">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/bell.svg'); mask-image: url('ui-icons/bell.svg');"></div>
+                </button>
+                <span id="newUpdateChip" class="chip new-chip hidden">New</span>
+            </div>
+            <button id="installPwaBtn" class="nav-rail-btn hidden" title="Install TaleTrove" aria-label="Install TaleTrove as an app">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/install.svg'); mask-image: url('ui-icons/install.svg');"></div>
+            </button>
+            <button id="helpBtn" class="nav-rail-btn" title="Help" aria-label="Help">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/question.svg'); mask-image: url('ui-icons/question.svg');"></div>
+            </button>
+            <button id="bugReportBtn" class="nav-rail-btn" title="Report a Bug / Feedback" aria-label="Report a Bug">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/bug.svg'); mask-image: url('ui-icons/bug.svg');"></div>
+            </button>
+            <button id="themeRailBtn" class="nav-rail-btn" title="Appearance" aria-label="Appearance settings">
+                <div class="icon-container theme-rail-icon"></div>
+            </button>
+        </div>
+    </nav>
+    <!-- Atlas panel and its toggle live outside #mainContainer so that
+         mainContainer's will-change/transform does not create a new containing
+         block that would misplace the position:fixed atlas panel. -->
+    <aside id="atlasPanel">
+        <div class="panel-tabs">
+            <button id="atlasTabBtn" class="tab active">World</button>
+            <button id="assetsTabBtn" class="tab">Assets</button>
+            <div class="tab-action-group">
+                <button id="panelSearchBtn" class="tab-action-btn" title="Search" aria-label="Toggle search">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/magnifying-glass.svg'); mask-image: url('ui-icons/magnifying-glass.svg'); background-color:currentColor; mask-size:contain; -webkit-mask-size:contain; mask-repeat:no-repeat; -webkit-mask-repeat:no-repeat;"></div>
+                </button>
+                <button id="sidebarFilterBtn" class="tab-action-btn" title="This map only" aria-label="Toggle map filter" aria-pressed="false"></button>
+                <button id="compactModeBtn" class="tab-action-btn" title="Compact View" aria-label="Toggle compact view"></button>
+                <button id="collapseExpandAllBtn" class="tab-action-btn" title="Collapse All" aria-label="Collapse All"></button>
+            </div>
+        </div>
+        <div class="panel-body-container" style="flex-grow: 1; overflow-y: auto;">
+            <div id="atlasView" class="pane active">
+                <div id="atlasTreeContainer" class="section-body"></div>
+                <div id="atlasControls"></div>
+                <!-- encyclopediaView is an inline section — populated by refreshEncyclopediaView() -->
+                <div id="encyclopediaView"></div>
+                <!-- sessionsView is a GM-only inline section — created and populated dynamically by refreshAtlasTree/refreshSessionsView() -->
+            </div>
+
+            <div id="assetsView" class="pane">
+                <div id="assetsFilterControls" class="panel-filter-bar">
+                    <div class="panel-filter-row">
+                        <input type="text" id="assetsFilterInput" class="panel-filter-input" placeholder="Filter assets..." autocomplete="off">
+                    </div>
+                </div>
+                <div id="assetsPagination" class="assets-pagination"></div>
+                <div id="assetsGrid" class="assets-grid" style="padding: 1rem; flex-grow: 1; overflow-y: auto;"></div>
+                <div class="panel-action-bar" style="grid-template-columns: 1fr 1fr;">
+                    <input type="file" id="globalAssetUpload" accept="image/*" class="sr-only" multiple>
+                    <button id="uploadAssetBtn" class="ghost" title="Upload images from your device">+ Upload</button>
+                    <button id="searchImagesBtn" class="ghost" title="Search free image libraries (Wikimedia Commons)">+ Search</button>
+                </div>
+            </div>
+        </div>
+        <footer class="aside-footer">
+            <div id="saveStatus" class="save-status">
+                <span class="status-icon"></span>
+                <span class="status-text">Saved locally</span>
+            </div>
+        </footer>
+    </aside>
+    <button id="toggleAsideBtn" class="aside-toggle-btn" title="Hide Atlas Panel" aria-label="Hide Atlas Panel" aria-expanded="true">
+        <span class="icon-open"></span>
+        <span class="icon-closed"></span>
+    </button>
+    <div class="container" id="mainContainer">
+        <div class="map-wrap">
+            <!-- Fog brush cursor ring — positioned by JS, visible only in fog mode -->
+            <div id="fogBrushCursor" aria-hidden="true"><span id="fogBrushCursorLabel"></span></div>
+
+            <!-- Fog of War Controls Popover -->
+            <div id="fogControlsPopover" class="popover hidden">
+                <div class="fog-control-group fog-control-group--divider">
+                    <span class="fog-control-label">Opacity</span>
+                    <input type="range" id="fogOpacitySlider" min="0" max="1" step="0.05" value="0.85" aria-label="Fog Opacity">
+                </div>
+                <div class="fog-control-group">
+                    <span class="fog-control-label">Pen Size</span>
+                    <input type="range" id="fogBrushSizeSlider" min="5" max="200" step="5" value="40" aria-label="Fog Pen Size">
+                    <input type="number" id="fogBrushSizeInput" min="5" max="200" value="40" aria-label="Fog Pen Size (pixels)">
+                </div>
+            </div>
+
+            <!-- Filter Toolbar -->
+            <div class="toolbar center" id="filterToolbar">
+                <!-- Group 1: Content/Lore -->
+                <button class="ghost icon-btn filter-btn" id="filterPinBtn" data-tooltip="Hide Pins" aria-label="Hide Pins" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-pin.svg'); mask-image: url('ui-icons/map-pin.svg');"></div>
+                </button>
+                <button class="ghost icon-btn filter-btn" id="filterTextBtn" data-tooltip="Hide Text Labels" aria-label="Hide Text Labels" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/text-t.svg'); mask-image: url('ui-icons/text-t.svg');"></div>
+                </button>
+
+                <span class="toolbar-divider"></span>
+
+                <!-- Group 2: Geometry -->
+                <button class="ghost icon-btn filter-btn" id="filterAreaBtn" data-tooltip="Hide Areas" aria-label="Hide Areas" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/area.svg'); mask-image: url('ui-icons/area.svg');"></div>
+                </button>
+                <button class="ghost icon-btn filter-btn" id="filterLineBtn" data-tooltip="Hide Lines" aria-label="Hide Lines" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/line-segments.svg'); mask-image: url('ui-icons/line-segments.svg');"></div>
+                </button>
+
+                <span class="toolbar-divider"></span>
+
+                <!-- Group 3: Annotation -->
+                <button class="ghost icon-btn" id="toggleLabelsBtn" data-tooltip="Hide Name Labels" aria-label="Hide Name Labels" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/tag.svg'); mask-image: url('ui-icons/tag.svg');"></div>
+                </button>
+            </div>
+
+            <div class="toolbar center" id="mainToolbar">
+                <!-- Zone A: Interaction -->
+                <button class="mode-btn icon-btn" id="modePointerBtn" data-tooltip="Pointer Tool" aria-label="Pointer Tool" aria-pressed="true">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/cursor.svg'); mask-image: url('ui-icons/cursor.svg');"></div>
+                </button>
+                <div class="edit-tool-group">
+                    <button class="mode-btn icon-btn" id="modeMoveBtn" data-tooltip="Move/Edit Tool" aria-label="Move/Edit Tool" aria-pressed="false">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-out-cardinal.svg'); mask-image: url('ui-icons/arrows-out-cardinal.svg');"></div>
+                    </button>
+                </div>
+                <button class="mode-btn icon-btn" id="modeMeasureBtn" data-tooltip="Measure Distance" aria-label="Measure Distance" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/ruler.svg'); mask-image: url('ui-icons/ruler.svg');"></div>
+                </button>
+                
+                <span class="toolbar-divider"></span>
+
+                <!-- Zone B: Creation -->
+                <button class="mode-btn icon-btn" id="modePinBtn" data-tooltip="Add Pin" aria-label="Add Pin" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-pin.svg'); mask-image: url('ui-icons/map-pin.svg');"></div>
+                </button>
+                <button class="mode-btn icon-btn" id="modeAreaBtn" data-tooltip="Draw Area" aria-label="Draw Area" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/area.svg'); mask-image: url('ui-icons/area.svg');"></div>
+                </button>
+                <button class="mode-btn icon-btn" id="modeLineBtn" data-tooltip="Draw Line" aria-label="Draw Line" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/line-segments.svg'); mask-image: url('ui-icons/line-segments.svg');"></div>
+                </button>
+                <button class="mode-btn icon-btn" id="modeTextBtn" data-tooltip="Add Text Label" aria-label="Add Text Label" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/text-t.svg'); mask-image: url('ui-icons/text-t.svg');"></div>
+                </button>
+                
+                <span class="toolbar-divider"></span>
+
+                <!-- Zone C: Map Management -->
+                <button class="ghost icon-btn" id="loadMapBtn" data-tooltip="Load Map Image" aria-label="Load Map Image">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/file-image.svg'); mask-image: url('ui-icons/file-image.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="overlayMenuBtn" data-tooltip="Overlay" aria-label="Overlay" aria-haspopup="true" aria-expanded="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/stack-simple.svg'); mask-image: url('ui-icons/stack-simple.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="toggleFogBtn" data-tooltip="Hide Fog of War" aria-label="Hide Fog of War" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/cloud-fog.svg'); mask-image: url('ui-icons/cloud-fog.svg');"></div>
+                </button>
+
+                <span class="toolbar-divider"></span>
+
+                <!-- Zone D: Navigation & View -->
+<button class="ghost icon-btn" id="centerOnSelectionBtn" data-tooltip="Center on Selection" aria-label="Center on Selection">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/crosshair.svg'); mask-image: url('ui-icons/crosshair.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="toggleFreeMoveBtn" data-tooltip="Enable Free Pan" aria-label="Enable Free Pan" aria-pressed="false">
+                    <span class="icon-locked">
+                        <div class="icon-container"
+                            style="-webkit-mask-image: url('ui-icons/lock.svg'); mask-image: url('ui-icons/lock.svg');">
+                        </div>
+                    </span>
+                    <span class="icon-unlocked">
+                        <div class="icon-container"
+                            style="-webkit-mask-image: url('ui-icons/lock-open.svg'); mask-image: url('ui-icons/lock-open.svg');">
+                        </div>
+                    </span>
+                </button>
+                <button class="ghost icon-btn" id="fitBtn" data-tooltip="Fit Map to Screen" aria-label="Fit Map to Screen">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-in-simple.svg'); mask-image: url('ui-icons/arrows-in-simple.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="toolbarPosBtn" data-tooltip="Toggle Toolbar Position" aria-label="Toggle Toolbar Position">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-down-up.svg'); mask-image: url('ui-icons/arrows-down-up.svg');"></div>
+                </button>
+
+                <span class="toolbar-divider"></span>
+
+                <!-- Zone E: System -->
+                <button class="ghost icon-btn" id="undoBtn" data-tooltip="Undo" aria-label="Undo">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-bend-up-left.svg'); mask-image: url('ui-icons/arrow-bend-up-left.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="redoBtn" data-tooltip="Redo" aria-label="Redo">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-bend-up-right.svg'); mask-image: url('ui-icons/arrow-bend-up-right.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="mapExpandBtn" data-tooltip="Fullscreen Map View" aria-label="Fullscreen Map View">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/frame-corners.svg'); mask-image: url('ui-icons/frame-corners.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="fullscreenBtn" data-tooltip="Toggle Fullscreen" aria-label="Toggle Fullscreen" aria-pressed="false">
+                    <div class="icon-container fullscreen-enter" style="-webkit-mask-image: url('ui-icons/arrows-out.svg'); mask-image: url('ui-icons/arrows-out.svg');"></div>
+                    <div class="icon-container fullscreen-exit" style="-webkit-mask-image: url('ui-icons/arrows-in.svg'); mask-image: url('ui-icons/arrows-in.svg');"></div>
+                </button>
+            </div>
+
+            <div id="fsToolbarHandle" role="button" aria-label="Show toolbar" tabindex="0">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/caret-down.svg'); mask-image: url('ui-icons/caret-down.svg');"></div>
+            </div>
+            <div id="mapFullscreenControls" class="toolbar hidden">
+                <button class="ghost icon-btn" id="mapExitFullscreenBtn" data-tooltip="Exit Fullscreen View" aria-label="Exit Fullscreen View">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-in.svg'); mask-image: url('ui-icons/arrows-in.svg');"></div>
+                </button>
+                <span class="toolbar-divider"></span>
+                <button class="ghost icon-btn" id="overlayMenuBtnFullscreen" data-tooltip="Overlay" aria-label="Overlay" aria-haspopup="true" aria-expanded="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/image.svg'); mask-image: url('ui-icons/image.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="toggleFogBtnFullscreen" data-tooltip="Show Fog of War" aria-label="Show Fog of War" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/cloud-fog.svg'); mask-image: url('ui-icons/cloud-fog.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="togglePinsBtnFullscreen" data-tooltip="Show Pins" aria-label="Show Pins" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-pin.svg'); mask-image: url('ui-icons/map-pin.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="gridSettingsBtn" data-tooltip="Grid Settings" aria-label="Grid Settings">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/grid-four.svg'); mask-image: url('ui-icons/grid-four.svg');"></div>
+                </button>
+                <button class="ghost icon-btn" id="rotateMapBtn" data-tooltip="Rotate Map" aria-label="Rotate Map" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-clockwise.svg'); mask-image: url('ui-icons/arrow-clockwise.svg');"></div>
+                </button>
+                <span class="toolbar-divider"></span>
+                <button class="ghost icon-btn" id="rhdPlaceSeatBtn" data-tooltip="Place Player Seat (RHD Sync)" aria-label="Place player seat for RHD initiative sync">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/person.svg'); mask-image: url('ui-icons/person.svg');"></div>
+                </button>
+                <span class="toolbar-divider"></span>
+                <button class="ghost icon-btn" id="fsMinimizeBtn" data-tooltip="Hide Toolbar" aria-label="Hide Toolbar">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/caret-up.svg'); mask-image: url('ui-icons/caret-up.svg');"></div>
+                </button>
+            </div>
+            <div id="gridAlignHint" class="grid-align-hint hidden">
+                <span id="gridAlignHintText"></span>
+                <button id="gridAlignCancelBtn" class="ghost" style="font-size:12px; padding: 0.2rem 0.6rem;">Cancel</button>
+            </div>
+            <div id="gridSettingsPopover" class="popover hidden">
+                <div class="grid-popover-header">
+                    <span class="grid-popover-title">Grid Overlay</span>
+                    <div class="grid-popover-header-actions">
+                        <button class="ghost grid-reset-btn" id="gridResetBtn">Reset</button>
+                        <label class="switch small-switch">
+                            <input type="checkbox" id="gridEnableChk">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="grid-section">
+                    <div class="grid-section-label">Appearance</div>
+                    <div class="grid-field-row">
+                        <label for="gridColorIn">Color</label>
+                        <input type="color" id="gridColorIn" value="#FFFFFF">
+                    </div>
+                    <div class="grid-field-row">
+                        <label for="gridWidthIn">Line weight</label>
+                        <input type="number" id="gridWidthIn" min="1" max="10" value="1" class="grid-small-input">
+                    </div>
+                    <div class="grid-field-row">
+                        <label for="gridOpacityIn">Opacity</label>
+                        <div class="opacity-slider-wrap">
+                            <input type="range" id="gridOpacityIn" min="0" max="1" step="0.05" value="0.5">
+                            <span id="gridOpacityVal">0.50</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-section">
+                    <div class="grid-section-label">Cell Size</div>
+                    <div class="grid-two-col">
+                        <div class="grid-field-col">
+                            <span class="grid-sub-label">Width</span>
+                            <input type="number" id="gridSizeXIn" min="5" value="50">
+                        </div>
+                        <div class="grid-field-col">
+                            <span class="grid-sub-label">Height</span>
+                            <input type="number" id="gridSizeYIn" min="5" value="50">
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-section">
+                    <div class="grid-section-label">Alignment</div>
+                    <div class="grid-two-col">
+                        <div class="grid-field-col">
+                            <span class="grid-sub-label">Offset X</span>
+                            <input type="number" id="gridOffsetXIn" value="0">
+                        </div>
+                        <div class="grid-field-col">
+                            <span class="grid-sub-label">Offset Y</span>
+                            <input type="number" id="gridOffsetYIn" value="0">
+                        </div>
+                    </div>
+                    <button class="ghost grid-action-btn" id="gridSetOriginBtn">
+                        <strong>Set Origin</strong>
+                        <span>Click a point on the map to snap a grid line intersection there</span>
+                    </button>
+                    <button class="ghost grid-action-btn" id="gridAlignBtn">
+                        <strong>Align to Map</strong>
+                        <span>Click two corners of a cell to auto-size and align the grid</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Overlay Menu Popover -->
+            <div id="overlayMenuPopover" class="popover hidden">
+                <button class="overlay-menu-action" id="loadOverlayBtn" aria-label="Load Overlay Image">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/image.svg'); mask-image: url('ui-icons/image.svg');"></div>
+                    <span>Load Overlay</span>
+                </button>
+                <div id="overlayMenuSettings" class="hidden">
+                    <div class="overlay-menu-divider"></div>
+                    <div class="fog-control-group">
+                        <span class="fog-control-label">Opacity</span>
+                        <input type="range" id="overlayOpacity" min="0" max="1" step="0.01" value="0.4" aria-label="Overlay Opacity">
+                        <span id="overlayOpacityVal">0.40</span>
+                    </div>
+                    <button class="overlay-menu-action" id="toggleOverlayBtn" aria-label="Hide Overlay" aria-pressed="false">
+                        <span class="overlay-visible-icon">
+                            <div class="icon-container" style="-webkit-mask-image: url('ui-icons/eye.svg'); mask-image: url('ui-icons/eye.svg');"></div>
+                        </span>
+                        <span class="overlay-hidden-icon">
+                            <div class="icon-container" style="-webkit-mask-image: url('ui-icons/eye-closed.svg'); mask-image: url('ui-icons/eye-closed.svg');"></div>
+                        </span>
+                        <span id="toggleOverlayLabel">Hide Overlay</span>
+                    </button>
+                </div>
+            </div>
+            <div id="map"></div>
+            
+            <!-- Map Zoom Slider (Google Maps style) -->
+            <div class="map-zoom-controls" id="mapZoomControls">
+                <div class="map-zoom-controls-body">
+                    <button id="zoomInBtn" class="icon-btn" title="Zoom In">
+                        <div class="icon-container"></div>
+                    </button>
+                    <div class="map-zoom-slider-wrap">
+                        <input type="range" id="mapZoomSlider" min="-5" max="8" step="0.1" value="0">
+                    </div>
+                    <button id="zoomOutBtn" class="icon-btn" title="Zoom Out">
+                        <div class="icon-container"></div>
+                    </button>
+                </div>
+                <button id="toggleZoomBtn" class="icon-btn" title="Show/Hide Zoom Controls">
+                    <div class="icon-container"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <aside id="infoPanel" class="info-panel">
+        <div id="selectionPanelContent" class="info-panel-content">
+            <div id="infoPanelControls"></div>
+            <div id="contentContainer"></div>
+        </div>
+    </aside>
+
+    <!-- Properties side-sheet: opened via ··· on panel rows -->
+    <div id="propertiesSheet" role="complementary" aria-label="Entity Properties">
+        <div class="side-sheet-header" id="propertiesSheetHeader">
+            <h3 id="propertiesSheetTitle">Properties</h3>
+            <button id="propertiesSheetClose" class="modal-close-simple" title="Close">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg'); width: 18px; height: 18px; background-color: currentColor; mask-size: contain; mask-repeat: no-repeat; mask-position: center;"></div>
+            </button>
+        </div>
+        <div class="side-sheet-body" id="propertiesSheetContent"></div>
+    </div>
+
+    <div id="minimapContainer" role="button" tabindex="0" aria-label="Back to Map">
+        <div id="minimapBack">← Back to Map</div>
+        <div id="minimapMapName"></div>
+    </div>
+    <div id="iconPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content icon-picker">
+            <div class="side-sheet-header">
+                <h3>Choose an Icon</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="side-sheet-search">
+                <input type="text" id="iconSearchInput" placeholder="Search icons..." autocomplete="off">
+            </div>
+            <div id="iconPickerGrid" class="icon-grid side-sheet-body"></div>
+        </div>
+    </div>
+    <div id="imageSearchModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content image-search-sheet">
+            <div class="side-sheet-header">
+                <h3>Search Images</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div id="imageSearchProviderTabs" class="image-search-provider-tabs"></div>
+            <div class="side-sheet-search">
+                <input type="text" id="imageSearchInput" placeholder="Search images..." autocomplete="off">
+            </div>
+            <div class="image-search-status-row"><span id="imageSearchStatus" class="image-search-status"></span></div>
+            <div class="image-search-body side-sheet-body">
+                <div id="imageSearchGrid" class="image-search-grid"></div>
+                <aside id="imageSearchDetail" class="image-search-detail"></aside>
+            </div>
+        </div>
+    </div>
+    <div id="pinShapePickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content icon-picker">
+            <div class="side-sheet-header">
+                <h3>Choose a Pin Shape</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="side-sheet-search">
+                <input type="text" id="shapeSearchInput" placeholder="Search shapes..." autocomplete="off">
+                <input type="file" id="customShapeFile" accept=".svg,image/svg+xml" class="sr-only">
+            </div>
+            <div id="pinShapePickerGrid" class="icon-grid side-sheet-body"></div>
+        </div>
+    </div>
+    <div id="colorPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content color-picker">
+            <div class="side-sheet-header">
+                <h3 id="colorPickerTitle">Choose a Color</h3>
+                <button class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="color-picker-body side-sheet-body">
+                <h4>Preset Colors</h4>
+                <div id="presetColorGrid" class="color-grid"></div>
+                <h4>Custom Colors</h4>
+                <div id="customColorGrid" class="color-grid"></div>
+            </div>
+        </div>
+    </div>
+    <div id="imageLightboxModal" class="modal-overlay hidden js-modal-overlay">
+        <button class="modal-close js-modal-close" title="Close">
+            <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+        </button>
+        <img src="" alt="Full-size view" id="lightboxImage">
+    </div>
+    <div id="inputModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content is-dialog">
+            <div class="modal-header">
+                <h3 id="inputModalTitle">Enter a name</h3>
+                <button id="inputModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="inputModalSubLabel" class="modal-sub-label hidden"></div>
+                <input type="text" id="inputModalField" class="full-width" aria-labelledby="inputModalTitle">
+            </div>
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button id="inputModalCancelBtn" class="ghost">Cancel</button>
+                    <button id="inputModalConfirmBtn" class="primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="imageUrlModal" class="modal-overlay hidden js-modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close js-modal-close" title="Close">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+            </button>
+            <h3>Add Image from URL</h3>
+            <p class="muted">Please enter the full web address of the image.</p>
+            <input type="url" id="imageUrlInput" placeholder="https://example.com/image.png"
+                style="width: 100%; margin-top: 1rem;">
+            <div class="modal-actions">
+                <button id="cancelImageUrlBtn" class="ghost">Cancel</button>
+                <button id="submitImageUrlBtn" class="primary">Add Image</button>
+            </div>
+        </div>
+    </div>
+    <div id="tutorialOverlay" class="tutorial-overlay hidden js-modal-overlay">
+        <div id="tutorialSpotlight"></div>
+        <div id="tutorialTextbox" class="tutorial-textbox">
+            <button id="tutorialCloseBtn" class="tutorial-close-btn" title="End Tutorial">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+            </button>
+            <div id="tutorialText"></div>
+            <div class="tutorial-nav">
+                <span id="tutorialStepCount" class="tutorial-step-count"></span>
+                <div>
+                    <button id="tutorialPrevBtn" class="ghost">Previous</button>
+                    <button id="tutorialNextBtn" class="primary">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="newsModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+        <div class="modal-content">
+            <div class="side-sheet-header">
+                <h3>What's New</h3>
+                <button id="markAllReadBtn" class="ghost small">Mark all read</button>
+            </div>
+            <div class="side-sheet-body" id="newsSheetBody"></div>
+        </div>
+    </div>
+    <div id="loadingOverlay" class="modal-overlay hidden" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; color: white;">
+            <div class="lds-ripple"><div></div><div></div></div>
+            <div id="loadingOverlayText" style="font-size: 1.25rem; font-weight: 500; font-family: 'Inter', sans-serif; letter-spacing: 0.5px;">Processing...</div>
+        </div>
+    </div>
+    <div id="toastContainer" class="toast-stack"></div>
+    <div id="appStatusIndicator" class="status-indicator hidden">
+        <div class="spinner"></div>
+        <span id="appStatusText">Loading...</span>
+    </div>
+    <div id="cropperModal" class="modal-overlay hidden">
+        <div class="modal-content is-large">
+            <button id="cropperCloseBtn" class="modal-close">
+                <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
+            </button>
+            <h3>Position Hero Image</h3>
+            <p class="muted">Move and scroll to zoom the image to get the perfect crop.</p>
+            <div class="cropper-container">
+                <img id="cropperImage" src="" alt="Image being cropped">
+            </div>
+            <div class="modal-actions">
+                <button id="cropperCancelBtn" class="ghost">Cancel</button>
+                <button id="cropperSetBtn" class="primary">Set Image</button>
+            </div>
+        </div>
+    </div>
+    <div id="timelineModal" class="modal-overlay hidden js-modal-overlay is-fullscreen">
+        <div class="modal-content is-large">
+            <div class="graph-modal-header">
+                <span class="graph-modal-title">Global Timeline</span>
+                <div class="graph-modal-actions">
+                    <button id="toggleEncyclopediaEventsBtn" class="icon-btn" title="Toggle Encyclopedia Events">
+                        <div class="icon-container"></div>
+                    </button>
+                    <div class="seg" id="timelineViewSeg">
+                        <button data-view="vertical" class="active" title="Vertical list view"><div class="icon-container"></div></button>
+                        <button data-view="gantt" title="Horizontal gantt view"><div class="icon-container"></div></button>
+                    </div>
+                    <div id="timelineZoomControls" class="hidden">
+                        <button id="timelineJumpToDateBtn" class="icon-btn" title="Jump to date">
+                            <div class="icon-container" style="-webkit-mask-image: url('ui-icons/calendar.svg'); mask-image: url('ui-icons/calendar.svg');"></div>
+                        </button>
+                        <button id="timelineZoomOutBtn" class="icon-btn" title="Zoom out"><div class="icon-container"></div></button>
+                        <button id="timelineZoomResetBtn" class="icon-btn" title="Reset zoom"><div class="icon-container"></div></button>
+                        <button id="timelineZoomInBtn" class="icon-btn" title="Zoom in"><div class="icon-container"></div></button>
+                    </div>
+                    <button class="graph-close-btn js-modal-close" aria-label="Close" title="Close"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div></button>
+                </div>
+            </div>
+            <div id="timelineViewerContent" class="timeline-viewer"></div>
+        </div>
+    </div>
+    <div id="calendarModal" class="modal-overlay hidden js-modal-overlay is-fullscreen">
+        <div class="modal-content is-large">
+            <div class="graph-modal-header">
+                <span class="graph-modal-title" id="calendarModalTitle">Calendar</span>
+                <div id="calendarMonthNav" class="calendar-month-nav"></div>
+                <div class="graph-modal-actions">
+                    <button id="calendarJumpToday" class="calendar-today-btn">Today</button>
+                    <button class="graph-close-btn js-modal-close" aria-label="Close" title="Close"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div></button>
+                </div>
+            </div>
+            <div class="calendar-wrapper">
+                <main id="calendarModalContent" class="calendar-main"></main>
+            </div>
+        </div>
+    </div>
+    <div id="commandPalette" class="modal-overlay hidden" role="dialog" aria-label="Command Palette" aria-modal="true">
+        <div class="cp-container">
+            <div class="cp-search-row">
+                <div class="cp-search-icon icon-container"></div>
+                <input type="text" id="cpInput" class="cp-input" placeholder="Search commands and articles…" autocomplete="off" spellcheck="false" aria-label="Command search">
+                <kbd class="cp-esc-hint">Esc</kbd>
+            </div>
+            <div id="cpResults" class="cp-results" role="listbox" aria-label="Commands and search results"></div>
+        </div>
+    </div>
+    <div id="dice-box"></div>
+    <script src="utils.js?v=2026.05.03.01"></script>
+    <script src="state.js?v=2026.05.03.01"></script>
+    <script src="data.js?v=2026.05.03.01"></script>
+    <script src="styles.js?v=2026.05.03.01"></script>
+    <script src="data/blocks.js?v=2026.05.03.01"></script>
+    <script src="markdown-extensions.js?v=2026.05.03.01"></script>
+    <script src="worldbuilder.js?v=2026.05.03.01"></script>
+    <script src="map.js?v=2026.05.03.01"></script>
+    <script src="grid.js?v=2026.05.03.01"></script>
+    <script src="ui.js?v=2026.05.03.01"></script>
+    <script src="panels.js?v=2026.05.03.01"></script>
+    <script src="image-search.js?v=2026.05.03.01"></script>
+    <script src="relational-graph.js?v=2026.05.03.01"></script>
+    <script src="family-tree.js?v=2026.05.03.01"></script>
+    <script src="inspector.js?v=2026.05.03.01"></script>
+    <script src="block-editor.js?v=2026.05.03.01"></script>
+    <script src="modals.js?v=2026.05.03.01"></script>
+    <script src="generator.js?v=2026.05.03.01"></script>
+    <script src="tutorial.js?v=2026.05.03.01"></script>
+    <script type="module" src="dice-roller.js?v=2026.05.03.01"></script>
+    <script src="obsidian-importer.js?v=2026.05.03.01"></script>
+    <script type="module" src="armoria.js?v=2026.05.03.01"></script>
+    <!-- Google Identity Services — loaded last so it doesn't block app init -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="google-drive.js?v=2026.05.03.01"></script>
+    <datalist id="encyclopediaTypes">
+        <option value="Character"></option>
+        <option value="Item"></option>
+        <option value="Event"></option>
+        <option value="Location"></option>
+        <option value="Organization"></option>
+        <option value="Session"></option>
+    </datalist>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(() => {
+                }).catch(err => {
+                    console.error('[SW] Registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
