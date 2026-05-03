@@ -1,5 +1,5 @@
 const GH_OWNER = 'Aestylis';
-const GH_REPO  = 'taletrove-feedback';
+const GH_REPO  = 'taletrove';
 
 // Side-sheets always stay in the layout (display:flex !important overrides .hidden).
 // Toggling .is-open fires the transition reliably — same technique as #infoPanel.
