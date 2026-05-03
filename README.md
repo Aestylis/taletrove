@@ -1,5 +1,7 @@
 # TaleTrove
 
+**[→ Try it live at taletrove.app](https://taletrove.app/forge/)**
+
 **A local-first world-building atlas for tabletop RPG campaigns.**
 
 Build living, interactive maps of your world. Every pin, region, and lore entry is a wiki article — link them together, track events on a custom calendar, roll 3D dice, and share a read-only player view without exposing GM secrets.
