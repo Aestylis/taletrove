@@ -22,6 +22,11 @@
 /calendrical_calculations.pdf
 ccswitch.sh
 
+# AI assistant config files (kept locally, not for the repo)
+CLAUDE.md
+GEMINI.md
+.claude/
+
 # Session memory (Claude .remember/ directory)
 .remember/
 
@@ -40,7 +45,6 @@ Thumbs.db
 .idea/
 *.swp
 *.bak
-.claude/
 
 # Temporary / Log files
 *.log
