@@ -2008,6 +2008,7 @@ async function showInfoPanel(id, type = 'feature') {
   panel.classList.toggle('is-rearranging', isRearrangeMode);
   panel.classList.add('is-visible');
   $('#mainContainer').classList.add('info-panel-visible');
+  window._syncBothPanelsClass?.();
 
   const contentEl = $('#contentContainer');
   contentEl.innerHTML = '';
