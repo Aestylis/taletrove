@@ -6,7 +6,8 @@
   --header-bg: #0a0a0c;
   --muted: #8d95a0; /* was #818890 — lightened for WCAG AA contrast on dark panels */
   --text: #e8e9eb;
-  --accent-magenta: #ff3ea5;
+  --accent-magenta:     #ff3ea5;
+  --accent-magenta-rgb: 255, 62, 165;
   --accent-orange: #ff7a1a;
   --danger: #ff5a67;
   --gm: #ffd166;
@@ -99,6 +100,21 @@
   /* ─── Typography tokens ──────────────────────────────────────────────────── */
   --font-body:    Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --font-heading: var(--font-heading);
+
+  /* ─── Semantic color aliases ────────────────────────────────────────────── */
+  /* orange = interactive (actions, focus, primary CTA)                        */
+  /* magenta = state indicator (active tool mode, unread badges, visited)      */
+  --color-interactive:     var(--accent-orange);
+  --color-interactive-rgb: var(--accent-orange-rgb);
+  --color-state:           var(--accent-magenta);
+  --color-state-rgb:       var(--accent-magenta-rgb);
+
+  /* ─── Accent opacity tiers (replace ad-hoc rgba() throughout) ──────────── */
+  --accent-orange-06: rgba(var(--accent-orange-rgb), 0.06);  /* subtle hover fill */
+  --accent-orange-10: rgba(var(--accent-orange-rgb), 0.10);  /* selected item bg  */
+  --accent-orange-16: rgba(var(--accent-orange-rgb), 0.16);  /* active / pressed  */
+  --accent-magenta-10: rgba(var(--accent-magenta-rgb), 0.10);
+  --accent-magenta-16: rgba(var(--accent-magenta-rgb), 0.16);
 }
 
 /* Nocturne Dark Theme */
@@ -108,7 +124,8 @@
   --header-bg: #0a0a0c; /* Darkest - Header Bar */
   --muted: #8d95a0; /* was #818890 — lightened for WCAG AA on very dark bg */
   --text: #e8e9eb;
-  --accent-magenta: #ff3ea5;
+  --accent-magenta:     #ff3ea5;
+  --accent-magenta-rgb: 255, 62, 165;
   --accent-orange: #ff7a1a;
   --danger: #ff5a67;
   --gm: #ffd166;
@@ -137,7 +154,8 @@
   --header-bg: #ffffff; /* Brighter - Header Bar */
   --muted: #8a7d70;
   --text: #3d352e;
-  --accent-magenta: #c92a91;
+  --accent-magenta:     #c92a91;
+  --accent-magenta-rgb: 201, 42, 145;
   --accent-orange: #25a8b5;
   --danger: #e63946;
   --gm: #a57400;
@@ -182,9 +200,10 @@
   --border:           #44475A;
   --text:             #F8F8F2;
   --muted:            #6272A4;
-  --accent-orange:    #BD93F9;
-  --accent-orange-rgb: 189, 147, 249;
-  --accent-magenta:   #FF79C6;
+  --accent-orange:      #BD93F9;
+  --accent-orange-rgb:  189, 147, 249;
+  --accent-magenta:     #FF79C6;
+  --accent-magenta-rgb: 255, 121, 198;
   --map-tile-a:       #1E2030;
   --map-tile-b:       #282A40;
   --panel-translucent:        rgba(33, 34, 44, 0.88);
@@ -203,9 +222,10 @@
   --border:           #3E4452;
   --text:             #ABB2BF;
   --muted:            #636D83;
-  --accent-orange:    #61AFEF;
-  --accent-orange-rgb: 97, 175, 239;
-  --accent-magenta:   #C678DD;
+  --accent-orange:      #61AFEF;
+  --accent-orange-rgb:  97, 175, 239;
+  --accent-magenta:     #C678DD;
+  --accent-magenta-rgb: 198, 120, 221;
   --map-tile-a:       #1C1E24;
   --map-tile-b:       #262830;
   --panel-translucent:        rgba(33, 37, 43, 0.88);
@@ -224,9 +244,10 @@
   --border:           #292E42;
   --text:             #A9B1D6;
   --muted:            #787C99;
-  --accent-orange:    #7AA2F7;
-  --accent-orange-rgb: 122, 162, 247;
-  --accent-magenta:   #BB9AF7;
+  --accent-orange:      #7AA2F7;
+  --accent-orange-rgb:  122, 162, 247;
+  --accent-magenta:     #BB9AF7;
+  --accent-magenta-rgb: 187, 154, 247;
   --map-tile-a:       #13131A;
   --map-tile-b:       #1E1E28;
   --panel-translucent:        rgba(22, 22, 30, 0.88);
@@ -245,10 +266,11 @@
   --border:           #434C5E;
   --text:             #ECEFF4;
   --muted:            #616E88;
-  --accent-orange:    #88C0D0;
-  --accent-orange-rgb: 136, 192, 208;
-  --accent-magenta:   #B48EAD;
-  --map-tile-a:       #262C38;
+  --accent-orange:      #88C0D0;
+  --accent-orange-rgb:  136, 192, 208;
+  --accent-magenta:     #B48EAD;
+  --accent-magenta-rgb: 180, 142, 173;
+  --map-tile-a:         #262C38;
   --map-tile-b:       #323A48;
   --panel-translucent:        rgba(46, 52, 64, 0.88);
   --panel-translucent-darker: rgba(36, 41, 51, 0.96);
@@ -266,9 +288,10 @@
   --border:           #45475A;
   --text:             #CDD6F4;
   --muted:            #A6ADC8;
-  --accent-orange:    #89B4FA;
-  --accent-orange-rgb: 137, 180, 250;
-  --accent-magenta:   #CBA6F7;
+  --accent-orange:      #89B4FA;
+  --accent-orange-rgb:  137, 180, 250;
+  --accent-magenta:     #CBA6F7;
+  --accent-magenta-rgb: 203, 166, 247;
   --map-tile-a:       #161620;
   --map-tile-b:       #22222E;
   --panel-translucent:        rgba(24, 24, 37, 0.88);
@@ -287,9 +310,10 @@
   --border:           #504945;
   --text:             #EBDBB2;
   --muted:            #A89984;
-  --accent-orange:    #83A598;
-  --accent-orange-rgb: 131, 165, 152;
-  --accent-magenta:   #D3869B;
+  --accent-orange:      #83A598;
+  --accent-orange-rgb:  131, 165, 152;
+  --accent-magenta:     #D3869B;
+  --accent-magenta-rgb: 211, 134, 155;
   --map-tile-a:       #1D1D1D;
   --map-tile-b:       #2A2826;
   --panel-translucent:        rgba(50, 48, 47, 0.88);
@@ -311,9 +335,10 @@
   --border:           #2e2518;
   --text:             #e8dcc8;
   --muted:            #9a8870;
-  --accent-orange:    #c9a86c;   /* aged gold — landing page primary */
-  --accent-orange-rgb: 201, 168, 108;
-  --accent-magenta:   #c8472a;   /* cinnabar — warrior's robe + village rooftops */
+  --accent-orange:      #c9a86c;   /* aged gold — landing page primary */
+  --accent-orange-rgb:  201, 168, 108;
+  --accent-magenta:     #c8472a;   /* cinnabar — warrior's robe + village rooftops */
+  --accent-magenta-rgb: 200, 71, 42;
   --danger:           #c8352a;
   --danger-rgb:       200, 53, 42;
   --gm:               #d4a840;   /* gold trim */
@@ -349,9 +374,10 @@
   --border:           #D5CEBD;
   --text:             #657B83;
   --muted:            #93A1A1;
-  --accent-orange:    #268BD2;
-  --accent-orange-rgb: 38, 139, 210;
-  --accent-magenta:   #D33682;
+  --accent-orange:      #268BD2;
+  --accent-orange-rgb:  38, 139, 210;
+  --accent-magenta:     #D33682;
+  --accent-magenta-rgb: 211, 54, 130;
   --map-tile-a:       #E9E3D0;
   --map-tile-b:       #C5BDA8;
   --panel-translucent:        rgba(238, 232, 213, 0.90);
@@ -371,9 +397,10 @@
   --border:           #D1D9E0;
   --text:             #1F2328;
   --muted:            #59636E;
-  --accent-orange:    #0969DA;
-  --accent-orange-rgb: 9, 105, 218;
-  --accent-magenta:   #8250DF;
+  --accent-orange:      #0969DA;
+  --accent-orange-rgb:  9, 105, 218;
+  --accent-magenta:     #8250DF;
+  --accent-magenta-rgb: 130, 80, 223;
   --map-tile-a:       #EEF0F2;
   --map-tile-b:       #C5CBD4;
   --panel-translucent:        rgba(246, 248, 250, 0.90);
@@ -393,9 +420,10 @@
   --border:           #BCC0CC;
   --text:             #4C4F69;
   --muted:            #6C6F85;
-  --accent-orange:    #1E66F5;
-  --accent-orange-rgb: 30, 102, 245;
-  --accent-magenta:   #EA76CB;
+  --accent-orange:      #1E66F5;
+  --accent-orange-rgb:  30, 102, 245;
+  --accent-magenta:     #EA76CB;
+  --accent-magenta-rgb: 234, 118, 203;
   --map-tile-a:       #E4E6EB;
   --map-tile-b:       #BCC0C9;
   --panel-translucent:        rgba(230, 233, 239, 0.90);
@@ -415,10 +443,11 @@
   --border:           #D8DEE9;
   --text:             #2E3440;
   --muted:            #4C566A;
-  --accent-orange:    #5E81AC;
-  --accent-orange-rgb: 94, 129, 172;
-  --accent-magenta:   #B48EAD;
-  --map-tile-a:       #D8DCE8;
+  --accent-orange:      #5E81AC;
+  --accent-orange-rgb:  94, 129, 172;
+  --accent-magenta:     #B48EAD;
+  --accent-magenta-rgb: 180, 142, 173;
+  --map-tile-a:         #D8DCE8;
   --map-tile-b:       #AEB5C5;
   --panel-translucent:        rgba(229, 233, 240, 0.90);
   --panel-translucent-darker: rgba(236, 239, 244, 0.97);
@@ -437,9 +466,10 @@
   --border:           #D5C4A1;
   --text:             #3C3836;
   --muted:            #A89984;
-  --accent-orange:    #076678;
-  --accent-orange-rgb: 7, 102, 120;
-  --accent-magenta:   #8F3F71;
+  --accent-orange:      #076678;
+  --accent-orange-rgb:  7, 102, 120;
+  --accent-magenta:     #8F3F71;
+  --accent-magenta-rgb: 143, 63, 113;
   --map-tile-a:       #EDD8A8;
   --map-tile-b:       #C5B286;
   --panel-translucent:        rgba(242, 229, 188, 0.90);
@@ -459,9 +489,10 @@
   --border:           #E5E5E6;
   --text:             #383A42;
   --muted:            #696C77;
-  --accent-orange:    #4078F2;
-  --accent-orange-rgb: 64, 120, 242;
-  --accent-magenta:   #A626A4;
+  --accent-orange:      #4078F2;
+  --accent-orange-rgb:  64, 120, 242;
+  --accent-magenta:     #A626A4;
+  --accent-magenta-rgb: 166, 38, 164;
   --map-tile-a:       #EAEAEB;
   --map-tile-b:       #C0C0C2;
   --panel-translucent:        rgba(234, 234, 235, 0.90);
@@ -481,9 +512,10 @@
   --border:           #DFD9CC;
   --text:             #575279;
   --muted:            #9893A5;
-  --accent-orange:    #D7827A;
-  --accent-orange-rgb: 215, 130, 122;
-  --accent-magenta:   #EB6F92;
+  --accent-orange:      #D7827A;
+  --accent-orange-rgb:  215, 130, 122;
+  --accent-magenta:     #EB6F92;
+  --accent-magenta-rgb: 235, 111, 146;
   --map-tile-a:       #EDE3D4;
   --map-tile-b:       #C5B8A5;
   --panel-translucent:        rgba(242, 233, 222, 0.90);
@@ -505,9 +537,10 @@
   --border:           #dbc890;  /* warm sandy */
   --text:             #3c2b18;  /* deep warm brown */
   --muted:            #8a7250;  /* warm grey-brown */
-  --accent-orange:    #4ba8d4;  /* cerulean sky — mirrors torchlight's callout blue */
-  --accent-orange-rgb: 75, 168, 212;
-  --accent-magenta:   #c8472a;  /* cinnabar — same as Torchlight */
+  --accent-orange:      #4ba8d4;  /* cerulean sky — mirrors torchlight's callout blue */
+  --accent-orange-rgb:  75, 168, 212;
+  --accent-magenta:     #c8472a;  /* cinnabar — same as Torchlight */
+  --accent-magenta-rgb: 200, 71, 42;
   --danger:           #c8352a;
   --danger-rgb:       200, 53, 42;
   --gm:               #b87d10;  /* amber gold */
@@ -869,7 +902,7 @@ a:focus-visible {
 
 /* Breadcrumb links — add background tint to pair with the outline. */
 .breadcrumb-link:focus-visible {
-  background: rgba(var(--accent-orange-rgb), 0.1);
+  background: var(--accent-orange-10);
   border-radius: var(--radius-sm);
 }
 
@@ -3456,7 +3489,7 @@ body.player-view #overlayMenuPopover {
 
 .info-panel-hero-image.drag-over .hero-drop-zone {
   border-color: var(--accent-orange);
-  background: rgba(var(--accent-orange-rgb), 0.06);
+  background: var(--accent-orange-06);
   color: var(--text);
 }
 
@@ -4912,7 +4945,7 @@ body:not(.no-cats) #map::before {
 
 /* Vertex edit selection ring: use orange accent instead of Leaflet's pink */
 .leaflet-edit-marker-selected {
-  background-color: rgba(var(--accent-orange-rgb), 0.1);
+  background-color: var(--accent-orange-10);
   border-color: rgba(var(--accent-orange-rgb), 0.6);
   border-radius: var(--radius-sm);
 }

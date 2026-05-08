@@ -6,6 +6,12 @@
 
 ---
 
+## Tooling
+
+- **`/frontend-design:frontend-design`** — invoke for Phases 5, 6, 8 when generating new component visuals (empty states, article hero, hub modal, world card). Output must be vetted against TaleTrove constraints: vanilla JS only (no React/JSX/Tailwind), no inline event handlers, colors via CSS tokens, icons via CSS mask-image pattern.
+
+---
+
 ## Design Intent
 
 This plan upgrades the app toward a premium dark-tool feel while preserving what makes TaleTrove
@@ -448,7 +454,7 @@ At this breakpoint panels should overlay the map (slide over). Larger lift; docu
 | Phase | Description | Risk | Status |
 |---|---|---|---|
 | 0 | Token debt — hardcoded values, `transition: all` | None | ✅ |
-| 1 | Color semantics — accent tiers, rgb companion | None | ⬜ |
+| 1 | Color semantics — accent tiers, rgb companion | None | ✅ |
 | 2 | Typography scale — labels, line-height, Cormorant article | Low | ⬜ |
 | 3 | Interactive states — toolbar hover, scrollbars, focus | Low | ⬜ |
 | 4 | Spacing & density — form gaps, hub padding | Low | ⬜ |
