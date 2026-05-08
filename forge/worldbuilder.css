@@ -4235,7 +4235,6 @@ body:not(.no-cats) #map::before {
    disturbing Leaflet's outer transform: translate3d() positioning. */
 .name-label-inner {
   display: inline-block;
-  transition: transform 0.25s var(--ease-standard);
 }
 
 .name-label.label-style-shadow div {
@@ -15079,23 +15078,6 @@ a.image-search-license-chip:hover {
 .map-embed-container .leaflet-interactive { cursor: pointer; }
 
 /* Marker cluster icon */
-.cluster-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: rgba(var(--accent-orange-rgb), 0.82);
-  border: 2px solid var(--accent-orange);
-  border-radius: var(--radius-full);
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-}
-
 /* Edit mode field rows */
 .block-embed-field {
   display: flex;

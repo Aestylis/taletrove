@@ -37,60 +37,6 @@ const rightClickCancelHandler = function(e) {
 };
 document.addEventListener('mousedown', rightClickCancelHandler, true); // capture: true
 
-function _createClusterIcon(cluster) {
-  const count = cluster.getChildCount();
-  const size = count < 10 ? 32 : count < 100 ? 38 : 44;
-  return L.divIcon({
-    html: `<div class="cluster-icon"><span>${count}</span></div>`,
-    className: '',
-    iconSize: L.point(size, size)
-  });
-}
-
-const _PinShapeGroup = L.LayerGroup.extend({
-  initialize(clusterGroup, shapeGroup) {
-    this._clusterGroup = clusterGroup;
-    this._shapeGroup   = shapeGroup;
-    this._layers = {};
-  },
-  onAdd(map) {
-    this._clusterGroup.addTo(map);
-    this._shapeGroup.addTo(map);
-    return this;
-  },
-  onRemove(map) {
-    map.removeLayer(this._clusterGroup);
-    map.removeLayer(this._shapeGroup);
-    return this;
-  },
-  addLayer(layer) {
-    (layer._isPoint ? this._clusterGroup : this._shapeGroup).addLayer(layer);
-    return this;
-  },
-  removeLayer(layer) {
-    (layer._isPoint ? this._clusterGroup : this._shapeGroup).removeLayer(layer);
-    return this;
-  },
-  hasLayer(layer) {
-    return this._clusterGroup.hasLayer(layer) || this._shapeGroup.hasLayer(layer);
-  },
-  eachLayer(fn) {
-    this._clusterGroup.eachLayer(fn);
-    this._shapeGroup.eachLayer(fn);
-    return this;
-  },
-  getBounds() {
-    const b = L.latLngBounds([]);
-    try { b.extend(this._clusterGroup.getBounds()); } catch (_) {}
-    try { b.extend(this._shapeGroup.getBounds()); } catch (_) {}
-    return b;
-  },
-  clearLayers() {
-    this._clusterGroup.clearLayers();
-    this._shapeGroup.clearLayers();
-    return this;
-  }
-});
 
 async function initMap(mapObject) {
   if (map) {
@@ -138,15 +84,7 @@ async function initMap(mapObject) {
   map.on('zoomend', saveViewport);
 
   applyFreeMoveState();
-  const _pinCluster = L.markerClusterGroup({
-    showCoverageOnHover: false,
-    maxClusterRadius: 40,
-    spiderfyOnMaxZoom: true,
-    animate: false, // L.CRS.Simple: animation offsets don't align with flat-image coords
-    iconCreateFunction: _createClusterIcon
-  });
-  const _shapeGroup = L.featureGroup();
-  allLayers = new _PinShapeGroup(_pinCluster, _shapeGroup).addTo(map);
+  allLayers = L.featureGroup().addTo(map);
   labelLayer = L.layerGroup().addTo(map);
 
   const defaultPinHtml = `
@@ -350,7 +288,7 @@ async function initMap(mapObject) {
 
   map.on('zoomend moveend', scheduleCollisionDetection);
 
-  window.map = map;
+window.map = map;
   window.allLayers = allLayers;
   window.labelLayer = labelLayer;
   window.gridLayer = gridLayer;
@@ -986,7 +924,6 @@ async function featureToLayer(feat) {
     const [lng, lat] = feat.geojson.geometry.coordinates;
     const icon = await createMarkerIcon(feat);
     layer = L.marker([lat, lng], { icon });
-    layer._isPoint = true;
   }
   else if (geometryType === 'polygon') {
     const coords = feat.geojson.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);
@@ -1205,11 +1142,20 @@ function runLabelCollisionDetection() {
   if (inners.length < 2) return;
 
   // Reset all offsets so we measure true Leaflet-positioned rects.
-  inners.forEach(node => { node.style.transform = ''; });
+  // Pin labels use translateX(-50%) for horizontal centering — preserve it.
+  inners.forEach(node => {
+    const isPin = node.closest('.name-label-pin') !== null;
+    node.style.transform = isPin ? 'translateX(-50%)' : '';
+  });
 
   // Collect rects (after reset, before re-layout — same frame, so layout is stable).
   const infos = inners
-    .map(inner => ({ inner, rect: inner.getBoundingClientRect(), yOffset: 0 }))
+    .map(inner => ({
+      inner,
+      rect: inner.getBoundingClientRect(),
+      yOffset: 0,
+      isPin: inner.closest('.name-label-pin') !== null
+    }))
     .filter(info => info.rect.width > 0);
 
   // Sort by vertical center so we always push later labels downward.
@@ -1228,7 +1174,10 @@ function runLabelCollisionDetection() {
       const bTop    = b.rect.top    + b.yOffset;
       if (bTop < aBottom + 2) b.yOffset += (aBottom + 2) - bTop;
     }
-    if (b.yOffset > 0) b.inner.style.transform = `translateY(${b.yOffset}px)`;
+    if (b.yOffset > 0) {
+      const xPart = b.isPin ? 'translateX(-50%) ' : '';
+      b.inner.style.transform = `${xPart}translateY(${b.yOffset}px)`;
+    }
   }
 }
 
