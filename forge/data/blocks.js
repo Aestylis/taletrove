@@ -58,6 +58,11 @@ const BLOCK_DEFINITIONS = {
         name: 'Meter',
         icon: 'activity',
         defaultData: { label: '', current: 0, max: 10 }
+    },
+    MapEmbed: {
+        name: 'Map Embed',
+        icon: 'map-trifold',
+        defaultData: { mapId: null, zoom: null, lat: null, lng: null, height: 280, caption: '' }
     }
 };
 
