@@ -592,7 +592,7 @@ body.has-map-bg #map {
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.35rem;
 }
 .app-section-desc {
   font-size: 0.78rem;
@@ -1487,7 +1487,7 @@ aside {
 }
 
 .inspector {
-  padding: 0.75rem;
+  padding: 1rem;
 }
 
 /* Theme-aware link colors */
@@ -2157,7 +2157,7 @@ button.small {
 .form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: .4rem .6rem;
+  gap: 0.6rem 0.75rem;
 }
 
 .form .form-label {
@@ -14118,17 +14118,17 @@ body.article-mode.properties-sheet-open #infoPanel {
 
 /* ── Properties sheet: compact form sizing for 360px side-sheet ───────── */
 #propertiesSheet .side-sheet-body {
-  padding: 0.625rem 0.875rem;
+  padding: 1rem 1.25rem;
 }
 
 #propertiesSheet .form {
-  gap: 0.3rem 0.5rem;
+  gap: 0.5rem 0.6rem;
   /* minmax(0,1fr) prevents grid tracks from blowing past the sheet width */
   grid-template-columns: minmax(0, 1fr);
 }
 
 #propertiesSheet .form .form-divider {
-  margin: 0.4rem 0;
+  margin: 0.65rem 0;
 }
 
 #propertiesSheet input,
