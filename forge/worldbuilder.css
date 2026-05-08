@@ -51,6 +51,7 @@
   --radius-md:     6px;
   --radius-lg:     8px;
   --radius-xl:     12px;
+  --radius-2xl:    20px;
   --radius-full:   999px;
   --radius-circle: 50%;
 
@@ -64,6 +65,10 @@
   --ease-fast:   0.15s ease;
   --ease-normal: 0.2s ease;
   --ease-slow:   0.3s ease;
+
+  /* ─── Line-height scale ─────────────────────────────────────────────────── */
+  --line-height-body:    1.5;  /* base UI: panel rows, form fields, tooltips */
+  --line-height-article: 1.7;  /* wiki/article prose reading */
 
   /* ─── Panel & modal widths (responsive) ─────────────────────────────────── */
   --atlas-panel-width: min(360px, 30vw);
@@ -80,9 +85,6 @@
   --callout-warning-title: var(--danger);
   --callout-monster-border: var(--accent-orange);
   --callout-monster-bg: rgba(var(--accent-orange-rgb), 0.05);
-
-  /* ─── Border-radius extended ────────────────────────────────────────────── */
-  --radius-2xl: 20px;
 
   /* ─── Glass surface tokens (hub overlay & system dialogs) ────────────────── */
   --surface-glass:       color-mix(in srgb, var(--bg) 75%, transparent);
@@ -794,7 +796,7 @@ body.has-map-bg #map {
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   border: 3px solid var(--scrollbar-track);
   transition: background 0.2s ease;
 }
@@ -809,10 +811,15 @@ body.has-map-bg #map {
 }
 
 aside,
-.toolbar,
 .modal-content,
 .info-panel {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity   0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toolbar {
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow        0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body,
@@ -915,7 +922,7 @@ header.app-header {
   border: 1px solid var(--accent-orange);
   color: var(--accent-orange);
   padding: 0.2rem 0.6rem;
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1005,7 +1012,7 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.4 var(--font-body);
+  font: 14px/var(--line-height-body) var(--font-body);
 }
 
 select,
@@ -1015,7 +1022,7 @@ textarea {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: .5rem .6rem
 }
 
@@ -1300,7 +1307,7 @@ aside {
   height: 24px;
   font-size: 11px;
   padding: 0 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
@@ -1336,7 +1343,7 @@ aside {
   gap: 0.5rem;
   width: 100%;
   padding: 0.4rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: transparent;
   border: none;
   color: var(--text);
@@ -1485,7 +1492,7 @@ a:hover {
 .markdown {
   padding: .4rem .2rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--card);
   max-height: none;
   overflow: auto
@@ -1875,7 +1882,7 @@ a:hover {
 .ges-type-pill {
   display: inline-block;
   padding: 0.2em 0.75em;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
   background: color-mix(in srgb, var(--pill-color, #888) 18%, transparent);
@@ -2069,7 +2076,7 @@ a:hover {
 .role-select {
   height: 32px;
   padding: 0 .6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
@@ -2162,7 +2169,7 @@ button.small {
 
 .preview-wrap {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   background: var(--card);
   max-height: 360px;
   overflow: auto;
@@ -2310,7 +2317,7 @@ textarea[disabled] {
   border: 1px solid var(--accent-orange);
   color: var(--text);
   padding: .4rem .5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   margin-bottom: .4rem
 }
 
@@ -2695,7 +2702,7 @@ textarea[disabled] {
   z-index: var(--z-panels);
     background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: 0.75rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   width: 220px;
@@ -4115,15 +4122,15 @@ body:not(.no-cats) #map::before {
 
 .map-item {
   display: grid;
- 
+
   grid-template-columns: 1fr auto;
- 
+
   align-items: center;
   gap: .5rem;
   background: var(--card);
   border: 1px solid var(--border);
   padding: .4rem .5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
 }
 
@@ -4389,8 +4396,8 @@ body:not(.no-cats) #map::before {
   border: 1px dashed var(--muted);
  
   padding: .4rem .5rem .4rem 1rem;
- 
-  border-radius: 10px;
+
+  border-radius: var(--radius-lg);
   color: var(--muted);
   font-style: italic;
 }
@@ -4560,7 +4567,7 @@ body:not(.no-cats) #map::before {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--accent-magenta) 15%, transparent);
   color: var(--accent-magenta);
 }
@@ -4588,7 +4595,7 @@ body:not(.no-cats) #map::before {
   font-family: 'Inter', sans-serif;
   letter-spacing: 0.02em;
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--border);
   color: var(--muted);
 }
@@ -5212,7 +5219,7 @@ body:not(.no-cats) #map::before {
 .known-issue-label {
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-weight: 500;
   background: var(--card);
   color: var(--muted);
@@ -5354,7 +5361,7 @@ path.leaflet-interactive.leaflet-feature-selected {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: .5rem .6rem;
   cursor: pointer;
   display: flex;
@@ -5370,7 +5377,7 @@ path.leaflet-interactive.leaflet-feature-selected {
   z-index: var(--z-submenu);
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
   max-height: 250px;
  
@@ -5810,7 +5817,7 @@ label.switch.small-switch input:checked+.slider:before {
   width: 100%;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: 0.5rem 0.6rem;
   cursor: pointer;
   text-align: left;
@@ -6240,7 +6247,7 @@ border: 1px solid var(--border);
   color: var(--accent-orange);
   background: transparent;
   border: 1px solid var(--accent-orange);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -8363,7 +8370,7 @@ aside#atlasPanel>.section {
   font-weight: 500;
   color: var(--text-tertiary);
   background: rgba(var(--fg-rgb, 255 255 255), 0.07);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   padding: 0 5px;
   line-height: 1.5;
   transition: color 0.15s;
@@ -8487,7 +8494,7 @@ aside#atlasPanel>.section {
   align-items: center;
   gap: 0.3rem;
   padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -11278,7 +11285,7 @@ mark {
   min-width: 1.4em;
   padding: 0 0.4em;
   height: 1.4em;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--accent-orange) 18%, transparent);
   color: var(--accent-orange);
   font-size: 0.72rem;
@@ -11503,7 +11510,7 @@ mark {
 .entity-link-sublabel { font-size: 0.75rem; white-space: nowrap; }
 .entity-link-type-badge {
   flex-shrink: 0; font-size: 0.7rem; padding: 0.1rem 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--surface-3); color: var(--text-muted);
   text-transform: lowercase; letter-spacing: 0.02em;
 }
@@ -11914,7 +11921,7 @@ button.drag-over { outline: 2px dashed var(--accent); }
         radial-gradient(ellipse at 30% 60%, color-mix(in srgb, var(--accent-orange) 12%, transparent) 0%, transparent 60%),
         color-mix(in srgb, var(--bg) 60%, var(--card));
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
     overflow: hidden;
 }
 
@@ -14419,7 +14426,7 @@ body.article-mode.properties-sheet-open #infoPanel {
 .chip--type {
   font-size: 0.68rem;
   padding: 0.1rem 0.4rem;
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   background: var(--surface-3, var(--surface-2));
   color: var(--muted);
   border: 1px solid var(--border);
@@ -14432,7 +14439,7 @@ body.article-mode.properties-sheet-open #infoPanel {
 .chip--map {
   font-size: 0.68rem;
   padding: 0.1rem 0.4rem;
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--callout-note-title) 12%, transparent);
   color: var(--callout-note-title);
   border: 1px solid color-mix(in srgb, var(--callout-note-title) 25%, transparent);
@@ -14536,7 +14543,7 @@ body.article-mode.properties-sheet-open #infoPanel {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl, 0 8px 32px rgba(0,0,0,0.4));
   overflow: hidden;
   display: none;
@@ -14661,7 +14668,7 @@ body.article-mode.properties-sheet-open #infoPanel {
 
 .image-search-provider-tab {
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
@@ -14850,7 +14857,7 @@ body.article-mode.properties-sheet-open #infoPanel {
 .image-search-license-chip {
   display: inline-block;
   padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--accent-orange);
   color: var(--on-accent, #fff);
   font-size: 0.7rem;
@@ -14916,7 +14923,7 @@ a.image-search-license-chip:hover {
   top: 4px;
   right: 4px;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(0,0,0,0.65);
   color: #fff;
   font-size: 0.55rem;
