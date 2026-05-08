@@ -145,11 +145,18 @@ async function initMap(mapObject) {
     animate: false, // L.CRS.Simple: animation offsets don't align with flat-image coords
     iconCreateFunction: _createClusterIcon
   });
-  // Re-sync floating name labels after cluster expands — labels live on labelLayer
-  // (separate from _pinCluster) and need repositioning once pins reach final positions.
+  // Sync floating name labels after cluster state changes.
+  // For unclustered pins: recreate label at current position.
+  // For clustered pins: hide label (pin is inside a cluster icon, not individually visible).
   _pinCluster.on('animationend', () => {
     for (const [id, layer] of layerById.entries()) {
-      if (layer._isPoint) updateLabelsFor(id);
+      if (!layer._isPoint) continue;
+      if (layer.getElement?.()) {
+        updateLabelsFor(id);
+      } else if (layer._nameMarker) {
+        labelLayer.removeLayer(layer._nameMarker);
+        layer._nameMarker = null;
+      }
     }
   });
   const _shapeGroup = L.featureGroup();
@@ -1186,6 +1193,12 @@ function updateLabelsFor(id, tempLatLng = null) {
   l._nameMarker = m;
   labelLayer.addLayer(m);
   if (role === 'player' && !f.visibleToPlayers) labelLayer.removeLayer(m);
+  // Hide label if this pin is currently inside a cluster (not individually rendered).
+  // getElement() returns null when markercluster has removed the marker's DOM element.
+  if (l._isPoint && !l.getElement?.()) {
+    labelLayer.removeLayer(m);
+    l._nameMarker = null;
+  }
 }
 
 // Post-render greedy pass: shift overlapping labels downward so they don't stack.
