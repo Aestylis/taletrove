@@ -455,7 +455,7 @@ At this breakpoint panels should overlay the map (slide over). Larger lift; docu
 |---|---|---|---|
 | 0 | Token debt — hardcoded values, `transition: all` | None | ✅ |
 | 1 | Color semantics — accent tiers, rgb companion | None | ✅ |
-| 2 | Typography scale — labels, line-height, Cormorant article | Low | ⬜ |
+| 2 | Typography scale — labels, line-height, Cormorant article | Low | ✅ |
 | 3 | Interactive states — toolbar hover, scrollbars, focus | Low | ⬜ |
 | 4 | Spacing & density — form gaps, hub padding | Low | ⬜ |
 | 5 | Component polish — chips, empty states, world card | Low-Med | ⬜ |

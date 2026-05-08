@@ -99,7 +99,7 @@
 
   /* ─── Typography tokens ──────────────────────────────────────────────────── */
   --font-body:    Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  --font-heading: var(--font-heading);
+  --font-heading: 'Cormorant Garamond', Georgia, serif; /* default; overridden by [data-heading-font] */
 
   /* ─── Semantic color aliases ────────────────────────────────────────────── */
   /* orange = interactive (actions, focus, primary CTA)                        */
@@ -603,12 +603,10 @@ body.has-map-bg #map {
 
 /* Sub-group label inside a section (e.g. "Dark" / "Light") */
 .app-group-label {
-  font-size: 0.67rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--muted);
-  opacity: 0.7;
   margin: 0.85rem 0 0.45rem;
 }
 .app-group-label:first-child { margin-top: 0; }
@@ -1123,10 +1121,10 @@ aside {
 
 .section h3 {
   margin: .2rem 0 .6rem;
-  font-size: 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .12em
+  letter-spacing: 0.02em;
 }
 
 .row {
@@ -1320,11 +1318,10 @@ aside {
 }
 
 .fog-control-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   min-width: 56px;
 }
@@ -1617,11 +1614,10 @@ a:hover {
   padding: 2px 0;
 }
 .meter-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 500;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
 }
 .meter-bar-track {
   height: 10px;
@@ -1777,19 +1773,16 @@ a:hover {
   pointer-events: auto;
 }
 .graph-filter-hdr {
-  font-family: var(--font-heading);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--muted);
   margin-bottom: 0.1rem;
 }
 .graph-filter-sep {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   margin-top: 0.35rem;
 }
@@ -1925,9 +1918,8 @@ a:hover {
 }
 .ges-desc-label {
   font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
 }
 .ges-desc-textarea {
@@ -2178,10 +2170,10 @@ button.small {
 }
 
 .form .form-label {
-  font-size: 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .12em
+  letter-spacing: 0.02em;
 }
 
 .form .row {
@@ -13883,8 +13875,32 @@ body.article-mode #infoPanel.content-edit-mode #infoPanelControls {
 /* Improved reading line-height in article/peek modes */
 body.article-mode .canvas-block p,
 body.peek-mode .canvas-block p {
-  line-height: 1.65;
+  line-height: var(--line-height-article);
 }
+
+/* Cormorant heading hierarchy in article/peek content */
+body.article-mode .canvas-block h1,
+body.peek-mode .canvas-block h1,
+body.article-mode .canvas-block h2,
+body.peek-mode .canvas-block h2,
+body.article-mode .canvas-block h3,
+body.peek-mode .canvas-block h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-top: 1.6em;
+  margin-bottom: 0.4em;
+}
+
+body.article-mode .canvas-block h1,
+body.peek-mode .canvas-block h1 { font-size: 2rem; }
+
+body.article-mode .canvas-block h2,
+body.peek-mode .canvas-block h2 { font-size: 1.45rem; }
+
+body.article-mode .canvas-block h3,
+body.peek-mode .canvas-block h3 { font-size: 1.15rem; }
 
 /* 720px reading column lives on #infoPanelBody, not the scroll container */
 body.article-mode #infoPanelBody {
