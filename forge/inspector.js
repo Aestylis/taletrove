@@ -814,17 +814,26 @@ async function buildArticlePropertiesInspector(article, container, silo) {
       debouncedSave();
     });
 
-    const angleVal = el('span', { text: `${article.angle ?? 0}°` });
+    const applyAngle = (deg) => {
+      deg = Math.max(-180, Math.min(180, deg));
+      article.angle = deg;
+      angleSlider.value = deg;
+      angleNumIn.value = deg;
+      updateSingleFeatureUI(article);
+    };
+
     const angleSlider = el('input', {
       id: 'textAngleIn', type: 'range', min: -180, max: 180, step: 1,
       value: article.angle ?? 0
     });
-    angleSlider.oninput = (e) => {
-      const deg = parseInt(e.target.value, 10);
-      angleVal.textContent = `${deg}°`;
-      article.angle = deg;
-      updateSingleFeatureUI(article);
-    };
+    const angleNumIn = el('input', {
+      type: 'number', min: -180, max: 180, step: 1,
+      value: article.angle ?? 0,
+      style: 'width:4rem;text-align:center;'
+    });
+    const angleResetBtn = el('button', { class: 'ghost small', text: '↺', 'data-tooltip': 'Reset to 0°' });
+
+    angleSlider.oninput = (e) => applyAngle(parseInt(e.target.value, 10));
     angleSlider.onchange = (e) => {
       recordState();
       article.angle = parseInt(e.target.value, 10);
@@ -832,6 +841,22 @@ async function buildArticlePropertiesInspector(article, container, silo) {
       debouncedSave();
     };
     angleSlider.onfocus = () => recordState();
+
+    angleNumIn.oninput = (e) => applyAngle(parseInt(e.target.value, 10) || 0);
+    angleNumIn.onchange = (e) => {
+      recordState();
+      applyAngle(parseInt(e.target.value, 10) || 0);
+      markEntityDirty('article', article.id);
+      debouncedSave();
+    };
+    angleNumIn.onfocus = () => recordState();
+
+    angleResetBtn.addEventListener('click', () => {
+      recordState();
+      applyAngle(0);
+      markEntityDirty('article', article.id);
+      debouncedSave();
+    });
 
     form.append(
       el('label', { class: 'form-label', for: 'fontSizeIn', text: 'Font Size' }),
@@ -848,9 +873,9 @@ async function buildArticlePropertiesInspector(article, container, silo) {
       ]),
       el('div', { class: 'form-label', text: 'Label Style' }),
       textLabelStyleSeg,
-      el('div', { class: 'form-label full-width', style: 'display:flex;justify-content:space-between;align-items:center;' }, [
+      el('div', { class: 'form-label full-width', style: 'display:flex;justify-content:space-between;align-items:center;gap:0.5rem;' }, [
         el('span', { text: 'Rotation' }),
-        angleVal
+        el('div', { style: 'display:flex;align-items:center;gap:0.25rem;' }, [angleNumIn, angleResetBtn])
       ]),
       angleSlider
     );
