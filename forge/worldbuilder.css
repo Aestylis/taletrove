@@ -74,7 +74,7 @@
   /* ─── Panel & modal widths (responsive) ─────────────────────────────────── */
   /* Breakpoints: compact=1100px, narrow=768px (used in @media below — CSS vars can't go in @media) */
   --atlas-panel-width: clamp(280px, 30vw, 360px);
-  --nav-rail-width: 44px;
+  --nav-rail-width: 52px;
   --info-panel-width:  clamp(380px, 40vw, 540px);
   --modal-max-width:   min(500px, calc(100vw - 2rem));
 
@@ -615,7 +615,7 @@ body.has-map-bg #map {
 /* ─── Appearance: Theme grid ─────────────────────────────────────────────── */
 .app-theme-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   gap: 0.45rem;
 }
 
@@ -8157,10 +8157,14 @@ aside#atlasPanel>.section {
 /* --- TEMPLATE MANAGER MODAL --- */
 
 .settings-section-heading {
-  margin-top: 2rem;
-  margin-bottom: 0.25rem;
-  font-size: 1rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.0rem;
   font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 .settings-section-sub {
@@ -13290,13 +13294,13 @@ body.modal-open-scale .app-header {
     width: 100%;
     background: transparent;
     border: none;
-    border-left: 2px solid transparent;
     border-radius: 0;
     color: var(--text);
     font-weight: 400;
     font-size: 0.875rem;
     cursor: pointer;
     text-align: left;
+    position: relative;
     transition: background 0.15s;
 }
 
@@ -13306,10 +13310,21 @@ body.modal-open-scale .app-header {
 }
 
 .settings-nav-item.active {
-    background: rgba(var(--accent-orange-rgb), 0.08);
-    border-left-color: var(--accent-orange);
-    color: var(--text);
+    background: color-mix(in srgb, var(--accent-orange) 12%, transparent);
+    color: var(--accent-orange);
     box-shadow: none;
+}
+
+.settings-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: var(--accent-orange);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .settings-nav-item .icon-container {
