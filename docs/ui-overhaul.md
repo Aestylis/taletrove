@@ -460,5 +460,5 @@ At this breakpoint panels should overlay the map (slide over). Larger lift; docu
 | 4 | Spacing & density — form gaps, hub padding | Low | ✅ |
 | 5 | Component polish — chips, empty states, world card | Low-Med | ⬜ |
 | 6 | Info panel article view — hero, prose, banner, peek | Medium | ⬜ |
-| 7 | Responsive — `clamp()` widths, adaptive collapse | Med-High | ⬜ |
-| 8 | Hub modal polish — nav rail, active state, grid | Low | ⬜ |
+| 7 | Responsive — `clamp()` widths, adaptive collapse | Med-High | ✅ |
+| 8 | Hub modal polish — nav rail, active state, grid | Low | ✅ |
