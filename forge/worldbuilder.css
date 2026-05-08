@@ -1448,8 +1448,8 @@ aside {
   display: inline-flex;
   align-items: center;
   gap: .35rem;
-  font-size: 10px;
-  padding: .1rem .4rem;
+  font-size: 10.5px;
+  padding: 0.15rem 0.5rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   color: var(--muted)
@@ -1547,10 +1547,11 @@ a:hover {
 
 .tag {
   font-size: 11px;
-  background: var(--card);
-  padding: .15rem .45rem;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  padding: 0.2rem 0.55rem;
+  line-height: 1.4;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border)
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent)
 }
 
 /* ── Chip tag input ──────────────────────────────────────────────────────── */
@@ -6500,11 +6501,12 @@ border: 1px solid var(--border);
   -webkit-mask-position: center;
   mask-position: center;
   margin-bottom: 0.4rem;
-  opacity: 0.45;
+  opacity: 0.35;
 }
 
 .panel-empty-heading {
-  font-size: 0.82rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text);
 }
@@ -12447,9 +12449,10 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 .hub-recent-card {
-    flex: 0 0 160px;
+    flex: 0 0 180px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-orange);
     background: var(--card);
     overflow: hidden;
     cursor: pointer;
@@ -12463,7 +12466,7 @@ button.drag-over { outline: 2px dashed var(--accent); }
 
 .hub-recent-thumb {
     width: 100%;
-    height: 88px;
+    height: 160px;
     background: var(--surface);
     background-size: cover;
     background-position: center;
@@ -12474,8 +12477,10 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 .hub-recent-name {
-    font-size: 0.8rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
     font-weight: 600;
+    line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -12483,7 +12488,7 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 .hub-recent-date {
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     color: var(--muted);
 }
 
