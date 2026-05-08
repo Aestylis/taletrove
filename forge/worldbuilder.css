@@ -15018,6 +15018,83 @@ a.image-search-license-chip:hover {
   }
 }
 
+/* ── Map Embed Block ──────────────────────────────────────────────────────── */
+.canvas-block.type-mapembed {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+}
+
+.map-embed-container {
+  width: 100%;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.map-embed-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.map-embed-caption {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.4rem 1rem 0.25rem;
+  margin: 0;
+  font-style: italic;
+}
+
+.map-embed-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+/* Themed tooltip for embed map pins */
+.map-embed-tooltip.leaflet-tooltip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.map-embed-tooltip.leaflet-tooltip::before {
+  border-top-color: var(--border);
+}
+
+/* Click-to-navigate cursor on embed pins */
+.map-embed-container .leaflet-interactive { cursor: pointer; }
+
+/* Edit mode field rows */
+.block-embed-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  padding: 0 0.75rem;
+}
+
+.block-embed-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.block-embed-range-row input[type="range"] { flex: 1; }
+
 /* Asset card license badge — surfaces when state.assetMeta has attribution for that key */
 .asset-card.has-attribution { position: relative; }
 .asset-card.has-attribution::after {

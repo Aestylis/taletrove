@@ -14,6 +14,7 @@ const PURIFY_CONFIG = {
 const SLASH_COMMANDS = [
   { type: 'TextField',     label: 'Text',          icon: 'text-align-left',   desc: 'Rich markdown text' },
   { type: 'Image',         label: 'Image',          icon: 'image',             desc: 'Upload or embed an image' },
+  { type: 'MapEmbed',      label: 'Map',            icon: 'map-trifold',       desc: 'Embed an interactive map view' },
   { type: 'Timeline',      label: 'Timeline',       icon: 'calendar-blank',    desc: 'Chronological event list' },
   { type: 'Relationships', label: 'Relationships',  icon: 'arrows-horizontal', desc: 'Links to other entries' },
   { type: 'Meter',         label: 'Meter',          icon: 'hourglass',         desc: 'Stat bar or progress meter' },
@@ -21,6 +22,8 @@ const SLASH_COMMANDS = [
   { type: 'YouTube',       label: 'YouTube',        icon: 'youtube-logo',      desc: 'Embed YouTube video' },
   { type: 'Spotify',       label: 'Spotify',        icon: 'spotify-logo',      desc: 'Embed Spotify track' },
 ];
+
+const _embedMapInstances = new Map(); // blockId → L.map instance
 
 let _slashPalette = null;
 let _slashQuery = '';
@@ -727,6 +730,48 @@ async function renderBlock(block) {
         wrapper.append(meterLabelInput, meterRow);
         break;
       }
+      case 'MapEmbed': {
+        const mapOptions = state.maps.map(m => ({ value: m.id, text: m.name }));
+        const currentMapId = block.data.mapId || state.activeMapId;
+        const mapSelect = createSearchableSelect(
+          mapOptions, currentMapId,
+          (val) => updateBlockData(ownerId, block.blockId, { mapId: val }),
+          'Select map…'
+        );
+
+        const heightVal = block.data.height || 280;
+        const heightLabel = el('span', { text: `${heightVal}px`, class: 'muted', style: 'min-width: 3rem' });
+        const heightInput = el('input', {
+          type: 'range', min: '160', max: '600', step: '20',
+          value: String(heightVal), class: 'inline-editor',
+          oninput:  (e) => { heightLabel.textContent = `${e.target.value}px`; },
+          onchange: (e) => updateBlockData(ownerId, block.blockId, { height: Number(e.target.value) })
+        });
+
+        const captionInput = el('input', {
+          type: 'text', class: 'inline-editor',
+          placeholder: 'Caption (optional)…',
+          value: block.data.caption || '',
+          onfocus: () => recordState(),
+          onchange: (e) => updateBlockData(ownerId, block.blockId, { caption: e.target.value })
+        });
+
+        wrapper.append(
+          el('div', { class: 'block-embed-field' }, [
+            el('label', { class: 'form-label', text: 'Map' }),
+            mapSelect
+          ]),
+          el('div', { class: 'block-embed-field' }, [
+            el('label', { class: 'form-label', text: 'Height' }),
+            el('div', { class: 'block-embed-range-row' }, [heightInput, heightLabel])
+          ]),
+          el('div', { class: 'block-embed-field' }, [
+            el('label', { class: 'form-label', text: 'Caption' }),
+            captionInput
+          ])
+        );
+        break;
+      }
     }
   } else {
     // This is the default "View Mode"
@@ -754,6 +799,11 @@ async function renderBlock(block) {
         window.rollDice(btn.dataset.notation);
       });
     });
+    // Initialize embedded Leaflet maps (async — loading state shows until resolved)
+    wrapper.querySelectorAll('.map-embed-container[data-embed-block-id]').forEach(c => {
+      _initMapEmbedLeaflet(c);
+    });
+
     // Wiki-link navigation: resolve by name at click time so links never
     // go stale after renames or deletions (no ID is stored in the HTML).
     wrapper.querySelectorAll('.wiki-link[data-wiki-name]').forEach(link => {
@@ -789,6 +839,77 @@ function deleteBlock(ownerId, blockId, ownerType = 'feature') {
   markEntityDirty(ownerType, ownerId);
   showInfoPanel(ownerId, ownerType);
   debouncedSave();
+}
+
+async function _initMapEmbedLeaflet(container) {
+  const blockId = container.dataset.embedBlockId;
+  const rawMapId = container.dataset.embedMapId;
+  const rawZoom = container.dataset.embedZoom;
+  const rawLat  = container.dataset.embedLat;
+  const rawLng  = container.dataset.embedLng;
+
+  const zoom = rawZoom && rawZoom !== 'null' ? Number(rawZoom) : null;
+  const lat  = rawLat  && rawLat  !== 'null' ? Number(rawLat)  : null;
+  const lng  = rawLng  && rawLng  !== 'null' ? Number(rawLng)  : null;
+
+  if (_embedMapInstances.has(blockId)) {
+    try { _embedMapInstances.get(blockId).remove(); } catch (_) {}
+    _embedMapInstances.delete(blockId);
+  }
+
+  const mapDef = state.maps.find(m => m.id === rawMapId)
+    || state.maps.find(m => m.id === state.activeMapId)
+    || state.maps[0];
+  if (!mapDef) {
+    container.innerHTML = '<p class="map-embed-empty">No map found.</p>';
+    return;
+  }
+
+  const w = mapDef.width  || 2000;
+  const h = mapDef.height || 1200;
+  const bounds = [[0, 0], [h, w]];
+
+  container.innerHTML = '';
+
+  const embedMap = L.map(container, {
+    crs: L.CRS.Simple,
+    zoomControl: false,
+    attributionControl: false,
+    dragging: true,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    touchZoom: true,
+    keyboard: false
+  });
+
+  if (mapDef.imageKey) {
+    const imageUrl = await resolveImageUrl(mapDef.imageKey);
+    if (imageUrl) L.imageOverlay(imageUrl, bounds).addTo(embedMap);
+  }
+
+  if (lat !== null && lng !== null && zoom !== null) {
+    embedMap.setView([lat, lng], zoom);
+  } else {
+    embedMap.fitBounds(bounds, { animate: false });
+  }
+
+  state.articles
+    .filter(a => a.mapId === mapDef.id && a.geometry === 'point' && a.lat != null && a.lng != null)
+    .forEach(pin => {
+      const color = pin.pinColor || pin.color || '#ff7f50';
+      const marker = L.circleMarker([pin.lat, pin.lng], {
+        radius: 5, color, fillColor: color, fillOpacity: 0.85, weight: 1.5
+      }).addTo(embedMap);
+      marker.bindTooltip(escapeHtml(pin.title || pin.name || '(untitled)'), {
+        direction: 'top', offset: [0, -8], className: 'map-embed-tooltip'
+      });
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        window.navigateAndPeek(pin.id);
+      });
+    });
+
+  _embedMapInstances.set(blockId, embedMap);
 }
 
 async function renderBlockViewMode(block) {
@@ -1015,6 +1136,27 @@ async function renderBlockViewMode(block) {
         innerHTML = '<p class="muted">No relationships defined.</p>';
       }
       break;
+    case 'MapEmbed': {
+      const embedMapId = block.data.mapId || state.activeMapId || '';
+      const embedHeight = Math.max(160, Math.min(600, Number(block.data.height) || 280));
+      const embedZoom = block.data.zoom ?? 'null';
+      const embedLat  = block.data.lat  ?? 'null';
+      const embedLng  = block.data.lng  ?? 'null';
+      const embedCaption = block.data.caption || '';
+      innerHTML = `
+        <div class="map-embed-container"
+             data-embed-block-id="${escapeHtml(block.blockId)}"
+             data-embed-map-id="${escapeHtml(embedMapId)}"
+             data-embed-zoom="${embedZoom}"
+             data-embed-lat="${embedLat}"
+             data-embed-lng="${embedLng}"
+             style="height: ${embedHeight}px">
+          <div class="map-embed-loading"><span>Loading map…</span></div>
+        </div>
+        ${embedCaption ? `<p class="map-embed-caption">${escapeHtml(embedCaption)}</p>` : ''}
+      `;
+      break;
+    }
   }
   return innerHTML;
 }
