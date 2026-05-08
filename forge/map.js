@@ -145,22 +145,6 @@ async function initMap(mapObject) {
     animate: false, // L.CRS.Simple: animation offsets don't align with flat-image coords
     iconCreateFunction: _createClusterIcon
   });
-  // Sync floating name labels after cluster state changes.
-  // rAF defers until Leaflet has finished adding/removing marker elements,
-  // so getElement() correctly reflects clustered vs. unclustered state.
-  _pinCluster.on('animationend', () => {
-    requestAnimationFrame(() => {
-      for (const [id, layer] of layerById.entries()) {
-        if (!layer._isPoint) continue;
-        if (layer.getElement?.()) {
-          updateLabelsFor(id);
-        } else if (layer._nameMarker) {
-          labelLayer.removeLayer(layer._nameMarker);
-          layer._nameMarker = null;
-        }
-      }
-    });
-  });
   const _shapeGroup = L.featureGroup();
   allLayers = new _PinShapeGroup(_pinCluster, _shapeGroup).addTo(map);
   labelLayer = L.layerGroup().addTo(map);
