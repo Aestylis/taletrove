@@ -72,9 +72,10 @@
   --line-height-article: 1.7;  /* wiki/article prose reading */
 
   /* ─── Panel & modal widths (responsive) ─────────────────────────────────── */
-  --atlas-panel-width: min(360px, 30vw);
+  /* Breakpoints: compact=1100px, narrow=768px (used in @media below — CSS vars can't go in @media) */
+  --atlas-panel-width: clamp(280px, 30vw, 360px);
   --nav-rail-width: 44px;
-  --info-panel-width:  min(540px, 45vw);
+  --info-panel-width:  clamp(380px, 40vw, 540px);
   --modal-max-width:   min(500px, calc(100vw - 2rem));
 
 
@@ -14991,6 +14992,15 @@ a.image-search-license-chip:hover {
 .image-search-insert-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ── Phase 7: Adaptive collapse at compact viewports (1100px) ─────────────────
+   When both panels are open at <1100px the map is crushed.
+   JS toggles body.both-panels-open; CSS slides info panel out of the way.     */
+@media (max-width: 1100px) {
+  body.both-panels-open #infoPanel {
+    transform: translateX(100%);
+  }
 }
 
 /* Asset card license badge — surfaces when state.assetMeta has attribution for that key */

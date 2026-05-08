@@ -408,6 +408,13 @@ function _syncToolbarOffset(panelHidden) {
 }
 window._syncToolbarOffset = _syncToolbarOffset;
 
+function _syncBothPanelsClass() {
+  const atlasClosed = $('#atlasPanel')?.classList.contains('is-hidden');
+  const infoPanelOpen = $('#infoPanel')?.classList.contains('is-visible');
+  document.body.classList.toggle('both-panels-open', !atlasClosed && infoPanelOpen);
+}
+window._syncBothPanelsClass = _syncBothPanelsClass;
+
 function toggleAsidePanel(hide) {
   const panel = $('#atlasPanel'); // CORRECTED: Changed ID from #inspectorPanel to #atlasPanel
   if (!panel) return;
@@ -427,6 +434,7 @@ function toggleAsidePanel(hide) {
   }
 
   _syncToolbarOffset(shouldHide);
+  _syncBothPanelsClass();
   if (map) setTimeout(() => map.invalidateSize({ pan: false }), 350);
 }
 
@@ -739,7 +747,7 @@ async function showPinFlyout(x, y) {
 function hideInfoPanel(persist = true) {
   $('#infoPanel').classList.remove('is-visible');
   $('#mainContainer').classList.remove('info-panel-visible');
-  
+  _syncBothPanelsClass();
   infoPanelFeatureId = null;
   selectedBlockId = null;
   isContentEditMode = false;
