@@ -814,6 +814,25 @@ async function buildArticlePropertiesInspector(article, container, silo) {
       debouncedSave();
     });
 
+    const angleVal = el('span', { text: `${article.angle ?? 0}°` });
+    const angleSlider = el('input', {
+      id: 'textAngleIn', type: 'range', min: -180, max: 180, step: 1,
+      value: article.angle ?? 0
+    });
+    angleSlider.oninput = (e) => {
+      const deg = parseInt(e.target.value, 10);
+      angleVal.textContent = `${deg}°`;
+      article.angle = deg;
+      updateSingleFeatureUI(article);
+    };
+    angleSlider.onchange = (e) => {
+      recordState();
+      article.angle = parseInt(e.target.value, 10);
+      markEntityDirty('article', article.id);
+      debouncedSave();
+    };
+    angleSlider.onfocus = () => recordState();
+
     form.append(
       el('label', { class: 'form-label', for: 'fontSizeIn', text: 'Font Size' }),
       fontSizeInput,
@@ -828,7 +847,12 @@ async function buildArticlePropertiesInspector(article, container, silo) {
         el('label', { class: 'inline' }, [underlineChk, el('span', { text: 'Underline' })])
       ]),
       el('div', { class: 'form-label', text: 'Label Style' }),
-      textLabelStyleSeg
+      textLabelStyleSeg,
+      el('div', { class: 'form-label full-width', style: 'display:flex;justify-content:space-between;align-items:center;' }, [
+        el('span', { text: 'Rotation' }),
+        angleVal
+      ]),
+      angleSlider
     );
   }
 

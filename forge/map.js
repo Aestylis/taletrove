@@ -142,7 +142,15 @@ async function initMap(mapObject) {
     showCoverageOnHover: false,
     maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
+    animate: false, // L.CRS.Simple: animation offsets don't align with flat-image coords
     iconCreateFunction: _createClusterIcon
+  });
+  // Re-sync floating name labels after cluster expands — labels live on labelLayer
+  // (separate from _pinCluster) and need repositioning once pins reach final positions.
+  _pinCluster.on('animationend', () => {
+    for (const [id, layer] of layerById.entries()) {
+      if (layer._isPoint) updateLabelsFor(id);
+    }
   });
   const _shapeGroup = L.featureGroup();
   allLayers = new _PinShapeGroup(_pinCluster, _shapeGroup).addTo(map);
@@ -806,6 +814,7 @@ function addTextFeature(latlng, text) {
     italic: false,
     underline: false,
     labelStyle: DEFAULT_GEOMETRY_STYLES.text.labelStyle,
+    angle: 0,
     blocks: [],
     tags: [],
     images: [],
@@ -906,7 +915,8 @@ async function syncSingleLayer(feature) {
       const chromeStyle = isPlain
         ? ''
         : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-      const textStyle = `font-size:${feature.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle}`;
+      const textAngleStyle = feature.angle ? `transform: rotate(${feature.angle}deg);` : '';
+      const textStyle = `font-size:${feature.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
       layer.setIcon(L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feature.text || '')}</div>`, iconSize: null }));
     }
     // Point/Marker Updates (Atlas Pins and Encyclopedia Lore-Pins)
@@ -1024,7 +1034,8 @@ async function featureToLayer(feat) {
     const chromeStyle = isPlain
       ? ''
       : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-    const textStyle = `font-size:${feat.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle}`;
+    const textAngleStyle = feat.angle ? `transform: rotate(${feat.angle}deg);` : '';
+    const textStyle = `font-size:${feat.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
     const icon = L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feat.text || '')}</div>`, iconSize: null });
     layer = L.marker([lat, lng], { icon });
   }
