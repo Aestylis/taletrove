@@ -1272,6 +1272,9 @@ function runLabelCollisionDetection() {
 
   for (let i = 1; i < infos.length; i++) {
     const b = infos[i];
+    // Area/line labels are geographic anchors — never push them off-centroid.
+    // They still appear in the list so pin labels treat them as obstacles.
+    if (!b.isPin) continue;
     for (let j = i - 1; j >= 0; j--) {
       const a = infos[j];
       // Skip if no horizontal overlap — labels in different columns can't collide.
@@ -1281,9 +1284,7 @@ function runLabelCollisionDetection() {
       if (bTop < aBottom + 2) b.yOffset += (aBottom + 2) - bTop;
     }
     if (b.yOffset > 0) {
-      b.inner.style.transform = b.isPin
-        ? `translateX(-50%) translateY(${b.yOffset}px)`
-        : `translate(-50%, calc(-50% + ${b.yOffset}px))`;
+      b.inner.style.transform = `translateX(-50%) translateY(${b.yOffset}px)`;
     }
   }
 }

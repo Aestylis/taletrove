@@ -239,13 +239,14 @@
 | **Assets — Unsplash integration** | Medium | Browse/search Unsplash free photos directly in the Assets tab; insert as hero image or image block. Requires Unsplash API key (free tier: 50 req/hr). Use `utm_source` attribution param to comply with guidelines. |
 | **Assets — Pinterest integration** | High | Browse user's Pinterest boards and pins as image sources. Requires Pinterest OAuth + Developer App approval. Pin images are not freely embeddable — may need to link-out rather than import. Investigate viability before starting. |
 | **Assets — Additional free image sources** | Medium | Candidates: **Wikimedia Commons** (REST API, no key, CC-licensed art/maps — ideal for fantasy worlds), **Pexels** (free API, similar to Unsplash), **Pixabay** (free API, broad content). A unified "Image Search" panel in Assets that queries multiple sources would be ideal. |
-| **Assets — Wikimedia Commons (first source)** | Medium | 🚧 In progress — `feat/wikimedia-asset-search`. Search modal in Assets panel via provider-abstracted `image-search.js` (`window.IMAGE_SEARCH_PROVIDERS`). CC-licensed, no API key, CORS via `origin=*`. Attribution stored in `state.assetMeta` sidecar (source/author/license/sourceUrl) — surfaces on Assets tile + Inspector. |
+| ~~**Assets — Wikimedia Commons (first source)**~~ | ~~Medium~~ | ✅ Done. Search modal in Assets via provider-abstracted `image-search.js`. CC-licensed, no API key. Attribution stored in `state.assetMeta` (source/author/license/sourceUrl) — surfaces on Assets tile + Inspector. |
 | **Assets — Inline image search (image-block + hero-image)** | Low | Wire the existing `image-search.js` modal into the image-block upload menu and hero-image picker, so users can pull from Commons inline without first saving to library. Foundation already pluggable — pass an `onPick(blob, meta)` callback. — follow-up to `feat/wikimedia-asset-search` |
 | **Assets — Pexels / Pixabay / Unsplash providers** | Medium | Add provider plugins to `image-search.js` (Pexels free API, Pixabay free API, Unsplash with API key). Each plugs into the same modal shell as Wikimedia. Per-source license display. — follow-up to `feat/wikimedia-asset-search` |
+| **Emoji pin icons** | Low | Allow any emoji character as a pin icon alongside the existing SVG icon picker. Renders as a `divIcon` text node — no asset pipeline required. Complement to (not replacement of) the tintable SVG set; add an "Emoji" tab or input to the icon picker. |
 | **Map embed block** | Medium | Embed a live mini-map view inside a wiki article or sidebar block — similar to LegendKeeper 0.18. A read-only snapshot of a chosen map, click-to-navigate. Builds on existing block-editor architecture. |
-| **Leaflet.markercluster** | Medium | Cluster dense pins when zoomed out. Investigated 2026-04-25: not a quick win — `allLayers` is currently a single `L.featureGroup` consumed in 6+ sites (`panels.js`, `worldbuilder.js`, `map.js`). Adding a sibling `pinClusterGroup` requires routing layer add/remove by geometry type and updating all consumers (visibility toggle, eachLayer iterators). SRI hashes already computed for v1.5.3: `leaflet.markercluster.js` `sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr`, `MarkerCluster.css` `sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV`, `MarkerCluster.Default.css` `sha384-wgw+aLYNQ7dlhK47ZPK7FRACiq7ROZwgFNg0m04avm4CaXS+Z9Y7nMu8yNjBKYC+`. |
-| **Diacritic-insensitive search** (LK-inspired) | Low | "Espana" should match "España" everywhere. `normalizeForSearch()` helper in `utils.js` (NFD + strip `\p{Diacritic}` + lowercase), applied in: full-text search (`data.js`), atlas/encyclopedia/asset panel filters (`panels.js`), wiki-link autocomplete. Few hours. — `feat/lk-inspired-polish` |
-| **Icon search synonyms** (LK-inspired) | Low | Curated `forge/ui-icons-synonyms.json` map (sword → blade/sabre/scimitar; tower → keep/spire/turret) merged into icon-picker query matching. ~1 day, hand-curated for our ~200-icon set. — `feat/lk-inspired-polish` |
+| ~~**Leaflet.markercluster**~~ | ~~Medium~~ | ✅ Done (Alpha 6.2). Custom `_PinShapeGroup` proxy routes point markers to `L.markerClusterGroup`, shapes to `L.featureGroup`. All `allLayers` call sites unchanged. |
+| ~~**Diacritic-insensitive search** (LK-inspired)~~ | ~~Low~~ | ✅ Done. `normalizeForSearch()` in `utils.js`; applied in full-text search, atlas/encyclopedia/asset panel filters, wiki-link autocomplete. 100+ synonyms. |
+| ~~**Icon search synonyms** (LK-inspired)~~ | ~~Low~~ | ✅ Done. `forge/ui-icons-synonyms.json` merged into icon-picker query matching. |
 
 ---
 
@@ -311,7 +312,7 @@ All consumers (CoA, map rendering, backlinks) updated to read `links.find(l => l
 | Timeline participants | Medium | `participantIds` on events + links — **Alpha 5** |
 | **WebRTC Multiplayer** | High | Full spec in `PLAN-WEBRTC.md`. Manual signaling (copy-paste codes), GM-hub star topology, delta sync via `markEntityDirty`, cursor presence. Deferred to **Alpha 7+** — too large for current scope. |
 | Text object — no border/background | Low | Option to strip the shadow/background from freestanding text objects for clean map labelling |
-| Text object — rotation | Medium | Angle property on text objects; DivIcon CSS `transform: rotate()` |
+| ~~Text object — rotation~~ | ~~Medium~~ | ✅ Done (Alpha 6.2). Slider + number input in inspector; `rotate()` CSS transform on DivIcon. |
 | Text object — curved text | High | SVG `textPath` along a user-drawn path; significant rework of text geometry |
 
 ---
