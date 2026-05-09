@@ -2316,10 +2316,69 @@ function initModals() {
       closeSideSheet(iconPickerModal);
     };
 
+    // Emoji tab
+    const iconPickerTabs = iconPickerModal.querySelectorAll('.icon-picker-tab');
+    const iconsPanel = $('#iconPickerIconsPanel');
+    const emojiPanel = $('#iconPickerEmojiPanel');
+
+    const EMOJI_CATEGORIES = [
+      { label: 'Characters', emojis: ['👑','🧙','🧝','🧛','👸','🤴','🧟','🧞','🧜','🧚','🦸','🦹','🏹','⚔️','🛡️','👤','🕵️'] },
+      { label: 'Creatures',  emojis: ['🐉','🦄','🦅','🐺','🦊','🦁','🐻','🦋','🐍','🕷️','🦂','🦈','🐬','🦭','🦎','🐊','🦬','🐗'] },
+      { label: 'Nature',     emojis: ['🌲','🌳','🌴','🌵','🍄','🌾','🌊','🌋','🏔️','⛰️','🏝️','🌿','🍃','❄️','🔥','💧','⚡','🌈','☀️','🌙'] },
+      { label: 'Places',     emojis: ['🏰','🏯','⛩️','⛪','🕌','🗼','🏛️','🏕️','🗿','⚓','🌉','🌃','🏗️'] },
+      { label: 'Items',      emojis: ['💎','💍','🗡️','🔮','📜','🪄','🪙','💰','🏺','🔑','🗝️','📿','⚗️','🧪','📖','🕯️','🪔','🔔','🎭'] },
+      { label: 'Symbols',    emojis: ['⭐','🌟','✨','💫','💀','☠️','👁️','❤️','💙','💚','💛','🖤','⚜️','🔱','⚙️','⚖️','🧭','🚩'] },
+    ];
+
+    EMOJI_CATEGORIES.forEach(cat => {
+      const section = el('div', { class: 'emoji-category' });
+      section.appendChild(el('div', { class: 'emoji-category-label', text: cat.label }));
+      const grid = el('div', { class: 'emoji-category-grid' });
+      cat.emojis.forEach(emoji => {
+        const item = el('div', { class: 'icon-grid-item emoji-grid-item', 'data-emoji': emoji });
+        item.textContent = emoji;
+        grid.appendChild(item);
+      });
+      section.appendChild(grid);
+      emojiPanel.appendChild(section);
+    });
+
+    emojiPanel.addEventListener('click', (e) => {
+      const item = e.target.closest('.emoji-grid-item');
+      if (!item) return;
+      const currentTargetFeature = window.currentTargetFeatureForIcon;
+      if (currentTargetFeature) {
+        recordState();
+        currentTargetFeature.iconClass = item.dataset.emoji;
+        let type = 'feature';
+        if (state.encyclopedia.some(e => e.id === currentTargetFeature.id)) type = 'encyclopedia';
+        else if (state.maps.some(m => m.id === currentTargetFeature.id)) type = 'map';
+        markEntityDirty(type, currentTargetFeature.id);
+        render({ full: true });
+        if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(currentTargetFeature);
+        debouncedSave();
+        closeIconPicker();
+      }
+    });
+
+    iconPickerTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        iconPickerTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const showEmoji = tab.dataset.tab === 'emoji';
+        iconsPanel.classList.toggle('hidden', showEmoji);
+        emojiPanel.classList.toggle('hidden', !showEmoji);
+      });
+    });
+
     window.openIconPicker = (feature) => {
       window.currentTargetFeatureForIcon = feature;
       iconSearchInput.value = '';
       iconSearchInput.dispatchEvent(new Event('input'));
+      iconPickerTabs.forEach(t => t.classList.remove('active'));
+      iconPickerModal.querySelector('[data-tab="icons"]').classList.add('active');
+      iconsPanel.classList.remove('hidden');
+      emojiPanel.classList.add('hidden');
       openSideSheet(iconPickerModal);
       iconSearchInput.focus();
     };

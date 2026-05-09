@@ -48,6 +48,9 @@ const escapeHtml = (str) => {
 const normalizeForSearch = (s) => (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 window.normalizeForSearch = normalizeForSearch;
 
+const isEmoji = (str) => !!str && !/^[a-z0-9-]+$/i.test(str) && /\p{Extended_Pictographic}/u.test(str);
+window.isEmoji = isEmoji;
+
 // Rata Die arithmetic: structured date → single integer day count from Year 1 Day 1.
 // All temporal math (day-of-week, moon phase, durations) collapses to integer ops
 // instead of nested month_len[] loops.
