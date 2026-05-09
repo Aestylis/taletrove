@@ -3433,6 +3433,73 @@ function initEventListeners() {
       },
     });
   });
+  $('#importUrlAssetBtn')?.addEventListener('click', () => {
+    showInputModal('Import Image from URL', 'https://example.com/image.png', '', async (raw) => {
+      const url = (raw || '').trim();
+      if (!url) return;
+
+      // Security: only http/https, no credentials
+      let parsed;
+      try { parsed = new URL(url); } catch {
+        showAlertModal('Invalid URL', 'Please enter a valid URL starting with https:// or http://.');
+        return;
+      }
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        showAlertModal('Invalid URL', 'Only https:// and http:// URLs are allowed.');
+        return;
+      }
+      if (parsed.username || parsed.password) {
+        showAlertModal('Invalid URL', 'URLs with embedded credentials are not allowed.');
+        return;
+      }
+
+      setLoadingState(true, 'Fetching image…');
+      try {
+        const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+        const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (!res.ok) throw new Error(`Server returned ${res.status}.`);
+
+        const ct = (res.headers.get('content-type') || '').split(';')[0].trim();
+        if (!ct.startsWith('image/')) throw new Error('URL did not return an image (got: ' + (ct || 'unknown') + ').');
+
+        const cl = parseInt(res.headers.get('content-length') || '0', 10);
+        if (cl > MAX_BYTES) throw new Error('Image exceeds the 10 MB size limit.');
+
+        // Stream with rolling size guard — defence against missing Content-Length
+        const reader = res.body.getReader();
+        const chunks = [];
+        let total = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          total += value.length;
+          if (total > MAX_BYTES) { reader.cancel(); throw new Error('Image exceeds the 10 MB size limit.'); }
+          chunks.push(value);
+        }
+        const blob = new Blob(chunks, { type: ct });
+
+        const processed = await processImageUpload(blob);
+        const imageKey = 'img-' + uid();
+        await idbSet(imageKey, processed);
+        state.assetNames = state.assetNames || {};
+        state.assetNames[imageKey] = parsed.pathname.split('/').pop() || 'url-import';
+        markEntityDirty('meta');
+        debouncedSave();
+        showToast('Image imported from URL.');
+        refreshAssetsView();
+      } catch (err) {
+        const msg = err.name === 'TimeoutError'
+          ? 'Request timed out. The server may be too slow or blocking external access.'
+          : err.name === 'TypeError'
+          ? 'Could not reach the URL. The server may be blocking cross-origin requests (CORS).'
+          : err.message;
+        showAlertModal('Import Failed', msg);
+      } finally {
+        setLoadingState(false);
+      }
+    });
+  });
+
   // Helper used by the custom icon upload flow.
   async function saveCustomIcon(file, iconKey, feature, modal) {
     const reader = new FileReader();
