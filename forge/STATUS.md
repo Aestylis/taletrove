@@ -365,7 +365,7 @@ All consumers (CoA, map rendering, backlinks) updated to read `links.find(l => l
 | **H** | Command palette (Cmd+K) | ✅ Done 2026-03-18 |
 | **I** | Session layer (first-class entity) | ✅ Done 2026-03-24 |
 | **J** | Onboarding / sample world | ✅ Done 2026-03-23 |
-| **K** | Publish / static HTML export | Not started |
+| **K** | Publish / static HTML export | Deferred indefinitely — complexity too high relative to current priorities. |
 
 > Phase G (GM secret blocks) removed — per-block player visibility toggle already covers this.
 
