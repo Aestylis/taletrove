@@ -87,7 +87,7 @@ function buildHeroImageSection(article, isAtlas) {
         debouncedSave();
       });
     }).catch(() => {});
-    const removeBtn = el('button', { class: 'hero-remove-btn', title: 'Remove hero image', 'aria-label': 'Remove hero image', innerHTML: getIconHTMLSync('x-circle', 'currentColor') });
+    const removeBtn = el('button', { class: 'hero-remove-btn', title: 'Remove hero image', 'aria-label': 'Remove hero image', innerHTML: getIconHTMLSync('x', 'currentColor') });
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       recordState();

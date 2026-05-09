@@ -6370,7 +6370,7 @@ border: 1px solid var(--border);
   color: var(--muted);
 }
 
-.hero-image-preview button {
+.hero-image-preview button:not(.hero-remove-btn) {
   background: var(--panel-translucent);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -6382,16 +6382,19 @@ border: 1px solid var(--border);
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
   color: #fff;
+  cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
   z-index: 3;
 }
 
@@ -6405,8 +6408,8 @@ border: 1px solid var(--border);
 }
 
 .hero-remove-btn:hover {
-  background: var(--danger) !important;
-  border-color: var(--danger) !important;
+  background: var(--danger);
+  color: #fff;
 }
 
 
