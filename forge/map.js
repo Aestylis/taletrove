@@ -37,6 +37,7 @@ const rightClickCancelHandler = function(e) {
 };
 document.addEventListener('mousedown', rightClickCancelHandler, true); // capture: true
 
+
 function _createClusterIcon(cluster) {
   const count = cluster.getChildCount();
   const size = count < 10 ? 32 : count < 100 ? 38 : 44;
@@ -120,8 +121,12 @@ async function initMap(mapObject) {
   map.getPane('fogPane').style.pointerEvents = 'none'; // Initially non-interactive
 
   map.createPane('labelsPane');
-  map.getPane('labelsPane').style.zIndex = 550; // Below markers (600)
-  map.getPane('labelsPane').style.pointerEvents = 'none';
+  const _labelsPaneEl = map.getPane('labelsPane');
+  _labelsPaneEl.style.position = 'absolute';
+  _labelsPaneEl.style.top = '0';
+  _labelsPaneEl.style.left = '0';
+  _labelsPaneEl.style.zIndex = 550; // Below markers (600)
+  _labelsPaneEl.style.pointerEvents = 'none';
 
   mapPopup = L.popup();
 
@@ -142,11 +147,30 @@ async function initMap(mapObject) {
     showCoverageOnHover: false,
     maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
+    animate: false,
     iconCreateFunction: _createClusterIcon
   });
   const _shapeGroup = L.featureGroup();
   allLayers = new _PinShapeGroup(_pinCluster, _shapeGroup).addTo(map);
   labelLayer = L.layerGroup().addTo(map);
+
+  // Re-sync floating name labels after cluster expands/collapses.
+  // Labels live on labelLayer (separate from _pinCluster) and need repositioning
+  // once pins reach final positions. rAF defers until Leaflet has finished
+  // adding/removing marker elements, so getElement() correctly reflects cluster state.
+  _pinCluster.on('animationend', () => {
+    requestAnimationFrame(() => {
+      for (const [id, layer] of layerById.entries()) {
+        if (!layer._isPoint) continue;
+        if (layer.getElement?.()) {
+          updateLabelsFor(id);
+        } else if (layer._nameMarker) {
+          labelLayer.removeLayer(layer._nameMarker);
+          layer._nameMarker = null;
+        }
+      }
+    });
+  });
 
   const defaultPinHtml = `
       <div class="custom-svg-pin">
@@ -349,7 +373,7 @@ async function initMap(mapObject) {
 
   map.on('zoomend moveend', scheduleCollisionDetection);
 
-  window.map = map;
+window.map = map;
   window.allLayers = allLayers;
   window.labelLayer = labelLayer;
   window.gridLayer = gridLayer;
@@ -806,6 +830,7 @@ function addTextFeature(latlng, text) {
     italic: false,
     underline: false,
     labelStyle: DEFAULT_GEOMETRY_STYLES.text.labelStyle,
+    angle: 0,
     blocks: [],
     tags: [],
     images: [],
@@ -906,7 +931,8 @@ async function syncSingleLayer(feature) {
       const chromeStyle = isPlain
         ? ''
         : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-      const textStyle = `font-size:${feature.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle}`;
+      const textAngleStyle = feature.angle ? `transform: rotate(${feature.angle}deg);` : '';
+      const textStyle = `font-size:${feature.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
       layer.setIcon(L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feature.text || '')}</div>`, iconSize: null }));
     }
     // Point/Marker Updates (Atlas Pins and Encyclopedia Lore-Pins)
@@ -983,7 +1009,6 @@ async function featureToLayer(feat) {
     const [lng, lat] = feat.geojson.geometry.coordinates;
     const icon = await createMarkerIcon(feat);
     layer = L.marker([lat, lng], { icon });
-    layer._isPoint = true;
   }
   else if (geometryType === 'polygon') {
     const coords = feat.geojson.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);
@@ -1024,10 +1049,13 @@ async function featureToLayer(feat) {
     const chromeStyle = isPlain
       ? ''
       : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-    const textStyle = `font-size:${feat.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle}`;
+    const textAngleStyle = feat.angle ? `transform: rotate(${feat.angle}deg);` : '';
+    const textStyle = `font-size:${feat.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
     const icon = L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feat.text || '')}</div>`, iconSize: null });
     layer = L.marker([lat, lng], { icon });
   }
+
+  if (isPoint) layer._isPoint = true;
 
   const displayName = feat.title || feat.name;
   if (displayName) {
@@ -1175,6 +1203,11 @@ function updateLabelsFor(id, tempLatLng = null) {
   l._nameMarker = m;
   labelLayer.addLayer(m);
   if (role === 'player' && !f.visibleToPlayers) labelLayer.removeLayer(m);
+  // Hide label if pin is inside a cluster (not individually rendered on map).
+  if (l._isPoint && !l.getElement?.()) {
+    labelLayer.removeLayer(m);
+    l._nameMarker = null;
+  }
 }
 
 // Post-render greedy pass: shift overlapping labels downward so they don't stack.
@@ -1194,18 +1227,27 @@ function scheduleCollisionDetection() {
 }
 
 function runLabelCollisionDetection() {
-  const pane = document.querySelector('.leaflet-labelsPane-pane');
+  const pane = document.querySelector('.leaflet-labels-pane');
   if (!pane) return;
 
   const inners = Array.from(pane.querySelectorAll('.name-label-inner'));
   if (inners.length < 2) return;
 
   // Reset all offsets so we measure true Leaflet-positioned rects.
-  inners.forEach(node => { node.style.transform = ''; });
+  // Pin labels use translateX(-50%) for horizontal centering — preserve it.
+  inners.forEach(node => {
+    const isPin = node.closest('.name-label-pin') !== null;
+    node.style.transform = isPin ? 'translateX(-50%)' : '';
+  });
 
   // Collect rects (after reset, before re-layout — same frame, so layout is stable).
   const infos = inners
-    .map(inner => ({ inner, rect: inner.getBoundingClientRect(), yOffset: 0 }))
+    .map(inner => ({
+      inner,
+      rect: inner.getBoundingClientRect(),
+      yOffset: 0,
+      isPin: inner.closest('.name-label-pin') !== null
+    }))
     .filter(info => info.rect.width > 0);
 
   // Sort by vertical center so we always push later labels downward.
@@ -1224,7 +1266,10 @@ function runLabelCollisionDetection() {
       const bTop    = b.rect.top    + b.yOffset;
       if (bTop < aBottom + 2) b.yOffset += (aBottom + 2) - bTop;
     }
-    if (b.yOffset > 0) b.inner.style.transform = `translateY(${b.yOffset}px)`;
+    if (b.yOffset > 0) {
+      const xPart = b.isPin ? 'translateX(-50%) ' : '';
+      b.inner.style.transform = `${xPart}translateY(${b.yOffset}px)`;
+    }
   }
 }
 
