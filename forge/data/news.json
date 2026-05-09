@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-2",
+    "date": "2026-05-08",
+    "title": "Alpha 6.2: Map Clustering & Bug Fixes",
+    "summary": "Dense pin maps now cluster automatically, text labels can be rotated, and several map label bugs are fixed.",
+    "tags": ["Map", "Bug Fix"],
+    "content": "<h4>Pin clustering</h4><p>Map pins now cluster automatically when zoomed out. Click a cluster to zoom in and see individual pins. Clusters expand with a spider layout at maximum zoom.</p><h4>Text label rotation</h4><p>Text geometry features now support a rotation angle. Use the slider or number input in the inspector to rotate area labels to match your map's geography.</p><h4>Bug fixes</h4><ul><li><strong>Area label centering:</strong> Area name labels were losing their centering after collision detection ran, causing them to appear offset from their coat-of-arms badge. Fixed.</li><li><strong>Panel toggle:</strong> The left-panel pull tab no longer slides on mousedown.</li><li><strong>Pin labels after navigation:</strong> Clicking a pin in the Atlas panel now reliably shows its label after the map flies to it.</li><li><strong>Area tooltip:</strong> Hovering over an area polygon no longer shows a redundant name tooltip.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6",
     "date": "2026-03-24",
     "title": "Alpha 6: Session Layer",
