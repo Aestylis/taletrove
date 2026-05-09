@@ -67,7 +67,7 @@ function initUI() {
   if (searchIconContainer) {
     getIconHTML('magnifying-glass', 'var(--muted)').then(html => {
       searchIconContainer.innerHTML = html;
-    });
+    }).catch(() => {});
   }
 
   const searchInput = $('#globalSearchInput');
@@ -135,6 +135,7 @@ let _uiIconSet = null; // lazy Set for O(1) lookups — populated on first call
 
 function getIconHTMLSync(iconName = 'pin', color = '#ffffff') {
   if (!iconName) return '';
+  if (isEmoji(iconName)) return `<span class="emoji-pin-icon">${iconName}</span>`;
 
   let iconUrl;
 

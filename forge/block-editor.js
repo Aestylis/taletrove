@@ -422,7 +422,7 @@ async function renderBlock(block) {
         break;
       case 'Image':
         const previewContainer = el('div', { class: 'block-image-preview' });
-        renderBlockViewMode(block).then(html => { if (previewContainer.parentNode) previewContainer.innerHTML = html; });
+        renderBlockViewMode(block).then(html => { if (previewContainer.parentNode) previewContainer.innerHTML = html; }).catch(() => {});
         const uploadBtn = el('button', {
           class: 'ghost', style: 'flex: 1;', text: 'Upload',
           title: 'Upload an image from your device',

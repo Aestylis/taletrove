@@ -3,7 +3,7 @@
 > Last verified: 2026-05-08. All statuses confirmed by direct code inspection.
 > TaleTrove follows [VERSIONING.md](../VERSIONING.md) rules.
 
-## Current Version: `0.6.0-alpha` (Session Layer — Phases A–J + I + L complete; M deferred)
+## Current Version: `0.6.2-alpha` (Session Layer — Phases A–J + I + L complete; M deferred)
 
 ---
 
@@ -240,10 +240,10 @@
 | **Assets — Pinterest integration** | High | Browse user's Pinterest boards and pins as image sources. Requires Pinterest OAuth + Developer App approval. Pin images are not freely embeddable — may need to link-out rather than import. Investigate viability before starting. |
 | **Assets — Additional free image sources** | Medium | Candidates: **Wikimedia Commons** (REST API, no key, CC-licensed art/maps — ideal for fantasy worlds), **Pexels** (free API, similar to Unsplash), **Pixabay** (free API, broad content). A unified "Image Search" panel in Assets that queries multiple sources would be ideal. |
 | ~~**Assets — Wikimedia Commons (first source)**~~ | ~~Medium~~ | ✅ Done. Search modal in Assets via provider-abstracted `image-search.js`. CC-licensed, no API key. Attribution stored in `state.assetMeta` (source/author/license/sourceUrl) — surfaces on Assets tile + Inspector. |
-| **Assets — Inline image search (image-block + hero-image)** | Low | Wire the existing `image-search.js` modal into the image-block upload menu and hero-image picker, so users can pull from Commons inline without first saving to library. Foundation already pluggable — pass an `onPick(blob, meta)` callback. — follow-up to `feat/wikimedia-asset-search` |
-| **Assets — Pexels / Pixabay / Unsplash providers** | Medium | Add provider plugins to `image-search.js` (Pexels free API, Pixabay free API, Unsplash with API key). Each plugs into the same modal shell as Wikimedia. Per-source license display. — follow-up to `feat/wikimedia-asset-search` |
-| **Emoji pin icons** | Low | Allow any emoji character as a pin icon alongside the existing SVG icon picker. Renders as a `divIcon` text node — no asset pipeline required. Complement to (not replacement of) the tintable SVG set; add an "Emoji" tab or input to the icon picker. |
-| **Map embed block** | Medium | Embed a live mini-map view inside a wiki article or sidebar block — similar to LegendKeeper 0.18. A read-only snapshot of a chosen map, click-to-navigate. Builds on existing block-editor architecture. |
+| ~~**Assets — Inline image search (image-block + hero-image)**~~ | ~~Low~~ | ✅ Done. `openImageSearchModal` wired into image-block upload menu (`block-editor.js`) and hero-image picker (`inspector.js`). |
+| ~~**Assets — Pexels / Pixabay / Unsplash providers**~~ | ~~Medium~~ | ❌ Scrapped. Wikimedia Commons sufficient for fantasy worldbuilding use case; third-party API keys add deployment friction. |
+| ~~**Emoji pin icons**~~ | ~~Low~~ | ✅ Done. "Emoji" tab in icon picker side sheet; 6 curated fantasy categories (105 emoji). `isEmoji()` in utils.js; `getIconHTMLSync` short-circuits to `<span>` — no mask/tint. Works for map pins and wiki entries. |
+| ~~**Map embed block**~~ | ~~Medium~~ | ✅ Done. Full editor (map picker, height slider, caption) + interactive Leaflet view renderer (`_initMapEmbedLeaflet`) in `block-editor.js`. |
 | ~~**Leaflet.markercluster**~~ | ~~Medium~~ | ✅ Done (Alpha 6.2). Custom `_PinShapeGroup` proxy routes point markers to `L.markerClusterGroup`, shapes to `L.featureGroup`. All `allLayers` call sites unchanged. |
 | ~~**Diacritic-insensitive search** (LK-inspired)~~ | ~~Low~~ | ✅ Done. `normalizeForSearch()` in `utils.js`; applied in full-text search, atlas/encyclopedia/asset panel filters, wiki-link autocomplete. 100+ synonyms. |
 | ~~**Icon search synonyms** (LK-inspired)~~ | ~~Low~~ | ✅ Done. `forge/ui-icons-synonyms.json` merged into icon-picker query matching. |
@@ -311,7 +311,7 @@ All consumers (CoA, map rendering, backlinks) updated to read `links.find(l => l
 | Region/territory roster | Medium | Sidebar list of all entities linked to a given polygon — **Alpha 5** |
 | Timeline participants | Medium | `participantIds` on events + links — **Alpha 5** |
 | **WebRTC Multiplayer** | High | Full spec in `PLAN-WEBRTC.md`. Manual signaling (copy-paste codes), GM-hub star topology, delta sync via `markEntityDirty`, cursor presence. Deferred to **Alpha 7+** — too large for current scope. |
-| Text object — no border/background | Low | Option to strip the shadow/background from freestanding text objects for clean map labelling |
+| ~~Text object — no border/background~~ | ~~Low~~ | ✅ Done. `labelStyle: 'none'` in `LABEL_STYLE_OPTIONS` strips background/shadow; wired in inspector for text geometry. |
 | ~~Text object — rotation~~ | ~~Medium~~ | ✅ Done (Alpha 6.2). Slider + number input in inspector; `rotate()` CSS transform on DivIcon. |
 | Text object — curved text | High | SVG `textPath` along a user-drawn path; significant rework of text geometry |
 
@@ -365,7 +365,7 @@ All consumers (CoA, map rendering, backlinks) updated to read `links.find(l => l
 | **H** | Command palette (Cmd+K) | ✅ Done 2026-03-18 |
 | **I** | Session layer (first-class entity) | ✅ Done 2026-03-24 |
 | **J** | Onboarding / sample world | ✅ Done 2026-03-23 |
-| **K** | Publish / static HTML export | Not started |
+| **K** | Publish / static HTML export | Deferred indefinitely — complexity too high relative to current priorities. |
 
 > Phase G (GM secret blocks) removed — per-block player visibility toggle already covers this.
 

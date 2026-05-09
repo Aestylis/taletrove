@@ -2659,6 +2659,95 @@ textarea[disabled] {
   max-width: 600px;
 }
 
+/* Icon picker tab bar */
+.icon-picker-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.icon-picker-tab {
+  flex: 1;
+  padding: 0.35rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.icon-picker-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.icon-picker-tab:hover:not(.active) {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* Emoji panel */
+.emoji-category {
+  margin-bottom: 1rem;
+}
+
+.emoji-category-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0 0.25rem 0.4rem;
+}
+
+.emoji-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 0.3rem;
+}
+
+.emoji-grid-item {
+  font-size: 1.35rem;
+  height: 44px;
+  cursor: pointer;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+  user-select: none;
+  line-height: 1;
+}
+
+.emoji-grid-item:hover {
+  background: var(--bg);
+  border-color: var(--accent-magenta);
+  transform: scale(1.1);
+}
+
+/* Emoji inside pin divIcon */
+.emoji-pin-icon {
+  font-size: 0.6em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  background-color: transparent !important;
+}
+
+.pin-blank .pin-icon-inner .emoji-pin-icon {
+  font-size: 1.3em;
+}
+
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
@@ -6281,29 +6370,46 @@ border: 1px solid var(--border);
   color: var(--muted);
 }
 
-.hero-empty-search-link {
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.7rem;
-  color: var(--accent-orange);
-  background: transparent;
-  border: 1px solid var(--accent-orange);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.hero-empty-search-link:hover {
-  background: var(--accent-orange);
-  color: var(--on-accent, #fff);
-}
-
-.hero-image-preview button {
+.hero-image-preview button:not(.hero-remove-btn) {
   background: var(--panel-translucent);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   font-weight: bold;
+}
+
+.hero-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  z-index: 3;
+}
+
+.hero-remove-btn .icon-container {
+  width: 16px;
+  height: 16px;
+}
+
+.hero-image-preview:hover .hero-remove-btn {
+  opacity: 1;
+}
+
+.hero-remove-btn:hover {
+  background: var(--danger);
+  color: #fff;
 }
 
 
