@@ -87,17 +87,17 @@ function buildHeroImageSection(article, isAtlas) {
         debouncedSave();
       });
     }).catch(() => {});
-    heroPreview.appendChild(el('button', {
-      class: 'ghost small danger', text: 'Remove',
-      onclick: () => {
-        recordState();
-        article.heroImageKey   = null;
-        article.heroFocalPoint = null;
-        markEntityDirty('article', article.id);
-        if (isAtlas) render();
-        debouncedSave();
-      }
-    }));
+    const removeBtn = el('button', { class: 'hero-remove-btn', title: 'Remove hero image', 'aria-label': 'Remove hero image', innerHTML: getIconHTMLSync('x-circle', 'currentColor') });
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      recordState();
+      article.heroImageKey   = null;
+      article.heroFocalPoint = null;
+      markEntityDirty('article', article.id);
+      if (isAtlas) render();
+      debouncedSave();
+    });
+    heroPreview.appendChild(removeBtn);
   } else if (role === 'gm') {
     heroPreview.classList.add('is-empty');
     heroPreview.addEventListener('click', () => {
@@ -105,41 +105,6 @@ function buildHeroImageSection(article, isAtlas) {
       $('#heroImageFile').click();
     });
     const emptyState = buildHeroEmptyState();
-    const searchLink = el('button', {
-      class: 'hero-empty-search-link',
-      type: 'button',
-      title: 'Search free image libraries (Wikimedia Commons)',
-      text: 'Search free images',
-    });
-    searchLink.addEventListener('click', (e) => {
-      e.stopPropagation(); // don't trigger the parent click → file picker
-      if (typeof window.openImageSearchModal !== 'function') {
-        if (typeof showAlertModal === 'function') showAlertModal('Image Search Unavailable', 'The image search module did not load.');
-        return;
-      }
-      window.openImageSearchModal({
-        title: 'Search Hero Image',
-        onPick: async (blob, meta) => {
-          const processed = await processImageUpload(blob);
-          const imageKey = 'img-' + uid();
-          await idbSet(imageKey, processed);
-          state.assetNames = state.assetNames || {};
-          state.assetNames[imageKey] = meta.title || 'Untitled';
-          state.assetMeta = state.assetMeta || {};
-          state.assetMeta[imageKey] = meta;
-          recordState();
-          article.heroImageKey = imageKey;
-          markEntityDirty('article', article.id);
-          markEntityDirty('meta');
-          if ($('#infoPanel').classList.contains('is-visible'))
-            showInfoPanel(article.id, isAtlas ? 'feature' : 'encyclopedia');
-          if (typeof refreshAssetsView === 'function') refreshAssetsView(true);
-          debouncedSave();
-          if (typeof showToast === 'function') showToast(`Hero image set from ${meta.sourceLabel}.`);
-        },
-      });
-    });
-    emptyState.appendChild(searchLink);
     heroPreview.appendChild(emptyState);
   }
 

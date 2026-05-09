@@ -6370,29 +6370,43 @@ border: 1px solid var(--border);
   color: var(--muted);
 }
 
-.hero-empty-search-link {
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.7rem;
-  color: var(--accent-orange);
-  background: transparent;
-  border: 1px solid var(--accent-orange);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.hero-empty-search-link:hover {
-  background: var(--accent-orange);
-  color: var(--on-accent, #fff);
-}
-
 .hero-image-preview button {
   background: var(--panel-translucent);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   font-weight: bold;
+}
+
+.hero-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  z-index: 3;
+}
+
+.hero-remove-btn .icon-container {
+  width: 16px;
+  height: 16px;
+}
+
+.hero-image-preview:hover .hero-remove-btn {
+  opacity: 1;
+}
+
+.hero-remove-btn:hover {
+  background: var(--danger) !important;
+  border-color: var(--danger) !important;
 }
 
 
