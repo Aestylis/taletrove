@@ -38,6 +38,61 @@ const rightClickCancelHandler = function(e) {
 document.addEventListener('mousedown', rightClickCancelHandler, true); // capture: true
 
 
+function _createClusterIcon(cluster) {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 32 : count < 100 ? 38 : 44;
+  return L.divIcon({
+    html: `<div class="cluster-icon"><span>${count}</span></div>`,
+    className: '',
+    iconSize: L.point(size, size)
+  });
+}
+
+const _PinShapeGroup = L.LayerGroup.extend({
+  initialize(clusterGroup, shapeGroup) {
+    this._clusterGroup = clusterGroup;
+    this._shapeGroup   = shapeGroup;
+    this._layers = {};
+  },
+  onAdd(map) {
+    this._clusterGroup.addTo(map);
+    this._shapeGroup.addTo(map);
+    return this;
+  },
+  onRemove(map) {
+    map.removeLayer(this._clusterGroup);
+    map.removeLayer(this._shapeGroup);
+    return this;
+  },
+  addLayer(layer) {
+    (layer._isPoint ? this._clusterGroup : this._shapeGroup).addLayer(layer);
+    return this;
+  },
+  removeLayer(layer) {
+    (layer._isPoint ? this._clusterGroup : this._shapeGroup).removeLayer(layer);
+    return this;
+  },
+  hasLayer(layer) {
+    return this._clusterGroup.hasLayer(layer) || this._shapeGroup.hasLayer(layer);
+  },
+  eachLayer(fn) {
+    this._clusterGroup.eachLayer(fn);
+    this._shapeGroup.eachLayer(fn);
+    return this;
+  },
+  getBounds() {
+    const b = L.latLngBounds([]);
+    try { b.extend(this._clusterGroup.getBounds()); } catch (_) {}
+    try { b.extend(this._shapeGroup.getBounds()); } catch (_) {}
+    return b;
+  },
+  clearLayers() {
+    this._clusterGroup.clearLayers();
+    this._shapeGroup.clearLayers();
+    return this;
+  }
+});
+
 async function initMap(mapObject) {
   if (map) {
     map.remove();
@@ -66,8 +121,12 @@ async function initMap(mapObject) {
   map.getPane('fogPane').style.pointerEvents = 'none'; // Initially non-interactive
 
   map.createPane('labelsPane');
-  map.getPane('labelsPane').style.zIndex = 550; // Below markers (600)
-  map.getPane('labelsPane').style.pointerEvents = 'none';
+  const _labelsPaneEl = map.getPane('labelsPane');
+  _labelsPaneEl.style.position = 'absolute';
+  _labelsPaneEl.style.top = '0';
+  _labelsPaneEl.style.left = '0';
+  _labelsPaneEl.style.zIndex = 550; // Below markers (600)
+  _labelsPaneEl.style.pointerEvents = 'none';
 
   mapPopup = L.popup();
 
@@ -84,8 +143,34 @@ async function initMap(mapObject) {
   map.on('zoomend', saveViewport);
 
   applyFreeMoveState();
-  allLayers = L.featureGroup().addTo(map);
+  const _pinCluster = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 40,
+    spiderfyOnMaxZoom: true,
+    animate: false,
+    iconCreateFunction: _createClusterIcon
+  });
+  const _shapeGroup = L.featureGroup();
+  allLayers = new _PinShapeGroup(_pinCluster, _shapeGroup).addTo(map);
   labelLayer = L.layerGroup().addTo(map);
+
+  // Re-sync floating name labels after cluster expands/collapses.
+  // Labels live on labelLayer (separate from _pinCluster) and need repositioning
+  // once pins reach final positions. rAF defers until Leaflet has finished
+  // adding/removing marker elements, so getElement() correctly reflects cluster state.
+  _pinCluster.on('animationend', () => {
+    requestAnimationFrame(() => {
+      for (const [id, layer] of layerById.entries()) {
+        if (!layer._isPoint) continue;
+        if (layer.getElement?.()) {
+          updateLabelsFor(id);
+        } else if (layer._nameMarker) {
+          labelLayer.removeLayer(layer._nameMarker);
+          layer._nameMarker = null;
+        }
+      }
+    });
+  });
 
   const defaultPinHtml = `
       <div class="custom-svg-pin">
@@ -970,6 +1055,8 @@ async function featureToLayer(feat) {
     layer = L.marker([lat, lng], { icon });
   }
 
+  if (isPoint) layer._isPoint = true;
+
   const displayName = feat.title || feat.name;
   if (displayName) {
     layer.bindTooltip(displayName, {
@@ -1116,6 +1203,11 @@ function updateLabelsFor(id, tempLatLng = null) {
   l._nameMarker = m;
   labelLayer.addLayer(m);
   if (role === 'player' && !f.visibleToPlayers) labelLayer.removeLayer(m);
+  // Hide label if pin is inside a cluster (not individually rendered on map).
+  if (l._isPoint && !l.getElement?.()) {
+    labelLayer.removeLayer(m);
+    l._nameMarker = null;
+  }
 }
 
 // Post-render greedy pass: shift overlapping labels downward so they don't stack.
@@ -1135,7 +1227,7 @@ function scheduleCollisionDetection() {
 }
 
 function runLabelCollisionDetection() {
-  const pane = document.querySelector('.leaflet-labelsPane-pane');
+  const pane = document.querySelector('.leaflet-labels-pane');
   if (!pane) return;
 
   const inners = Array.from(pane.querySelectorAll('.name-label-inner'));
