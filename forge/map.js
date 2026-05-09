@@ -1058,7 +1058,7 @@ async function featureToLayer(feat) {
   if (isPoint) layer._isPoint = true;
 
   const displayName = feat.title || feat.name;
-  if (displayName) {
+  if (displayName && geometryType !== 'polygon') {
     layer.bindTooltip(displayName, {
       className: 'mouseover-tooltip',
       sticky: true,
@@ -1234,10 +1234,10 @@ function runLabelCollisionDetection() {
   if (inners.length < 2) return;
 
   // Reset all offsets so we measure true Leaflet-positioned rects.
-  // Pin labels use translateX(-50%) for horizontal centering — preserve it.
+  // Pin labels use translateX(-50%); area/line labels use translate(-50%, -50%).
   inners.forEach(node => {
     const isPin = node.closest('.name-label-pin') !== null;
-    node.style.transform = isPin ? 'translateX(-50%)' : '';
+    node.style.transform = isPin ? 'translateX(-50%)' : 'translate(-50%, -50%)';
   });
 
   // Collect rects (after reset, before re-layout — same frame, so layout is stable).
@@ -1267,8 +1267,9 @@ function runLabelCollisionDetection() {
       if (bTop < aBottom + 2) b.yOffset += (aBottom + 2) - bTop;
     }
     if (b.yOffset > 0) {
-      const xPart = b.isPin ? 'translateX(-50%) ' : '';
-      b.inner.style.transform = `${xPart}translateY(${b.yOffset}px)`;
+      b.inner.style.transform = b.isPin
+        ? `translateX(-50%) translateY(${b.yOffset}px)`
+        : `translate(-50%, calc(-50% + ${b.yOffset}px))`;
     }
   }
 }

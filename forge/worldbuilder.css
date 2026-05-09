@@ -3031,6 +3031,15 @@ body.player-view #overlayMenuPopover {
   border-right-color: var(--accent-orange);
 }
 
+/* Override global button:active { transform: translateY(1px) } — preserves centering on hold */
+.aside-toggle-btn:active {
+  transform: translateY(-50%) translateX(0);
+}
+
+#atlasPanel.is-hidden+.aside-toggle-btn:active {
+  transform: translateY(-50%) translateX(calc((var(--atlas-panel-width) + var(--nav-rail-width)) * -1));
+}
+
 
 /* --- ASIDE TOGGLE ICONS --- */
 .aside-toggle-btn .icon-open,
