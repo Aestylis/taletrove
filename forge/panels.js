@@ -913,7 +913,7 @@ async function refreshAssetsView(resetPage = true) {
               if (state.assetMeta?.[key])   { delete state.assetMeta[key];   metaDirty = true; }
               if (metaDirty) { markEntityDirty('meta'); debouncedSave(); }
               refreshAssetsView(true);
-            });
+            }).catch(e => console.error('[panels] Asset delete failed:', e));
           });
         };
       }

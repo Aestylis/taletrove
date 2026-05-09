@@ -1650,7 +1650,7 @@ function populateThemeSettings() {
     if (state.appearance?.mapBgKey) {
       resolveImageUrl(state.appearance.mapBgKey).then(url => {
         if (url && mapBgPreview) _setBgZoneImage(mapBgPreview, url);
-      });
+      }).catch(() => {});
       if (mapBgClear) mapBgClear.style.display = 'block';
     }
 

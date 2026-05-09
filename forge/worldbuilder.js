@@ -1070,7 +1070,7 @@ const activateToolWithTemplate = (templateId, geometryType) => {
         lastUsedTemplateIds[geometryType] = templateId;
         const mode = geometryType === 'point' ? 'add-marker' : (geometryType === 'polygon' ? 'add-polygon' : 'add-polyline');
         debouncedSetMode(mode, options);
-      });
+      }).catch(e => console.error('[worldbuilder] Icon load failed:', e));
       return; // Exit early as we handle the mode in the promise
     }  }
 
@@ -3594,7 +3594,7 @@ function initEventListeners() {
             refreshAssetsView(true);
             debouncedSave();
             showToast('Hero image updated.');
-          });
+          }).catch(e => { console.error('[worldbuilder] Hero image save failed:', e); showAlertModal('Save Error', 'Could not save the hero image.'); });
         }
       } else if (dropTarget.id === 'infoPanel' && selectedId) {
         // If dropped on the info panel, add it as a new Image block to the selected feature.
@@ -3619,7 +3619,7 @@ function initEventListeners() {
             refreshAssetsView(true);
             debouncedSave();
             showToast('Image added to feature.');
-          });
+          }).catch(e => { console.error('[worldbuilder] Image block save failed:', e); showAlertModal('Save Error', 'Could not save the image.'); });
         }
       }
     };
@@ -3903,7 +3903,7 @@ function renderRecentProjects() {
         if (activeMap && activeMap.imageKey) {
           resolveImageUrl(activeMap.imageKey).then(url => {
             if (url) heroEl.style.backgroundImage = `url('${url}')`;
-          });
+          }).catch(() => {});
         }
       }
 
@@ -3912,10 +3912,10 @@ function renderRecentProjects() {
         sizeEl.textContent = 'Calculating usage...';
         calculateProjectSize().then(bytes => {
           sizeEl.textContent = `Project Usage: ${formatBytes(bytes)}`;
-        });
+        }).catch(() => { sizeEl.textContent = 'Project Usage: unavailable'; });
       }
 
-      saveRecentProject().then(() => renderRecentProjects());
+      saveRecentProject().then(() => renderRecentProjects()).catch(e => console.error('[worldbuilder] saveRecentProject failed:', e));
     }
   });
 

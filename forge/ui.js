@@ -67,7 +67,7 @@ function initUI() {
   if (searchIconContainer) {
     getIconHTML('magnifying-glass', 'var(--muted)').then(html => {
       searchIconContainer.innerHTML = html;
-    });
+    }).catch(() => {});
   }
 
   const searchInput = $('#globalSearchInput');

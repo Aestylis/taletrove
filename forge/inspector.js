@@ -86,7 +86,7 @@ function buildHeroImageSection(article, isAtlas) {
         markEntityDirty('article', article.id);
         debouncedSave();
       });
-    });
+    }).catch(() => {});
     heroPreview.appendChild(el('button', {
       class: 'ghost small danger', text: 'Remove',
       onclick: () => {
@@ -375,7 +375,7 @@ function buildCoaBlock(article, silo, form) {
         coaPreview.style.backgroundImage = `url('${url}')`;
         coaPreview.classList.add('has-image');
       }
-    });
+    }).catch(() => {});
   } else if (article.coatOfArms && window.generateCoatOfArms) {
     const coaSeed = article.coatOfArms.seed || article.id;
     window.generateCoatOfArms(coaSeed, { shield: article.coatOfArms.shield || 'heater', size: 256 }).then(coaUrl => {
@@ -383,7 +383,7 @@ function buildCoaBlock(article, silo, form) {
         coaPreview.innerHTML = `<img src="${coaUrl}" alt="Coat of Arms Preview">`;
         coaPreview.classList.add('has-svg');
       }
-    });
+    }).catch(() => {});
   } else {
     coaPreview.classList.add('is-empty');
   }
@@ -656,13 +656,13 @@ async function buildArticlePropertiesInspector(article, container, silo) {
             coaPreview.style.backgroundImage = `url('${url}')`;
             coaPreview.classList.add('has-image');
           }
-        });
+        }).catch(() => {});
       } else if (linkedPolygon.coatOfArms && window.generateCoatOfArms) {
         const coaSeed = linkedPolygon.coatOfArms.seed || linkedPolygon.id;
         window.generateCoatOfArms(coaSeed, { shield: linkedPolygon.coatOfArms.shield || 'heater', size: 256 }).then(coaUrl => {
           coaPreview.innerHTML = `<img src="${coaUrl}" alt="Coat of Arms Preview">`;
           coaPreview.classList.add('has-svg');
-        });
+        }).catch(() => {});
       }
 
       const editOnTerritoryBtn = el('button', { class: 'ghost small', text: 'Edit on Territory' });
@@ -2081,14 +2081,14 @@ async function showInfoPanel(id, type = 'feature') {
       // Peek mode: expand-to-full | edit | properties | [spacer] | × close
       const expandIconHtml = await getIconHTML('book-open-text', 'var(--text)');
       if (myReqId !== _infoPanelReqId) return;
-      const expandBtn = el('button', { class: 'panel-icon-btn', title: 'Open full article', innerHTML: expandIconHtml });
+      const expandBtn = el('button', { class: 'panel-icon-btn', title: 'Open full article', 'aria-label': 'Open full article', innerHTML: expandIconHtml });
       expandBtn.onclick = () => { exitPeekMode(); enterArticleMode(id, type); };
       infoPanelControls.appendChild(expandBtn);
 
       if (role === 'gm') {
         const peekEditIconHtml = await getIconHTML('pencil', 'var(--text)');
         if (myReqId !== _infoPanelReqId) return;
-        const peekEditBtn = el('button', { class: 'panel-icon-btn', title: 'Edit article', innerHTML: peekEditIconHtml });
+        const peekEditBtn = el('button', { class: 'panel-icon-btn', title: 'Edit article', 'aria-label': 'Edit article', innerHTML: peekEditIconHtml });
         peekEditBtn.onclick = async () => {
           await enterArticleMode(id, type);
           isContentEditMode = true;
@@ -2099,7 +2099,7 @@ async function showInfoPanel(id, type = 'feature') {
 
       const propsIconHtml = await getIconHTML('list', 'var(--text)');
       if (myReqId !== _infoPanelReqId) return;
-      const propsBtn = el('button', { class: 'panel-icon-btn', title: 'Properties', innerHTML: propsIconHtml });
+      const propsBtn = el('button', { class: 'panel-icon-btn', title: 'Properties', 'aria-label': 'Properties', innerHTML: propsIconHtml });
       propsBtn.onclick = () => window.openPropertiesSheet?.(id, type);
       infoPanelControls.appendChild(propsBtn);
 
@@ -2107,14 +2107,14 @@ async function showInfoPanel(id, type = 'feature') {
 
       const closeIconHtml = await getIconHTML('x', 'var(--text)');
       if (myReqId !== _infoPanelReqId) return;
-      const closeBtn = el('button', { class: 'panel-icon-btn', title: 'Close', innerHTML: closeIconHtml });
+      const closeBtn = el('button', { class: 'panel-icon-btn', title: 'Close', 'aria-label': 'Close panel', innerHTML: closeIconHtml });
       closeBtn.onclick = exitPeekMode;
       infoPanelControls.appendChild(closeBtn);
     } else if (articleViewMode) {
       // Article mode: ← back | map name | (edit btn at right)
       const backIconHtml = await getIconHTML('arrow-left', 'var(--text)');
       if (myReqId !== _infoPanelReqId) return;
-      const backBtn = el('button', { class: 'panel-icon-btn', title: 'Back to Map', innerHTML: backIconHtml });
+      const backBtn = el('button', { class: 'panel-icon-btn', title: 'Back to Map', 'aria-label': 'Back to Map', innerHTML: backIconHtml });
       backBtn.onclick = exitArticleMode;
       infoPanelControls.appendChild(backBtn);
 
@@ -2141,6 +2141,7 @@ async function showInfoPanel(id, type = 'feature') {
         const editModeBtn = el('button', {
           class: 'panel-icon-btn',
           title: isContentEditMode ? 'Switch to View Mode' : 'Enter Edit Mode',
+          'aria-label': isContentEditMode ? 'Switch to View Mode' : 'Enter Edit Mode',
           innerHTML: editIconHtml
         });
         editModeBtn.onclick = () => toggleContentEditMode(id, type);
@@ -2148,7 +2149,7 @@ async function showInfoPanel(id, type = 'feature') {
 
         const propsIconHtml = await getIconHTML('list', 'var(--text)');
         if (myReqId !== _infoPanelReqId) return;
-        const propsBtn = el('button', { class: 'panel-icon-btn', title: 'Properties', innerHTML: propsIconHtml });
+        const propsBtn = el('button', { class: 'panel-icon-btn', title: 'Properties', 'aria-label': 'Properties', innerHTML: propsIconHtml });
         propsBtn.onclick = () => window.openPropertiesSheet?.(id, type);
         infoPanelControls.appendChild(propsBtn);
       }
@@ -2177,6 +2178,7 @@ async function showInfoPanel(id, type = 'feature') {
         const editModeBtn = el('button', {
           class: 'panel-icon-btn',
           title: editModeTooltip,
+          'aria-label': editModeTooltip,
           innerHTML: editIconHtml
         });
         editModeBtn.onclick = () => toggleContentEditMode(id, type);
@@ -2189,6 +2191,7 @@ async function showInfoPanel(id, type = 'feature') {
       const closeBtn = el('button', {
         class: 'panel-icon-btn close-btn',
         title: 'Close Panel',
+        'aria-label': 'Close Panel',
         innerHTML: closeIconHtml
       });
       closeBtn.onclick = hideInfoPanel;
@@ -2363,7 +2366,7 @@ async function showInfoPanel(id, type = 'feature') {
   if (isContentEditMode && role === 'gm') {
     const addBtnIconHtml = await getIconHTML('plus', 'var(--text)');
     if (myReqId !== _infoPanelReqId) return;
-    const stickyAddBtn = el('button', { class: 'add-block-btn', title: 'Add Block', innerHTML: addBtnIconHtml });
+    const stickyAddBtn = el('button', { class: 'add-block-btn', title: 'Add Block', 'aria-label': 'Add Block', innerHTML: addBtnIconHtml });
     stickyAddBtn.onclick = () => {
       const rect = stickyAddBtn.getBoundingClientRect();
       showBlockChooserModal(rect.left, rect.bottom + 8, id, type);
@@ -2545,9 +2548,10 @@ async function openPropertiesSheet(id, type) {
     const backBtn = el('button', {
       id: 'propertiesSheetBack',
       class: 'panel-icon-btn',
-      title: 'Back to peek'
+      title: 'Back to peek',
+      'aria-label': 'Back to peek'
     });
-    getIconHTML('arrow-u-down-left', 'var(--text)').then(html => { backBtn.innerHTML = html; });
+    getIconHTML('arrow-u-down-left', 'var(--text)').then(html => { backBtn.innerHTML = html; }).catch(() => {});
     backBtn.onclick = () => {
       closePropertiesSheet();
       enterPeekMode(fromPeekId, fromPeekType);
