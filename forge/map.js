@@ -172,6 +172,19 @@ async function initMap(mapObject) {
     });
   });
 
+  // After any map move/zoom completes (including flyToBounds), restore labels for pins
+  // that are now individually visible but lost their label mid-animation when still clustered.
+  map.on('moveend', () => {
+    requestAnimationFrame(() => {
+      for (const [id, layer] of layerById.entries()) {
+        if (!layer._isPoint) continue;
+        if (layer.getElement?.() && !layer._nameMarker) {
+          updateLabelsFor(id);
+        }
+      }
+    });
+  });
+
   const defaultPinHtml = `
       <div class="custom-svg-pin">
         <svg viewBox="0 0 256 256" fill="#ff7a1a" stroke="black" stroke-width="16">
