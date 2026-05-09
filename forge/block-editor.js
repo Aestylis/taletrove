@@ -14,6 +14,7 @@ const PURIFY_CONFIG = {
 const SLASH_COMMANDS = [
   { type: 'TextField',     label: 'Text',          icon: 'text-align-left',   desc: 'Rich markdown text' },
   { type: 'Image',         label: 'Image',          icon: 'image',             desc: 'Upload or embed an image' },
+  { type: 'Properties',   label: 'Properties',     icon: 'table',             desc: 'Label–value rows for stats or attributes' },
   { type: 'MapEmbed',      label: 'Map',            icon: 'map-trifold',       desc: 'Embed an interactive map view' },
   { type: 'Timeline',      label: 'Timeline',       icon: 'calendar-blank',    desc: 'Chronological event list' },
   { type: 'Relationships', label: 'Relationships',  icon: 'arrows-horizontal', desc: 'Links to other entries' },
@@ -549,6 +550,119 @@ async function renderBlock(block) {
         );
         wrapper.appendChild(linkEditor);
         break;
+      case 'Properties': {
+        block.data.rows = block.data.rows || [];
+        const propsEditor = el('div', { class: 'properties-editor' });
+
+        // Title + columns controls
+        const titleInput = el('input', {
+          type: 'text', class: 'inline-editor properties-title-input',
+          placeholder: 'Section title (optional)…',
+          value: block.data.title || '',
+          onfocus: () => recordState(),
+          onchange: (e) => updateBlockData(ownerId, block.blockId, { title: e.target.value })
+        });
+
+        const colToggle = el('div', { class: 'properties-col-toggle' }, [
+          el('span', { class: 'form-label', text: 'Columns' }),
+          ...[1, 2].map(n => {
+            const btn = el('button', {
+              class: 'properties-col-btn' + (( block.data.columns || 2 ) === n ? ' active' : ''),
+              text: String(n),
+              onclick: () => {
+                recordState();
+                updateBlockData(ownerId, block.blockId, { columns: n });
+              }
+            });
+            return btn;
+          })
+        ]);
+
+        propsEditor.append(
+          el('div', { class: 'properties-editor-header' }, [titleInput, colToggle])
+        );
+
+        // Row list
+        const rowList = el('div', { class: 'properties-row-list' });
+
+        const rebuildRows = () => {
+          rowList.innerHTML = '';
+          block.data.rows.forEach((row, idx) => {
+            const rowEl = el('div', { class: 'properties-editor-row' + (row.isSection ? ' is-section' : '') });
+
+            const labelInput = el('input', {
+              type: 'text', class: 'inline-editor props-label-input',
+              placeholder: row.isSection ? 'Section header…' : 'Label…',
+              value: row.label || '',
+              onfocus: () => recordState(),
+              onchange: (e) => { row.label = e.target.value; debouncedSave(); }
+            });
+
+            const valueInput = row.isSection
+              ? el('span') // no value for section headers
+              : el('input', {
+                  type: 'text', class: 'inline-editor props-value-input',
+                  placeholder: 'Value…',
+                  value: row.value || '',
+                  onfocus: () => recordState(),
+                  onchange: (e) => { row.value = e.target.value; debouncedSave(); }
+                });
+
+            const sectionBtn = el('button', {
+              class: 'properties-section-toggle' + (row.isSection ? ' active' : ''),
+              title: row.isSection ? 'Make data row' : 'Make section header',
+              innerHTML: getIconHTMLSync('columns', 'currentColor'),
+              onclick: () => {
+                recordState();
+                row.isSection = !row.isSection;
+                if (row.isSection) row.value = '';
+                debouncedSave();
+                showInfoPanel(ownerId, ownerType);
+              }
+            });
+
+            const removeBtn = el('button', {
+              class: 'remove-event-btn', title: 'Remove row',
+              onclick: () => {
+                recordState();
+                block.data.rows.splice(idx, 1);
+                debouncedSave();
+                showInfoPanel(ownerId, ownerType);
+              }
+            }, [el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })]);
+
+            rowEl.append(labelInput, valueInput, sectionBtn, removeBtn);
+            rowList.appendChild(rowEl);
+          });
+        };
+
+        rebuildRows();
+        propsEditor.appendChild(rowList);
+
+        const addRowBtn = el('button', {
+          class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
+          text: '+ Add Row',
+          onclick: () => {
+            recordState();
+            block.data.rows.push({ label: '', value: '', isSection: false });
+            debouncedSave();
+            showInfoPanel(ownerId, ownerType);
+          }
+        });
+        const addSectionBtn = el('button', {
+          class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
+          text: '+ Add Section',
+          onclick: () => {
+            recordState();
+            block.data.rows.push({ label: '', value: '', isSection: true });
+            debouncedSave();
+            showInfoPanel(ownerId, ownerType);
+          }
+        });
+        propsEditor.appendChild(el('div', { style: 'display:flex; gap:.5rem;' }, [addRowBtn, addSectionBtn]));
+        wrapper.appendChild(propsEditor);
+        break;
+      }
       case 'Timeline': {
         const editorWrapper = el('div', { class: 'timeline-editor' });
 
@@ -1012,6 +1126,38 @@ async function renderBlockViewMode(block) {
         `;
       }
       break;
+    case 'Properties': {
+      const rows = block.data.rows || [];
+      if (rows.length === 0) {
+        innerHTML = '<p class="muted">No properties defined.</p>';
+        break;
+      }
+      const cols = block.data.columns || 2;
+      const titleHTML = block.data.title
+        ? `<div class="properties-block-title">${escapeHtml(block.data.title)}</div>`
+        : '';
+
+      // Build rows HTML
+      const rowsHTML = rows.map(row => {
+        if (row.isSection) {
+          return `<div class="properties-section-header" style="grid-column: 1 / -1">${escapeHtml(row.label || '')}</div>`;
+        }
+        return `<div class="properties-row">
+          <span class="properties-label">${escapeHtml(row.label || '')}</span>
+          <span class="properties-value">${escapeHtml(row.value || '')}</span>
+        </div>`;
+      }).join('');
+
+      innerHTML = `
+        <div class="properties-block">
+          ${titleHTML}
+          <div class="properties-grid" style="--props-cols: ${cols}">
+            ${rowsHTML}
+          </div>
+        </div>
+      `;
+      break;
+    }
     case 'Tags':
       if (block.data.tags && block.data.tags.length > 0) {
         innerHTML = block.data.tags.map(tagText => `<span class="tag">${escapeHtml(tagText)}</span>`).join('');

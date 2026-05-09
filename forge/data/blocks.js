@@ -63,6 +63,11 @@ const BLOCK_DEFINITIONS = {
         name: 'Map Embed',
         icon: 'map-trifold',
         defaultData: { mapId: null, zoom: null, lat: null, lng: null, height: 280, caption: '' }
+    },
+    Properties: {
+        name: 'Properties',
+        icon: 'table',
+        defaultData: { title: '', columns: 2, rows: [] }
     }
 };
 
