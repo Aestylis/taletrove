@@ -65,7 +65,7 @@ const BLOCK_DEFINITIONS = {
         defaultData: { mapId: null, zoom: null, lat: null, lng: null, height: 280, caption: '' }
     },
     Properties: {
-        name: 'Properties',
+        name: 'Info Table',
         icon: 'table',
         defaultData: { title: '', columns: 2, rows: [] }
     }

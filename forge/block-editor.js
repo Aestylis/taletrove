@@ -14,7 +14,7 @@ const PURIFY_CONFIG = {
 const SLASH_COMMANDS = [
   { type: 'TextField',     label: 'Text',          icon: 'text-align-left',   desc: 'Rich markdown text' },
   { type: 'Image',         label: 'Image',          icon: 'image',             desc: 'Upload or embed an image' },
-  { type: 'Properties',   label: 'Properties',     icon: 'table',             desc: 'Label–value rows for stats or attributes' },
+  { type: 'Properties',   label: 'Info Table',     icon: 'table',             desc: 'Label–value rows for stats or attributes' },
   { type: 'MapEmbed',      label: 'Map',            icon: 'map-trifold',       desc: 'Embed an interactive map view' },
   { type: 'Timeline',      label: 'Timeline',       icon: 'calendar-blank',    desc: 'Chronological event list' },
   { type: 'Relationships', label: 'Relationships',  icon: 'arrows-horizontal', desc: 'Links to other entries' },
