@@ -172,9 +172,10 @@ async function initMap(mapObject) {
     });
   });
 
-  // After any map move/zoom completes (including flyToBounds), restore labels for pins
-  // that are now individually visible but lost their label mid-animation when still clustered.
-  map.on('moveend', () => {
+  // After zoom completes (including flyToBounds), restore labels for pins that are now
+  // individually visible but lost their label mid-animation when still clustered.
+  // zoomend only — pure pans never change cluster membership.
+  map.on('zoomend', () => {
     requestAnimationFrame(() => {
       for (const [id, layer] of layerById.entries()) {
         if (!layer._isPoint) continue;
@@ -1308,13 +1309,18 @@ async function updateCoaMarkerFor(id) {
   const size = f.markerSize || settings.globalMarkerSize || 40;
 
   let innerHtml;
-  if (f.coatOfArmsKey) {
-    const url = await resolveImageUrl(f.coatOfArmsKey);
-    innerHtml = `<img src="${escapeHtml(url)}" alt="Coat of Arms" style="width:${size}px;height:${size}px;object-fit:contain;display:block;">`;
-  } else {
-    const coaSeed = f.coatOfArms.seed || f.id;
-    const coaUrl = await window.generateCoatOfArms(coaSeed, { shield: f.coatOfArms.shield || 'heater', size: 256 });
-    innerHtml = `<img src="${coaUrl}" alt="Coat of Arms" style="width:${size}px;height:${size}px;object-fit:contain;display:block;">`;
+  try {
+    if (f.coatOfArmsKey) {
+      const url = await resolveImageUrl(f.coatOfArmsKey);
+      innerHtml = `<img src="${escapeHtml(url)}" alt="Coat of Arms" style="width:${size}px;height:${size}px;object-fit:contain;display:block;">`;
+    } else {
+      const coaSeed = f.coatOfArms.seed || f.id;
+      const coaUrl = await window.generateCoatOfArms(coaSeed, { shield: f.coatOfArms.shield || 'heater', size: 256 });
+      innerHtml = `<img src="${coaUrl}" alt="Coat of Arms" style="width:${size}px;height:${size}px;object-fit:contain;display:block;">`;
+    }
+  } catch (e) {
+    console.warn(`[updateCoaMarkerFor] Failed to resolve COA for "${id}":`, e);
+    return;
   }
 
   const m = L.marker(pos, {
