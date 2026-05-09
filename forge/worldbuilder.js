@@ -662,7 +662,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const lastSeenNewsVersion = loadLS('lastSeenNewsVersion', null);
     try {
-      const response = await fetch('data/news.json');
+      const response = await fetch(`data/news.json?v=${APP_VERSION}`);
       if (response.ok) {
         NEWS_DATA = await response.json();
         if (NEWS_DATA.length > 0) {
