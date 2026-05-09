@@ -56,7 +56,7 @@ const BLOCK_DEFINITIONS = {
     },
     Meter: {
         name: 'Meter',
-        icon: 'activity',
+        icon: 'gauge',
         defaultData: { label: '', current: 0, max: 10 }
     },
     MapEmbed: {

@@ -18,7 +18,7 @@ const SLASH_COMMANDS = [
   { type: 'MapEmbed',      label: 'Map',            icon: 'map-trifold',       desc: 'Embed an interactive map view' },
   { type: 'Timeline',      label: 'Timeline',       icon: 'calendar-blank',    desc: 'Chronological event list' },
   { type: 'Relationships', label: 'Relationships',  icon: 'arrows-horizontal', desc: 'Links to other entries' },
-  { type: 'Meter',         label: 'Meter',          icon: 'hourglass',         desc: 'Stat bar or progress meter' },
+  { type: 'Meter',         label: 'Meter',          icon: 'gauge',             desc: 'Stat bar or progress meter' },
   { type: 'Tags',          label: 'Tags',           icon: 'tag',               desc: 'Searchable tag labels' },
   { type: 'YouTube',       label: 'YouTube',        icon: 'youtube-logo',      desc: 'Embed YouTube video' },
   { type: 'Spotify',       label: 'Spotify',        icon: 'spotify-logo',      desc: 'Embed Spotify track' },
