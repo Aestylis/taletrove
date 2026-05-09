@@ -6,13 +6,13 @@ async function fetchJson(url) {
 
 async function loadAllData() {
   try {
-    const taxonomyData = await fetchJson('data/taxonomy.json');
+    const taxonomyData = await fetchJson(`data/taxonomy.json?v=${APP_VERSION}`);
     Object.assign(TAXONOMY, taxonomyData);
-    ICON_MANIFEST    = await fetchJson('data/icon-manifest.json');
-    UI_ICON_MANIFEST = await fetchJson('data/ui-icon-manifest.json');
-    GENERATOR_DATA = await fetchJson('data/generators.json');
+    ICON_MANIFEST    = await fetchJson(`data/icon-manifest.json?v=${APP_VERSION}`);
+    UI_ICON_MANIFEST = await fetchJson(`data/ui-icon-manifest.json?v=${APP_VERSION}`);
+    GENERATOR_DATA = await fetchJson(`data/generators.json?v=${APP_VERSION}`);
     // Synonyms are optional — failing to load them just means substring-only icon search.
-    try { ICON_SYNONYMS = await fetchJson('data/icon-synonyms.json'); } catch { ICON_SYNONYMS = {}; }
+    try { ICON_SYNONYMS = await fetchJson(`data/icon-synonyms.json?v=${APP_VERSION}`); } catch { ICON_SYNONYMS = {}; }
   } catch (e) {
     console.error("Failed to load core data:", e);
     showAlertModal('Critical Error', 'Could not load core application data. The app cannot run.');
@@ -125,7 +125,7 @@ function performGlobalSearch(query) {
 async function seedStarterTemplates() {
   let starters;
   try {
-    starters = await fetchJson('data/starter-templates.json');
+    starters = await fetchJson(`data/starter-templates.json?v=${APP_VERSION}`);
   } catch (e) {
     console.warn('[seedStarterTemplates] Could not load starter-templates.json:', e);
     return false;
