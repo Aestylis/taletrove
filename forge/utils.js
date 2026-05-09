@@ -177,7 +177,14 @@ const el = (tag, attrs = {}, children = []) => {
     else if (k === "for") n.htmlFor = v;
     else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
     else if (k === "text") n.textContent = v;
-    else if (k === "innerHTML") n.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(v) : v;
+    else if (k === "innerHTML") {
+      if (typeof DOMPurify === 'undefined') {
+        console.error('[el] DOMPurify not loaded — refusing to set innerHTML to prevent XSS');
+        n.textContent = v; // safe fallback: render as text rather than inject raw HTML
+      } else {
+        n.innerHTML = DOMPurify.sanitize(v);
+      }
+    }
     else if (n[k] !== undefined && typeof n[k] === 'boolean') { // boolean props need assignment, not setAttribute
       n[k] = !!v;
     }
@@ -356,7 +363,12 @@ async function resolveImageUrl(src) {
   if (!src) return undefined;
   if (src.startsWith('http')) return src;
   if (src.startsWith('img-') || src.startsWith('bg-img-') || src.startsWith('banner-') || src.startsWith('ci-')) {
-    if (_blobUrlCache.has(src)) return _blobUrlCache.get(src);
+    if (_blobUrlCache.has(src)) {
+      const cached = _blobUrlCache.get(src);
+      _blobUrlCache.delete(src);
+      _blobUrlCache.set(src, cached); // move to end = mark as recently used
+      return cached;
+    }
     
     let blob = await idbGet(src);
     if (!blob) return undefined;

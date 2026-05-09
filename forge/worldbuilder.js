@@ -3860,7 +3860,7 @@ function renderRecentProjects() {
     const dateStr = new Date(entry.lastModified).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const card = el('div', { class: 'hub-recent-card', title: `Open "${entry.name}"` });
     const thumb = el('div', { class: 'hub-recent-thumb' });
-    if (entry.thumbnailDataUrl) {
+    if (entry.thumbnailDataUrl && /^data:image\/[a-z]+;base64,/.test(entry.thumbnailDataUrl)) {
       thumb.style.backgroundImage = `url('${entry.thumbnailDataUrl}')`;
     }
     const name = el('div', { class: 'hub-recent-name', text: entry.name });
