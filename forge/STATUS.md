@@ -3,11 +3,24 @@
 > Last verified: 2026-05-08. All statuses confirmed by direct code inspection.
 > TaleTrove follows [VERSIONING.md](../VERSIONING.md) rules.
 
-## Current Version: `0.6.2-alpha` (Session Layer — Phases A–J + I + L complete; M deferred)
+## Current Version: `0.6.7-alpha` (Session Layer — Phases A–J + I + L complete; M deferred)
 
 ---
 
 ## 🚀 Version History
+
+### Alpha 6.7 — Security Hardening + Polish (2026-05-09)
+
+- ✅ **Security — DOMPurify fallback**: `el()` in `utils.js` now refuses to set `innerHTML` if DOMPurify is missing, falling back to `textContent` instead of injecting raw HTML.
+- ✅ **Security — thumbnailDataUrl CSS injection**: Hub recent-project thumbnails now validated against `data:image/...;base64,` prefix before interpolating into CSS `background-image`.
+- ✅ **Security — Blob URL LRU cache**: `resolveImageUrl` cache now moves entries to tail on hit (true LRU eviction instead of FIFO). (`utils.js`)
+- ✅ **Emoji pin icons**: "Emoji" tab in the icon picker side sheet; 6 curated fantasy categories (~105 emoji). `isEmoji()` helper in `utils.js`; `getIconHTMLSync` short-circuits to `<span class="emoji-pin-icon">` bypassing CSS mask. (`modals.js`, `ui.js`, `worldbuilder.css`)
+- ✅ **Asset import from URL**: `+ URL` button in Assets panel; security-validates protocol (https only), no credentials, Content-Type must start with `image/`, 10 MB streaming cap, 15s timeout. (`worldbuilder.js`, `index.html`)
+- ✅ **Hero image X button**: Remove button moved from centered "Remove" text to a standard icon-button (x.svg, CSS mask) positioned top-right, hidden until hover, danger color on hover. (`inspector.js`, `worldbuilder.css`)
+- ✅ **Removed dead code — hero image search**: "Search free images" link removed from hero empty state (image search providers scrapped; workflow is Assets → drag/upload).
+- ✅ **16 missing `.catch()` handlers**: Added across `inspector.js`, `modals.js`, `panels.js`, `worldbuilder.js`, `ui.js`, `block-editor.js` — IDB failures surface an alert modal; image resolution failures fail silently.
+- ✅ **Accessibility — aria-labels**: All icon-only panel control buttons (expand, edit, properties, close, back, add block) now have `aria-label` matching their `title`. (`inspector.js`)
+- ❌ **Scrapped — Pexels / Pixabay / Unsplash providers**: Third-party API keys add deployment friction; Wikimedia Commons sufficient for fantasy worldbuilding.
 
 ### Alpha 6.2 — Markercluster + Bug Fixes (2026-05-08)
 
@@ -231,14 +244,14 @@
 | ~~**Radial context menu — sub-actions**~~ | ~~Medium~~ | ✅ Done. Redesigned as pin-petal flower: each button is a map-pin teardrop with tip pointing inward. 6 flat actions for points (Properties, Change Icon, Icon Color, Pin Color, Pin Shape, Delete), no sub-rings. (`map.js`, `worldbuilder.css`) |
 | ~~**Radial menu — petal gradient palette**~~ | ~~Low~~ | ✅ Done. Each pin-petal gets a unique `color-mix` hue tint (amber → lime → teal → blue → violet) via `nth-child`; hover border/glow/icon inherit per-petal `--petal-accent`. (`worldbuilder.css`) |
 | Bulk editing | ✅ | `worldbuilder.js: handleBulkUpdate`, `inspector.js: buildBulkEditInspector` |
-| **Universal Links System** | **High** | ✅ Phase 1 + 2 complete — `entity.links[]`, inspector UI, spatial containment detection, bidirectional "Linked by" view. Phase 3 (bidirectional write-through, relational graph view) deferred. |
+| **Universal Links System** | **High** | ✅ Phase 1 + 2 complete — `entity.links[]`, inspector UI, spatial containment detection, bidirectional "Linked by" view. Relational graph view done (see Future/Research). Phase 3 (bidirectional write-through) deferred. |
 | ~~CoA — Assets panel + lore-pin display~~ | ~~Medium~~ | ✅ Done. Lore-pins on the map now show a small territory CoA badge (18px, bottom-right) when the entry has a `territory` link to a polygon with a CoA — resolves from blob or Armoria generator, silently skipped on error. Custom CoA uploads now labeled `CoA · [entity name]` in the Assets panel via `getAssetDisplayName`. |
 | ~~**Templates — Encyclopedia support**~~ | ~~Medium~~ | ✅ Done. Encyclopedia context menu now calls `saveLayoutTemplate(id, 'encyclopedia')` instead of the fake duplicate+tag hack. `saveLayoutTemplate` stores `entityType` on layout templates; inspector picker filters by entity type (legacy templates with no `entityType` remain visible everywhere). Settings → Templates pane now has two sections: Feature Templates (map-placing, editable) and Layout Templates (block presets, with entity type chip + delete). `deleteLayoutTemplate` added. |
-| Automated E2E testing (Playwright) | High | No test suite yet; `.playwright-mcp/` config exists — **Alpha 5** |
+| Automated E2E testing (Playwright) | High | Partial — `tests/smoke.spec.js`, `tests/modals.spec.js`, `tests/calendar.spec.js` exist; coverage incomplete |
 | Virtual scrolling (Encyclopedia) | High | Defer — needed at 1000+ entries; profiling hasn't confirmed urgency — **Alpha 5** |
 | **Assets — Unsplash integration** | Medium | Browse/search Unsplash free photos directly in the Assets tab; insert as hero image or image block. Requires Unsplash API key (free tier: 50 req/hr). Use `utm_source` attribution param to comply with guidelines. |
 | **Assets — Pinterest integration** | High | Browse user's Pinterest boards and pins as image sources. Requires Pinterest OAuth + Developer App approval. Pin images are not freely embeddable — may need to link-out rather than import. Investigate viability before starting. |
-| **Assets — Additional free image sources** | Medium | Candidates: **Wikimedia Commons** (REST API, no key, CC-licensed art/maps — ideal for fantasy worlds), **Pexels** (free API, similar to Unsplash), **Pixabay** (free API, broad content). A unified "Image Search" panel in Assets that queries multiple sources would be ideal. |
+| ~~**Assets — Additional free image sources**~~ | ~~Medium~~ | ✅ Wikimedia Commons done (see below). Pexels/Pixabay/Unsplash scrapped. |
 | ~~**Assets — Wikimedia Commons (first source)**~~ | ~~Medium~~ | ✅ Done. Search modal in Assets via provider-abstracted `image-search.js`. CC-licensed, no API key. Attribution stored in `state.assetMeta` (source/author/license/sourceUrl) — surfaces on Assets tile + Inspector. |
 | ~~**Assets — Inline image search (image-block + hero-image)**~~ | ~~Low~~ | ✅ Done. `openImageSearchModal` wired into image-block upload menu (`block-editor.js`) and hero-image picker (`inspector.js`). |
 | ~~**Assets — Pexels / Pixabay / Unsplash providers**~~ | ~~Medium~~ | ❌ Scrapped. Wikimedia Commons sufficient for fantasy worldbuilding use case; third-party API keys add deployment friction. |
