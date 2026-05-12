@@ -11647,6 +11647,9 @@ mark {
   margin-top: 12px;
 }
 .backlink-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px 14px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -11656,6 +11659,7 @@ mark {
   transition: all 0.2s ease;
   cursor: pointer;
 }
+.backlink-item .backlink-name { flex: 1 1 auto; }
 .backlink-item:hover {
   border-color: var(--accent-orange);
   background: rgba(var(--accent-orange-rgb), 0.05);

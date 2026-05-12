@@ -146,11 +146,18 @@ function buildBacklinksSection(name, id, parentElement) {
 
   const list = el('div', { class: 'backlinks-list' });
   backlinks.forEach(link => {
-    const item = el('div', {
-      class: 'backlink-item clickable',
-      text: link.name,
-      title: `Click to navigate to ${link.name}`
-    });
+    const item = el('div', { class: 'backlink-item clickable', title: `Click to navigate to ${link.name}` });
+    item.appendChild(el('span', { class: 'backlink-name', text: link.name }));
+
+    if (link.type !== 'map') {
+      const besideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
+      besideBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.openBesidePanel?.(link.id, link.type === 'feature' ? 'feature' : 'encyclopedia');
+      });
+      item.appendChild(besideBtn);
+    }
+
     item.onclick = () => {
       if (link.type === 'feature') {
         window.navigateAndPeek?.(link.id, 'feature');
