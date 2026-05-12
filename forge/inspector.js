@@ -1711,67 +1711,89 @@ async function buildLinksSection(entity, entityType, parentElement) {
     const currentLinks = entity.links || [];
     if (currentLinks.length === 0) {
       chipsList.appendChild(el('span', { class: 'entity-links-empty muted', text: 'No links yet' }));
+      return;
     }
+
+    // Group links by linkType for structured sidebar display
+    const groups = new Map();
     for (const link of currentLinks) {
-      let target = null;
-      if (link.targetType === 'encyclopedia') target = state.encyclopedia.find(e => e.id === link.targetId);
-      else if (link.targetType === 'feature')  target = state.features.find(f => f.id === link.targetId);
-      else if (link.targetType === 'map')      target = (state.maps || []).find(m => m.id === link.targetId);
-      else if (link.targetId) {
-        // targetType missing — search all silos and repair in-place
-        target = state.encyclopedia.find(e => e.id === link.targetId)
-              || state.features.find(f => f.id === link.targetId)
-              || (state.maps || []).find(m => m.id === link.targetId);
-        if (target) {
-          link.targetType = state.encyclopedia.some(e => e.id === link.targetId) ? 'encyclopedia'
-                          : state.features.some(f => f.id === link.targetId)     ? 'feature'
-                          : 'map';
+      const type = link.linkType || 'related';
+      if (!groups.has(type)) groups.set(type, []);
+      groups.get(type).push(link);
+    }
+    const getLinkTypeLabel = (type) => {
+      const found = LINK_TYPES.find(lt => lt.value === type);
+      return found ? found.label : (type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, ' '));
+    };
+
+    for (const [type, links] of groups) {
+      const groupEl = el('div', { class: 'entity-links-group' });
+      groupEl.appendChild(el('div', { class: 'entity-links-group-label', text: getLinkTypeLabel(type) }));
+      const groupChips = el('div', { class: 'entity-links-group-chips' });
+
+      for (const link of links) {
+        let target = null;
+        if (link.targetType === 'encyclopedia') target = state.encyclopedia.find(e => e.id === link.targetId);
+        else if (link.targetType === 'feature')  target = state.features.find(f => f.id === link.targetId);
+        else if (link.targetType === 'map')      target = (state.maps || []).find(m => m.id === link.targetId);
+        else if (link.targetId) {
+          // targetType missing — search all silos and repair in-place
+          target = state.encyclopedia.find(e => e.id === link.targetId)
+                || state.features.find(f => f.id === link.targetId)
+                || (state.maps || []).find(m => m.id === link.targetId);
+          if (target) {
+            link.targetType = state.encyclopedia.some(e => e.id === link.targetId) ? 'encyclopedia'
+                            : state.features.some(f => f.id === link.targetId)     ? 'feature'
+                            : 'map';
+          }
         }
+
+        const name = target ? (target.title || target.name || '(untitled)') : '(untitled)';
+        const iconHtml = target ? (await getSidebarIconHTML(target)) : '';
+
+        const chip = el('div', { class: 'entity-link-chip' });
+        const iconWrap = el('div', { class: 'item-icon' });
+        iconWrap.innerHTML = iconHtml;
+        chip.appendChild(iconWrap);
+
+        const nameSpan = el('span', { class: 'entity-link-name', text: name });
+        if (target) {
+          nameSpan.classList.add('entity-link-navigate');
+          nameSpan.onclick = () => {
+            if (link.targetType === 'encyclopedia') window.navigateAndPeek?.(link.targetId, 'encyclopedia');
+            else if (link.targetType === 'feature') window.navigateAndPeek?.(link.targetId, 'feature');
+            else if (link.targetType === 'map')     window.navigateToMap(link.targetId, { skipInfoPanel: true });
+          };
+        }
+        chip.appendChild(nameSpan);
+
+        if (target && (link.targetType === 'feature' || link.targetType === 'encyclopedia')) {
+          const besideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
+          besideBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.openBesidePanel?.(link.targetId, link.targetType);
+          });
+          chip.appendChild(besideBtn);
+        }
+
+        if (link.label) chip.appendChild(el('span', { class: 'entity-link-sublabel muted', text: link.label }));
+
+        if (role === 'gm') {
+          const removeBtn = el('button', { class: 'entity-link-remove', title: 'Remove link', text: '×' });
+          removeBtn.onclick = () => {
+            recordState();
+            entity.links = (entity.links || []).filter(l => l.id !== link.id);
+            markEntityDirty(entityType, entity.id);
+            rebuildChips();
+            debouncedSave();
+          };
+          chip.appendChild(removeBtn);
+        }
+        groupChips.appendChild(chip);
       }
 
-      const name = target ? (target.title || target.name || '(untitled)') : '(untitled)';
-      const iconHtml = target ? (await getSidebarIconHTML(target)) : '';
-
-      const chip = el('div', { class: 'entity-link-chip' });
-      const iconWrap = el('div', { class: 'item-icon' });
-      iconWrap.innerHTML = iconHtml;
-      chip.appendChild(iconWrap);
-
-      const nameSpan = el('span', { class: 'entity-link-name', text: name });
-      if (target) {
-        nameSpan.classList.add('entity-link-navigate');
-        nameSpan.onclick = () => {
-          if (link.targetType === 'encyclopedia') window.navigateAndPeek?.(link.targetId, 'encyclopedia');
-          else if (link.targetType === 'feature') window.navigateAndPeek?.(link.targetId, 'feature');
-          else if (link.targetType === 'map')     window.navigateToMap(link.targetId, { skipInfoPanel: true });
-        };
-      }
-      chip.appendChild(nameSpan);
-
-      if (target && (link.targetType === 'feature' || link.targetType === 'encyclopedia')) {
-        const besideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
-        besideBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          window.openBesidePanel?.(link.targetId, link.targetType);
-        });
-        chip.appendChild(besideBtn);
-      }
-
-      if (link.label) chip.appendChild(el('span', { class: 'entity-link-sublabel muted', text: link.label }));
-      chip.appendChild(el('span', { class: 'entity-link-type-badge', text: link.linkType }));
-
-      if (role === 'gm') {
-        const removeBtn = el('button', { class: 'entity-link-remove', title: 'Remove link', text: '×' });
-        removeBtn.onclick = () => {
-          recordState();
-          entity.links = (entity.links || []).filter(l => l.id !== link.id);
-          markEntityDirty(entityType, entity.id);
-          rebuildChips();
-          debouncedSave();
-        };
-        chip.appendChild(removeBtn);
-      }
-      chipsList.appendChild(chip);
+      groupEl.appendChild(groupChips);
+      chipsList.appendChild(groupEl);
     }
   };
 
