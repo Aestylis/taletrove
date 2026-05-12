@@ -2918,7 +2918,7 @@ textarea[disabled] {
 
 /* Emoji inside pin divIcon */
 .emoji-pin-icon {
-  font-size: 0.6em;
+  font-size: 1.1em;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -2930,7 +2930,7 @@ textarea[disabled] {
 }
 
 .pin-blank .pin-icon-inner .emoji-pin-icon {
-  font-size: 1.3em;
+  font-size: 1.6em;
 }
 
 .icon-grid {
