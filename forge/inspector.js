@@ -1689,6 +1689,12 @@ async function buildLinksSection(entity, entityType, parentElement) {
 
   const chipsList = el('div', { class: 'entity-links-list' });
 
+  const getLinkTypeLabel = (type) => {
+    const found = LINK_TYPES.find(lt => lt.value === type);
+    return found ? found.label : (type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, ' '));
+  };
+  const typeOrder = new Map(LINK_TYPES.map((lt, i) => [lt.value, i]));
+
   const rebuildChips = async () => {
     chipsList.innerHTML = '';
 
@@ -1714,19 +1720,16 @@ async function buildLinksSection(entity, entityType, parentElement) {
       return;
     }
 
-    // Group links by linkType for structured sidebar display
+    // Group links by linkType, sorted by canonical LINK_TYPES order
     const groups = new Map();
     for (const link of currentLinks) {
       const type = link.linkType || 'related';
       if (!groups.has(type)) groups.set(type, []);
       groups.get(type).push(link);
     }
-    const getLinkTypeLabel = (type) => {
-      const found = LINK_TYPES.find(lt => lt.value === type);
-      return found ? found.label : (type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, ' '));
-    };
+    const sortedGroups = [...groups.entries()].sort(([a], [b]) => (typeOrder.get(a) ?? 999) - (typeOrder.get(b) ?? 999));
 
-    for (const [type, links] of groups) {
+    for (const [type, links] of sortedGroups) {
       const groupEl = el('div', { class: 'entity-links-group' });
       groupEl.appendChild(el('div', { class: 'entity-links-group-label', text: getLinkTypeLabel(type) }));
       const groupChips = el('div', { class: 'entity-links-group-chips' });
@@ -1827,25 +1830,40 @@ async function buildLinksSection(entity, entityType, parentElement) {
     section.appendChild(el('div', { class: 'form-label muted', style: 'font-size:0.75rem;margin-top:0.5rem', text: 'Linked by' }));
     const linkedByList = el('div', { class: 'entity-linked-by-list' });
 
-    for (const { source, sourceType, link } of incoming) {
-      const iconHtml = await getSidebarIconHTML(source);
-      const chip = el('div', { class: 'entity-link-chip entity-link-incoming' });
-      const iconWrap = el('div', { class: 'item-icon' });
-      iconWrap.innerHTML = iconHtml;
-      chip.appendChild(iconWrap);
-      const nameSpan = el('span', { class: 'entity-link-name entity-link-navigate', text: source.title || source.name || '(untitled)' });
-      nameSpan.onclick = () => {
-        window.navigateAndPeek?.(source.id, sourceType);
-      };
-      chip.appendChild(nameSpan);
-      const incomingBesideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
-      incomingBesideBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        window.openBesidePanel?.(source.id, sourceType);
-      });
-      chip.appendChild(incomingBesideBtn);
-      chip.appendChild(el('span', { class: 'entity-link-type-badge', text: link.linkType }));
-      linkedByList.appendChild(chip);
+    // Group incoming by linkType, sorted canonically
+    const incomingGroups = new Map();
+    for (const item of incoming) {
+      const type = item.link.linkType || 'related';
+      if (!incomingGroups.has(type)) incomingGroups.set(type, []);
+      incomingGroups.get(type).push(item);
+    }
+    const sortedIncoming = [...incomingGroups.entries()].sort(([a], [b]) => (typeOrder.get(a) ?? 999) - (typeOrder.get(b) ?? 999));
+
+    for (const [type, items] of sortedIncoming) {
+      const groupEl = el('div', { class: 'entity-links-group' });
+      groupEl.appendChild(el('div', { class: 'entity-links-group-label', text: getLinkTypeLabel(type) }));
+      const groupChips = el('div', { class: 'entity-links-group-chips' });
+
+      for (const { source, sourceType } of items) {
+        const iconHtml = await getSidebarIconHTML(source);
+        const chip = el('div', { class: 'entity-link-chip entity-link-incoming' });
+        const iconWrap = el('div', { class: 'item-icon' });
+        iconWrap.innerHTML = iconHtml;
+        chip.appendChild(iconWrap);
+        const nameSpan = el('span', { class: 'entity-link-name entity-link-navigate', text: source.title || source.name || '(untitled)' });
+        nameSpan.onclick = () => { window.navigateAndPeek?.(source.id, sourceType); };
+        chip.appendChild(nameSpan);
+        const incomingBesideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
+        incomingBesideBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.openBesidePanel?.(source.id, sourceType);
+        });
+        chip.appendChild(incomingBesideBtn);
+        groupChips.appendChild(chip);
+      }
+
+      groupEl.appendChild(groupChips);
+      linkedByList.appendChild(groupEl);
     }
 
     section.appendChild(linkedByList);
