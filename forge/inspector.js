@@ -9,6 +9,12 @@ let peekViewMode = false;
 let peekViewId = null;
 let peekViewType = 'feature';
 
+// Pinned Peek — M3 Supporting Pane (article-mode only)
+let peekPinned = false;
+let pinnedPeekId = null;
+let pinnedPeekType = 'feature';
+let _pinnedPanelReqId = 0;
+
 // Reading level memory — tracks the user's last intentional reading level so
 // that navigating to a new entity from the nav panel reopens at the same level.
 // null = closed, 'peek' = side-sheet, 'article' = full article view
@@ -1735,6 +1741,15 @@ async function buildLinksSection(entity, entityType, parentElement) {
       }
       chip.appendChild(nameSpan);
 
+      if (target && (link.targetType === 'feature' || link.targetType === 'encyclopedia')) {
+        const besideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
+        besideBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.openBesidePanel?.(link.targetId, link.targetType);
+        });
+        chip.appendChild(besideBtn);
+      }
+
       if (link.label) chip.appendChild(el('span', { class: 'entity-link-sublabel muted', text: link.label }));
       chip.appendChild(el('span', { class: 'entity-link-type-badge', text: link.linkType }));
 
@@ -1794,6 +1809,12 @@ async function buildLinksSection(entity, entityType, parentElement) {
         window.navigateAndPeek?.(source.id, sourceType);
       };
       chip.appendChild(nameSpan);
+      const incomingBesideBtn = el('button', { class: 'open-beside-btn', title: 'Open beside', 'aria-label': 'Open beside', innerHTML: getIconHTMLSync('push-pin', 'currentColor') });
+      incomingBesideBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.openBesidePanel?.(source.id, sourceType);
+      });
+      chip.appendChild(incomingBesideBtn);
       chip.appendChild(el('span', { class: 'entity-link-type-badge', text: link.linkType }));
       linkedByList.appendChild(chip);
     }
@@ -2414,6 +2435,8 @@ function exitArticleMode() {
   const id = articleViewId;
   const type = articleViewType;
 
+  closeBesidePanel();
+
   preferredReadingLevel = null;
   articleViewMode = false;
   articleViewId = null;
@@ -2424,6 +2447,100 @@ function exitArticleMode() {
 
   window.hideInfoPanel();
 }
+
+// ── Pinned Peek (M3 Supporting Pane) ─────────────────────────────────────
+
+async function openBesidePanel(id, type = 'feature') {
+  if (!document.body.classList.contains('article-mode')) return;
+  // Toggle off if same article is already pinned
+  if (peekPinned && pinnedPeekId === id && pinnedPeekType === type) {
+    closeBesidePanel();
+    return;
+  }
+  peekPinned = true;
+  pinnedPeekId = id;
+  pinnedPeekType = type;
+  window.peekPinned = true;
+  document.body.classList.add('peek-pinned');
+  $('#pinnedPeekPanel')?.classList.remove('hidden');
+  await showPinnedPeekPanel(id, type);
+}
+
+function closeBesidePanel() {
+  if (!peekPinned) return;
+  peekPinned = false;
+  pinnedPeekId = null;
+  pinnedPeekType = 'feature';
+  window.peekPinned = false;
+  document.body.classList.remove('peek-pinned');
+  const panel = $('#pinnedPeekPanel');
+  if (panel) {
+    panel.classList.add('hidden');
+    const ctrl = $('#pinnedPeekControls');
+    const body = $('#pinnedPeekBody');
+    if (ctrl) ctrl.innerHTML = '';
+    if (body) body.innerHTML = '';
+  }
+}
+
+async function showPinnedPeekPanel(id, type = 'feature') {
+  const myReqId = ++_pinnedPanelReqId;
+
+  const item = type === 'map'
+    ? state.maps.find(x => x.id === id)
+    : state.articles.find(x => x.id === id);
+  if (!item) { closeBesidePanel(); return; }
+
+  const ctrl = $('#pinnedPeekControls');
+  const body = $('#pinnedPeekBody');
+  if (!ctrl || !body) return;
+
+  ctrl.innerHTML = '';
+  body.innerHTML = '';
+
+  // Controls: entity name | spacer | open-full-article | close
+  const title = el('span', { class: 'pinned-peek-title', text: item.title || item.name || '(untitled)' });
+  ctrl.appendChild(title);
+  ctrl.appendChild(el('span', { style: 'flex:1' }));
+
+  const openIconHtml = await getIconHTML('book-open-text', 'var(--text)');
+  if (myReqId !== _pinnedPanelReqId) return;
+  const openBtn = el('button', { class: 'panel-icon-btn', title: 'Open full article', 'aria-label': 'Open full article', innerHTML: openIconHtml });
+  openBtn.onclick = () => { closeBesidePanel(); enterArticleMode(id, type); };
+  ctrl.appendChild(openBtn);
+
+  const closeIconHtml = await getIconHTML('x', 'var(--text)');
+  if (myReqId !== _pinnedPanelReqId) return;
+  const closeBtn = el('button', { class: 'panel-icon-btn', title: 'Close', 'aria-label': 'Close pinned pane', innerHTML: closeIconHtml });
+  closeBtn.onclick = closeBesidePanel;
+  ctrl.appendChild(closeBtn);
+
+  // Body: entity header (peek style) + blocks read-only
+  const headerEl = await buildEntityHeader(item, { showMeta: true, isPeek: true });
+  if (myReqId !== _pinnedPanelReqId) return;
+  body.appendChild(headerEl);
+
+  const blocksWrapper = el('div', { class: 'canvas-wrapper' });
+  const blocksContainer = el('div', { id: 'pinnedPeekBlocksContainer' });
+  blocksWrapper.appendChild(blocksContainer);
+  body.appendChild(blocksWrapper);
+
+  let blocks = item.blocks || [];
+  if (role === 'player') blocks = blocks.filter(b => b.visibleToPlayers);
+
+  if (blocks.length > 0) {
+    for (const block of blocks) {
+      if (myReqId !== _pinnedPanelReqId) return;
+      const blockEl = await renderBlock(block);
+      blocksContainer.appendChild(blockEl);
+    }
+  } else {
+    blocksContainer.appendChild(el('p', { class: 'muted', style: 'padding:1rem;font-size:0.85rem', text: 'No content yet.' }));
+  }
+}
+
+window.openBesidePanel  = openBesidePanel;
+window.closeBesidePanel = closeBesidePanel;
 
 async function enterPeekMode(id, type = 'feature') {
   preferredReadingLevel = 'peek';

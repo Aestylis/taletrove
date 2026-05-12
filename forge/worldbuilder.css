@@ -14327,6 +14327,107 @@ body.article-mode #contentContainer {
 
 body.article-mode #minimapContainer { display: block; }
 
+/* ── Pinned Peek — M3 Supporting Pane ──────────────────────────────────────
+   Triggered via "open beside" (push-pin) on entity link chips while in
+   article-mode. Primary article squishes left; pinned pane slides in from
+   the right. Read-only. Accent top-stripe signals the pinned state.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#pinnedPeekPanel {
+  position: fixed;
+  top: 52px;
+  right: calc(-1 * var(--info-panel-width));
+  width: var(--info-panel-width);
+  height: calc(100% - 52px);
+  background: color-mix(in srgb, var(--panel) 96%, var(--border) 4%);
+  border-left: 1px solid var(--border);
+  border-top: 2px solid transparent;
+  z-index: calc(var(--z-panels) + 1);
+  overflow: hidden;
+  transition: right 0.35s cubic-bezier(0.05, 0.7, 0.1, 1.0),
+              border-top-color 0.2s;
+}
+
+#pinnedPeekPanel.hidden { display: none; }
+
+body.peek-pinned #pinnedPeekPanel {
+  right: 0;
+  border-top-color: var(--accent);
+}
+
+/* Primary article panel squishes away from the pinned pane */
+body.article-mode.peek-pinned #infoPanel {
+  right: var(--info-panel-width);
+  transition: right 0.35s cubic-bezier(0.05, 0.7, 0.1, 1.0);
+}
+
+/* Minimap shifts left so it doesn't overlap the pinned pane */
+body.article-mode.peek-pinned #minimapContainer {
+  right: calc(var(--info-panel-width) + 1.5rem);
+  transition: right 0.35s cubic-bezier(0.05, 0.7, 0.1, 1.0);
+}
+
+#pinnedPeekContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+#pinnedPeekControls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 96%, var(--border) 4%);
+}
+
+#pinnedPeekControls .pinned-peek-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+#pinnedPeekBody {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 4rem;
+}
+
+/* Blocks in the pinned pane use peek-mode density */
+#pinnedPeekBody .canvas-block p,
+#pinnedPeekBody .canvas-block li { font-size: 0.875rem; line-height: 1.6; }
+
+#pinnedPeekBody .canvas-block h1 { font-size: 1.6rem; }
+#pinnedPeekBody .canvas-block h2 { font-size: 1.25rem; }
+#pinnedPeekBody .canvas-block h3 { font-size: 1.05rem; }
+
+/* Open-beside (push-pin) button on entity link chips */
+.open-beside-btn {
+  opacity: 0;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0 0.15rem;
+  line-height: 1;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.open-beside-btn:hover { color: var(--accent); }
+.entity-link-chip:hover .open-beside-btn { opacity: 1; }
+
+/* Hide the button outside article-mode — pinned pane only makes sense there */
+body:not(.article-mode) .open-beside-btn { display: none; }
+
 /* ── Wiki-view hero: full-bleed image with LK-style bottom fade ─────────── */
 
 /* Hero is naturally full-width — #selectionPanelContent has no horizontal padding */

@@ -5129,6 +5129,8 @@ function renderRecentProjects() {
           hideOverlayMenuPopover();
         } else if (document.body.classList.contains('properties-sheet-open')) {
           window.closePropertiesSheet?.();
+        } else if (document.body.classList.contains('peek-pinned')) {
+          window.closeBesidePanel?.();
         } else if (document.body.classList.contains('article-mode') && window.exitArticleMode) {
           window.exitArticleMode();
         } else {
