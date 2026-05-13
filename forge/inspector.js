@@ -2479,6 +2479,14 @@ async function enterArticleMode(id, type = 'feature') {
 
 function exitArticleMode() {
   if (!articleViewMode) return;
+
+  // Flush any focused input before hiding — panel slides off-screen via CSS,
+  // not display:none, so blur/onchange never fire naturally on hide.
+  const infoPanel = document.getElementById('infoPanel');
+  if (infoPanel?.contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+
   const id = articleViewId;
   const type = articleViewType;
 
@@ -2664,6 +2672,7 @@ async function openPropertiesSheet(id, type) {
     selectedId = id;
     selectedEncyclopediaEntryId = null;
   }
+  window.updateSelectionStyles?.();
 
   const sheet = document.getElementById('propertiesSheet');
   const content = document.getElementById('propertiesSheetContent');

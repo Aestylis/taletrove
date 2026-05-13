@@ -5048,7 +5048,11 @@ function renderRecentProjects() {
       return;
     }
     const activeEl = document.activeElement;
-    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT' || activeEl.isContentEditable)) {
+    const modeActive = document.body.classList.contains('article-mode') ||
+      document.body.classList.contains('peek-mode') ||
+      document.body.classList.contains('properties-sheet-open') ||
+      document.getElementById('infoPanel')?.classList.contains('content-edit-mode');
+    if (!modeActive && activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT' || activeEl.isContentEditable)) {
       return;
     }
 
