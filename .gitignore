@@ -27,8 +27,10 @@ CLAUDE.md
 GEMINI.md
 .claude/
 
-# Internal dev notes — not for the public repo
-forge/STATUS.md
+# Markdown files — internal docs stay local
+*.md
+!README.md
+!CONTRIBUTING.md
 
 # Session memory (Claude .remember/ directory)
 .remember/
