@@ -3144,6 +3144,54 @@ async function promptAndSetMapImage(mapId) {
 
   fileInput.click();
 }
+window.promptAndSetMapImage = promptAndSetMapImage;
+
+function syncMapEmptyState() {
+  const overlay = document.getElementById('mapEmptyState');
+  if (!overlay) return;
+  if (role !== 'gm') { overlay.classList.add('hidden'); return; }
+
+  const activeMap = state.maps.find(m => m.id === state.activeMapId);
+  if (!activeMap) { overlay.classList.add('hidden'); return; }
+
+  const hasImage = !!activeMap.imageKey;
+  const hasPins = state.features.some(f => f.mapId === state.activeMapId);
+
+  if (hasImage && hasPins) { overlay.classList.add('hidden'); return; }
+
+  overlay.dataset.state = hasImage ? 'no-pins' : 'no-image';
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = '';
+
+  const iconUrl = hasImage ? 'ui-icons/map-pin.svg' : 'ui-icons/file-image.svg';
+  const heading = hasImage ? 'No pins yet' : 'Start with a base map';
+  const subtext = hasImage
+    ? 'Press <kbd>N</kbd> or click the pin tool to drop your first location.'
+    : 'Upload an image to set the stage for your world.';
+
+  const iconDiv = document.createElement('div');
+  iconDiv.className = 'map-empty-icon';
+  iconDiv.innerHTML = `<div class="icon-container" style="-webkit-mask-image:url('${iconUrl}');mask-image:url('${iconUrl}');"></div>`;
+
+  const headingEl = document.createElement('div');
+  headingEl.className = 'map-empty-heading';
+  headingEl.textContent = heading;
+
+  const subtextEl = document.createElement('div');
+  subtextEl.className = 'map-empty-subtext';
+  subtextEl.innerHTML = subtext;
+
+  overlay.append(iconDiv, headingEl, subtextEl);
+
+  if (!hasImage) {
+    const cta = document.createElement('button');
+    cta.className = 'map-empty-cta';
+    cta.textContent = 'Load Map Image';
+    cta.addEventListener('click', () => promptAndSetMapImage(state.activeMapId));
+    overlay.appendChild(cta);
+  }
+}
+window.syncMapEmptyState = syncMapEmptyState;
 
 /**
  * Reads a user-provided CSS file and extracts only the allowed properties.
