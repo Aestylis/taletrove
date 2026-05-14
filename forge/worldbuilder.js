@@ -4621,6 +4621,89 @@ function renderRecentProjects() {
   _overlayPopover.addEventListener('mouseenter', _overlayCancelHide);
   _overlayPopover.addEventListener('mouseleave', _overlayStartHide);
 
+  // --- DRAW GROUP POPOVER ---
+  function _closeDrawGroupPopover() {
+    const pop = $('#drawGroupPopover');
+    if (pop) pop.classList.add('hidden');
+    const btn = $('#drawGroupBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function openDrawGroupPopover(triggerBtn) {
+    const popover = $('#drawGroupPopover');
+    // Close the overflow popover if open
+    const overflow = $('#toolbarOverflowPopover');
+    if (overflow && !overflow.classList.contains('hidden')) {
+      overflow.classList.add('hidden');
+      $('#toolbarOverflowBtn')?.setAttribute('aria-expanded', 'false');
+    }
+    const isHidden = popover.classList.toggle('hidden');
+    triggerBtn.setAttribute('aria-expanded', String(!isHidden));
+    if (!isHidden) {
+      const btnRect = triggerBtn.getBoundingClientRect();
+      const wrapRect = $('.map-wrap').getBoundingClientRect();
+      popover.style.left = `${btnRect.left - wrapRect.left + btnRect.width / 2}px`;
+      popover.style.transform = 'translateX(-50%)';
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      if (spaceBelow > 80) {
+        popover.style.top = `${btnRect.bottom - wrapRect.top + 8}px`;
+        popover.style.bottom = '';
+      } else {
+        popover.style.top = 'auto';
+        popover.style.bottom = `${wrapRect.bottom - btnRect.top + 8}px`;
+      }
+    }
+  }
+  $('#drawGroupBtn').addEventListener('click', (e) => { e.stopPropagation(); openDrawGroupPopover(e.currentTarget); });
+  // Close draw popover when a tool inside it is selected
+  $('#drawGroupPopover').addEventListener('click', (e) => {
+    if (e.target.closest('button')) _closeDrawGroupPopover();
+  });
+
+  // --- TOOLBAR OVERFLOW POPOVER ---
+  function _closeToolbarOverflowPopover() {
+    const pop = $('#toolbarOverflowPopover');
+    if (pop) pop.classList.add('hidden');
+    const btn = $('#toolbarOverflowBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function openToolbarOverflowPopover(triggerBtn) {
+    const popover = $('#toolbarOverflowPopover');
+    // Close the draw group popover if open
+    const drawPop = $('#drawGroupPopover');
+    if (drawPop && !drawPop.classList.contains('hidden')) _closeDrawGroupPopover();
+    const isHidden = popover.classList.toggle('hidden');
+    triggerBtn.setAttribute('aria-expanded', String(!isHidden));
+    if (!isHidden) {
+      const btnRect = triggerBtn.getBoundingClientRect();
+      const wrapRect = $('.map-wrap').getBoundingClientRect();
+      const popoverHalfWidth = 100;
+      const edgePad = 8;
+      const rawCenter = btnRect.left - wrapRect.left + btnRect.width / 2;
+      const maxLeft = wrapRect.width - popoverHalfWidth * 2 - edgePad;
+      popover.style.left = `${Math.min(rawCenter, maxLeft)}px`;
+      popover.style.transform = 'translateX(-50%)';
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      if (spaceBelow > 220) {
+        popover.style.top = `${btnRect.bottom - wrapRect.top + 8}px`;
+        popover.style.bottom = '';
+      } else {
+        popover.style.top = 'auto';
+        popover.style.bottom = `${wrapRect.bottom - btnRect.top + 8}px`;
+      }
+    }
+  }
+  $('#toolbarOverflowBtn').addEventListener('click', (e) => { e.stopPropagation(); openToolbarOverflowPopover(e.currentTarget); });
+  // Close overflow popover when an action inside it is activated
+  $('#toolbarOverflowPopover').addEventListener('click', (e) => {
+    if (e.target.closest('button')) _closeToolbarOverflowPopover();
+  });
+
+  // Close both new popovers on click-outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#drawGroupPopover, #drawGroupBtn')) _closeDrawGroupPopover();
+    if (!e.target.closest('#toolbarOverflowPopover, #toolbarOverflowBtn')) _closeToolbarOverflowPopover();
+  });
+
   $('#centerOnSelectionBtn').addEventListener('click', () => { if (selectedId) navigateToFeature(selectedId) });
 
   ['toggleFogBtn', 'toggleFogBtnFullscreen'].forEach(id => {
@@ -5128,8 +5211,14 @@ function renderRecentProjects() {
         break;
       }
       case 'escape': {
+        const drawGroupPop = $('#drawGroupPopover');
+        const overflowPop = $('#toolbarOverflowPopover');
         const overlayMenu = $('#overlayMenuPopover');
-        if (overlayMenu && !overlayMenu.classList.contains('hidden')) {
+        if (drawGroupPop && !drawGroupPop.classList.contains('hidden')) {
+          _closeDrawGroupPopover();
+        } else if (overflowPop && !overflowPop.classList.contains('hidden')) {
+          _closeToolbarOverflowPopover();
+        } else if (overlayMenu && !overlayMenu.classList.contains('hidden')) {
           hideOverlayMenuPopover();
         } else if (document.body.classList.contains('properties-sheet-open')) {
           window.closePropertiesSheet?.();

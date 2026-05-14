@@ -357,6 +357,13 @@ function updateModeButtons() {
       b.setAttribute('aria-pressed', String(isActive));
     }
   });
+  // Sync the Draw▾ group button — active when any draw tool is selected
+  const drawGroupBtn = document.getElementById('drawGroupBtn');
+  if (drawGroupBtn) {
+    const drawActive = ['add-polygon', 'add-polyline', 'add-text', 'measure'].includes(uiMode);
+    drawGroupBtn.classList.toggle('active', drawActive);
+    drawGroupBtn.setAttribute('aria-pressed', String(drawActive));
+  }
 }
 
 const commonFonts = [
