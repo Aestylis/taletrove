@@ -924,6 +924,7 @@ async function syncAllLayers() {
   });
 
   scheduleCollisionDetection();
+  window.syncMapEmptyState?.();
 }
 
 // Updates a single layer in place (Smart Patching)

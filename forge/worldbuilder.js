@@ -3144,6 +3144,54 @@ async function promptAndSetMapImage(mapId) {
 
   fileInput.click();
 }
+window.promptAndSetMapImage = promptAndSetMapImage;
+
+function syncMapEmptyState() {
+  const overlay = document.getElementById('mapEmptyState');
+  if (!overlay) return;
+  if (role !== 'gm') { overlay.classList.add('hidden'); return; }
+
+  const activeMap = state.maps.find(m => m.id === state.activeMapId);
+  if (!activeMap) { overlay.classList.add('hidden'); return; }
+
+  const hasImage = !!activeMap.imageKey;
+  const hasPins = state.features.some(f => f.mapId === state.activeMapId);
+
+  if (hasImage && hasPins) { overlay.classList.add('hidden'); return; }
+
+  overlay.dataset.state = hasImage ? 'no-pins' : 'no-image';
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = '';
+
+  const iconUrl = hasImage ? 'ui-icons/map-pin.svg' : 'ui-icons/file-image.svg';
+  const heading = hasImage ? 'No pins yet' : 'Start with a base map';
+  const subtext = hasImage
+    ? 'Press <kbd>N</kbd> or click the pin tool to drop your first location.'
+    : 'Upload an image to set the stage for your world.';
+
+  const iconDiv = document.createElement('div');
+  iconDiv.className = 'map-empty-icon';
+  iconDiv.innerHTML = `<div class="icon-container" style="-webkit-mask-image:url('${iconUrl}');mask-image:url('${iconUrl}');"></div>`;
+
+  const headingEl = document.createElement('div');
+  headingEl.className = 'map-empty-heading';
+  headingEl.textContent = heading;
+
+  const subtextEl = document.createElement('div');
+  subtextEl.className = 'map-empty-subtext';
+  subtextEl.innerHTML = subtext;
+
+  overlay.append(iconDiv, headingEl, subtextEl);
+
+  if (!hasImage) {
+    const cta = document.createElement('button');
+    cta.className = 'map-empty-cta';
+    cta.textContent = 'Load Map Image';
+    cta.addEventListener('click', () => promptAndSetMapImage(state.activeMapId));
+    overlay.appendChild(cta);
+  }
+}
+window.syncMapEmptyState = syncMapEmptyState;
 
 /**
  * Reads a user-provided CSS file and extracts only the allowed properties.
@@ -4621,6 +4669,89 @@ function renderRecentProjects() {
   _overlayPopover.addEventListener('mouseenter', _overlayCancelHide);
   _overlayPopover.addEventListener('mouseleave', _overlayStartHide);
 
+  // --- DRAW GROUP POPOVER ---
+  function _closeDrawGroupPopover() {
+    const pop = $('#drawGroupPopover');
+    if (pop) pop.classList.add('hidden');
+    const btn = $('#drawGroupBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function openDrawGroupPopover(triggerBtn) {
+    const popover = $('#drawGroupPopover');
+    // Close the overflow popover if open
+    const overflow = $('#toolbarOverflowPopover');
+    if (overflow && !overflow.classList.contains('hidden')) {
+      overflow.classList.add('hidden');
+      $('#toolbarOverflowBtn')?.setAttribute('aria-expanded', 'false');
+    }
+    const isHidden = popover.classList.toggle('hidden');
+    triggerBtn.setAttribute('aria-expanded', String(!isHidden));
+    if (!isHidden) {
+      const btnRect = triggerBtn.getBoundingClientRect();
+      const wrapRect = $('.map-wrap').getBoundingClientRect();
+      popover.style.left = `${btnRect.left - wrapRect.left + btnRect.width / 2}px`;
+      popover.style.transform = 'translateX(-50%)';
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      if (spaceBelow > 80) {
+        popover.style.top = `${btnRect.bottom - wrapRect.top + 8}px`;
+        popover.style.bottom = '';
+      } else {
+        popover.style.top = 'auto';
+        popover.style.bottom = `${wrapRect.bottom - btnRect.top + 8}px`;
+      }
+    }
+  }
+  $('#drawGroupBtn').addEventListener('click', (e) => { e.stopPropagation(); openDrawGroupPopover(e.currentTarget); });
+  // Close draw popover when a tool inside it is selected
+  $('#drawGroupPopover').addEventListener('click', (e) => {
+    if (e.target.closest('button')) _closeDrawGroupPopover();
+  });
+
+  // --- TOOLBAR OVERFLOW POPOVER ---
+  function _closeToolbarOverflowPopover() {
+    const pop = $('#toolbarOverflowPopover');
+    if (pop) pop.classList.add('hidden');
+    const btn = $('#toolbarOverflowBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function openToolbarOverflowPopover(triggerBtn) {
+    const popover = $('#toolbarOverflowPopover');
+    // Close the draw group popover if open
+    const drawPop = $('#drawGroupPopover');
+    if (drawPop && !drawPop.classList.contains('hidden')) _closeDrawGroupPopover();
+    const isHidden = popover.classList.toggle('hidden');
+    triggerBtn.setAttribute('aria-expanded', String(!isHidden));
+    if (!isHidden) {
+      const btnRect = triggerBtn.getBoundingClientRect();
+      const wrapRect = $('.map-wrap').getBoundingClientRect();
+      const popoverHalfWidth = 100;
+      const edgePad = 8;
+      const rawCenter = btnRect.left - wrapRect.left + btnRect.width / 2;
+      const maxLeft = wrapRect.width - popoverHalfWidth * 2 - edgePad;
+      popover.style.left = `${Math.min(rawCenter, maxLeft)}px`;
+      popover.style.transform = 'translateX(-50%)';
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      if (spaceBelow > 220) {
+        popover.style.top = `${btnRect.bottom - wrapRect.top + 8}px`;
+        popover.style.bottom = '';
+      } else {
+        popover.style.top = 'auto';
+        popover.style.bottom = `${wrapRect.bottom - btnRect.top + 8}px`;
+      }
+    }
+  }
+  $('#toolbarOverflowBtn').addEventListener('click', (e) => { e.stopPropagation(); openToolbarOverflowPopover(e.currentTarget); });
+  // Close overflow popover when an action inside it is activated
+  $('#toolbarOverflowPopover').addEventListener('click', (e) => {
+    if (e.target.closest('button')) _closeToolbarOverflowPopover();
+  });
+
+  // Close both new popovers on click-outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#drawGroupPopover, #drawGroupBtn')) _closeDrawGroupPopover();
+    if (!e.target.closest('#toolbarOverflowPopover, #toolbarOverflowBtn')) _closeToolbarOverflowPopover();
+  });
+
   $('#centerOnSelectionBtn').addEventListener('click', () => { if (selectedId) navigateToFeature(selectedId) });
 
   ['toggleFogBtn', 'toggleFogBtnFullscreen'].forEach(id => {
@@ -5128,8 +5259,14 @@ function renderRecentProjects() {
         break;
       }
       case 'escape': {
+        const drawGroupPop = $('#drawGroupPopover');
+        const overflowPop = $('#toolbarOverflowPopover');
         const overlayMenu = $('#overlayMenuPopover');
-        if (overlayMenu && !overlayMenu.classList.contains('hidden')) {
+        if (drawGroupPop && !drawGroupPop.classList.contains('hidden')) {
+          _closeDrawGroupPopover();
+        } else if (overflowPop && !overflowPop.classList.contains('hidden')) {
+          _closeToolbarOverflowPopover();
+        } else if (overlayMenu && !overlayMenu.classList.contains('hidden')) {
           hideOverlayMenuPopover();
         } else if (document.body.classList.contains('properties-sheet-open')) {
           window.closePropertiesSheet?.();

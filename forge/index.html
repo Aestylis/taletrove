@@ -50,7 +50,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@700&family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Space+Grotesk:wght@400;500;600&family=Nunito:wght@400;500;600&family=Ubuntu:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="worldbuilder.css?v=2026.05.13.01">
+    <link rel="stylesheet" href="worldbuilder.css?v=2026.05.14.03">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
           integrity="sha384-6LFfkTKLRlzFtgx8xsWyBdKGpcMMQTkv+dB7rAbugeJAu1Ym2q1Aji1cjHBG12Xh" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
@@ -773,32 +773,21 @@
                         <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-out-cardinal.svg'); mask-image: url('ui-icons/arrows-out-cardinal.svg');"></div>
                     </button>
                 </div>
-                <button class="mode-btn icon-btn" id="modeMeasureBtn" data-tooltip="Measure Distance" aria-label="Measure Distance" aria-pressed="false">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/ruler.svg'); mask-image: url('ui-icons/ruler.svg');"></div>
-                </button>
-                
+
                 <span class="toolbar-divider"></span>
 
                 <!-- Zone B: Creation -->
                 <button class="mode-btn icon-btn" id="modePinBtn" data-tooltip="Add Pin" aria-label="Add Pin" aria-pressed="false">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/map-pin.svg'); mask-image: url('ui-icons/map-pin.svg');"></div>
                 </button>
-                <button class="mode-btn icon-btn" id="modeAreaBtn" data-tooltip="Draw Area" aria-label="Draw Area" aria-pressed="false">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/area.svg'); mask-image: url('ui-icons/area.svg');"></div>
+                <button class="ghost icon-btn draw-group-trigger" id="drawGroupBtn" data-tooltip="Draw Tools" aria-label="Draw Tools" aria-haspopup="true" aria-expanded="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/pencil.svg'); mask-image: url('ui-icons/pencil.svg');"></div>
+                    <div class="icon-container draw-caret" style="-webkit-mask-image: url('ui-icons/caret-down.svg'); mask-image: url('ui-icons/caret-down.svg');"></div>
                 </button>
-                <button class="mode-btn icon-btn" id="modeLineBtn" data-tooltip="Draw Line" aria-label="Draw Line" aria-pressed="false">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/line-segments.svg'); mask-image: url('ui-icons/line-segments.svg');"></div>
-                </button>
-                <button class="mode-btn icon-btn" id="modeTextBtn" data-tooltip="Add Text Label" aria-label="Add Text Label" aria-pressed="false">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/text-t.svg'); mask-image: url('ui-icons/text-t.svg');"></div>
-                </button>
-                
+
                 <span class="toolbar-divider"></span>
 
                 <!-- Zone C: Map Management -->
-                <button class="ghost icon-btn" id="loadMapBtn" data-tooltip="Load Map Image" aria-label="Load Map Image">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/file-image.svg'); mask-image: url('ui-icons/file-image.svg');"></div>
-                </button>
                 <button class="ghost icon-btn" id="overlayMenuBtn" data-tooltip="Overlay" aria-label="Overlay" aria-haspopup="true" aria-expanded="false">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/stack-simple.svg'); mask-image: url('ui-icons/stack-simple.svg');"></div>
                 </button>
@@ -808,44 +797,18 @@
 
                 <span class="toolbar-divider"></span>
 
-                <!-- Zone D: Navigation & View -->
-<button class="ghost icon-btn" id="centerOnSelectionBtn" data-tooltip="Center on Selection" aria-label="Center on Selection">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/crosshair.svg'); mask-image: url('ui-icons/crosshair.svg');"></div>
-                </button>
-                <button class="ghost icon-btn" id="toggleFreeMoveBtn" data-tooltip="Enable Free Pan" aria-label="Enable Free Pan" aria-pressed="false">
-                    <span class="icon-locked">
-                        <div class="icon-container"
-                            style="-webkit-mask-image: url('ui-icons/lock.svg'); mask-image: url('ui-icons/lock.svg');">
-                        </div>
-                    </span>
-                    <span class="icon-unlocked">
-                        <div class="icon-container"
-                            style="-webkit-mask-image: url('ui-icons/lock-open.svg'); mask-image: url('ui-icons/lock-open.svg');">
-                        </div>
-                    </span>
-                </button>
-                <button class="ghost icon-btn" id="fitBtn" data-tooltip="Fit Map to Screen" aria-label="Fit Map to Screen">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-in-simple.svg'); mask-image: url('ui-icons/arrows-in-simple.svg');"></div>
-                </button>
-                <button class="ghost icon-btn" id="toolbarPosBtn" data-tooltip="Toggle Toolbar Position" aria-label="Toggle Toolbar Position">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-down-up.svg'); mask-image: url('ui-icons/arrows-down-up.svg');"></div>
-                </button>
-
-                <span class="toolbar-divider"></span>
-
-                <!-- Zone E: System -->
+                <!-- Zone D: Actions -->
                 <button class="ghost icon-btn" id="undoBtn" data-tooltip="Undo" aria-label="Undo">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-bend-up-left.svg'); mask-image: url('ui-icons/arrow-bend-up-left.svg');"></div>
                 </button>
                 <button class="ghost icon-btn" id="redoBtn" data-tooltip="Redo" aria-label="Redo">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrow-bend-up-right.svg'); mask-image: url('ui-icons/arrow-bend-up-right.svg');"></div>
                 </button>
-                <button class="ghost icon-btn" id="mapExpandBtn" data-tooltip="Fullscreen Map View" aria-label="Fullscreen Map View">
-                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/frame-corners.svg'); mask-image: url('ui-icons/frame-corners.svg');"></div>
+                <button class="ghost icon-btn" id="fitBtn" data-tooltip="Fit Map to Screen" aria-label="Fit Map to Screen">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-in-simple.svg'); mask-image: url('ui-icons/arrows-in-simple.svg');"></div>
                 </button>
-                <button class="ghost icon-btn" id="fullscreenBtn" data-tooltip="Toggle Fullscreen" aria-label="Toggle Fullscreen" aria-pressed="false">
-                    <div class="icon-container fullscreen-enter" style="-webkit-mask-image: url('ui-icons/arrows-out.svg'); mask-image: url('ui-icons/arrows-out.svg');"></div>
-                    <div class="icon-container fullscreen-exit" style="-webkit-mask-image: url('ui-icons/arrows-in.svg'); mask-image: url('ui-icons/arrows-in.svg');"></div>
+                <button class="ghost icon-btn" id="toolbarOverflowBtn" data-tooltip="More Tools" aria-label="More Tools" aria-haspopup="true" aria-expanded="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/dots-three-outline.svg'); mask-image: url('ui-icons/dots-three-outline.svg');"></div>
                 </button>
             </div>
 
@@ -973,6 +936,59 @@
                     </button>
                 </div>
             </div>
+            <!-- Draw Group Popover -->
+            <div id="drawGroupPopover" class="draw-group-popover hidden">
+                <button class="overflow-menu-action" id="modeAreaBtn" aria-label="Draw Area" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/area.svg'); mask-image: url('ui-icons/area.svg');"></div>
+                    <span>Draw Area</span>
+                </button>
+                <button class="overflow-menu-action" id="modeLineBtn" aria-label="Draw Line" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/line-segments.svg'); mask-image: url('ui-icons/line-segments.svg');"></div>
+                    <span>Draw Line</span>
+                </button>
+                <button class="overflow-menu-action" id="modeTextBtn" aria-label="Add Text Label" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/text-t.svg'); mask-image: url('ui-icons/text-t.svg');"></div>
+                    <span>Add Text Label</span>
+                </button>
+                <button class="overflow-menu-action" id="modeMeasureBtn" aria-label="Measure Distance" aria-pressed="false">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/ruler.svg'); mask-image: url('ui-icons/ruler.svg');"></div>
+                    <span>Measure Distance</span>
+                </button>
+            </div>
+            <!-- Toolbar Overflow Popover -->
+            <div id="toolbarOverflowPopover" class="toolbar-overflow-popover hidden">
+                <button class="overflow-menu-action" id="loadMapBtn" aria-label="Load Map Image">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/file-image.svg'); mask-image: url('ui-icons/file-image.svg');"></div>
+                    <span>Load Map Image</span>
+                </button>
+                <button class="overflow-menu-action" id="centerOnSelectionBtn" aria-label="Center on Selection">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/crosshair.svg'); mask-image: url('ui-icons/crosshair.svg');"></div>
+                    <span>Center on Selection</span>
+                </button>
+                <button class="overflow-menu-action" id="toggleFreeMoveBtn" aria-label="Enable Free Pan" aria-pressed="false">
+                    <span class="icon-locked">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/lock.svg'); mask-image: url('ui-icons/lock.svg');"></div>
+                    </span>
+                    <span class="icon-unlocked">
+                        <div class="icon-container" style="-webkit-mask-image: url('ui-icons/lock-open.svg'); mask-image: url('ui-icons/lock-open.svg');"></div>
+                    </span>
+                    <span>Free Pan</span>
+                </button>
+                <button class="overflow-menu-action" id="toolbarPosBtn" aria-label="Toggle Toolbar Position">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/arrows-down-up.svg'); mask-image: url('ui-icons/arrows-down-up.svg');"></div>
+                    <span>Toolbar Position</span>
+                </button>
+                <button class="overflow-menu-action" id="mapExpandBtn" aria-label="Fullscreen Map View">
+                    <div class="icon-container" style="-webkit-mask-image: url('ui-icons/frame-corners.svg'); mask-image: url('ui-icons/frame-corners.svg');"></div>
+                    <span>Map Fullscreen</span>
+                </button>
+                <button class="overflow-menu-action" id="fullscreenBtn" aria-label="Toggle Fullscreen" aria-pressed="false">
+                    <div class="icon-container fullscreen-enter" style="-webkit-mask-image: url('ui-icons/arrows-out.svg'); mask-image: url('ui-icons/arrows-out.svg');"></div>
+                    <div class="icon-container fullscreen-exit" style="-webkit-mask-image: url('ui-icons/arrows-in.svg'); mask-image: url('ui-icons/arrows-in.svg');"></div>
+                    <span>Fullscreen</span>
+                </button>
+            </div>
+            <div id="mapEmptyState" class="map-empty-state hidden"></div>
             <div id="map"></div>
             
             <!-- Map Zoom Slider (Google Maps style) -->
@@ -1240,31 +1256,31 @@
         </div>
     </div>
     <div id="dice-box"></div>
-    <script src="utils.js?v=2026.05.13.01"></script>
-    <script src="state.js?v=2026.05.13.01"></script>
-    <script src="data.js?v=2026.05.13.01"></script>
-    <script src="styles.js?v=2026.05.13.01"></script>
-    <script src="data/blocks.js?v=2026.05.13.01"></script>
-    <script src="markdown-extensions.js?v=2026.05.13.01"></script>
-    <script src="worldbuilder.js?v=2026.05.13.01"></script>
-    <script src="map.js?v=2026.05.13.01"></script>
-    <script src="grid.js?v=2026.05.13.01"></script>
-    <script src="ui.js?v=2026.05.13.01"></script>
-    <script src="panels.js?v=2026.05.13.01"></script>
-    <script src="image-search.js?v=2026.05.13.01"></script>
-    <script src="relational-graph.js?v=2026.05.13.01"></script>
-    <script src="family-tree.js?v=2026.05.13.01"></script>
-    <script src="inspector.js?v=2026.05.13.01"></script>
-    <script src="block-editor.js?v=2026.05.13.01"></script>
-    <script src="modals.js?v=2026.05.13.01"></script>
-    <script src="generator.js?v=2026.05.13.01"></script>
-    <script src="tutorial.js?v=2026.05.13.01"></script>
-    <script type="module" src="dice-roller.js?v=2026.05.13.01"></script>
-    <script src="obsidian-importer.js?v=2026.05.13.01"></script>
-    <script type="module" src="armoria.js?v=2026.05.13.01"></script>
+    <script src="utils.js?v=2026.05.14.03"></script>
+    <script src="state.js?v=2026.05.14.03"></script>
+    <script src="data.js?v=2026.05.14.03"></script>
+    <script src="styles.js?v=2026.05.14.03"></script>
+    <script src="data/blocks.js?v=2026.05.14.03"></script>
+    <script src="markdown-extensions.js?v=2026.05.14.03"></script>
+    <script src="worldbuilder.js?v=2026.05.14.03"></script>
+    <script src="map.js?v=2026.05.14.03"></script>
+    <script src="grid.js?v=2026.05.14.03"></script>
+    <script src="ui.js?v=2026.05.14.03"></script>
+    <script src="panels.js?v=2026.05.14.03"></script>
+    <script src="image-search.js?v=2026.05.14.03"></script>
+    <script src="relational-graph.js?v=2026.05.14.03"></script>
+    <script src="family-tree.js?v=2026.05.14.03"></script>
+    <script src="inspector.js?v=2026.05.14.03"></script>
+    <script src="block-editor.js?v=2026.05.14.03"></script>
+    <script src="modals.js?v=2026.05.14.03"></script>
+    <script src="generator.js?v=2026.05.14.03"></script>
+    <script src="tutorial.js?v=2026.05.14.03"></script>
+    <script type="module" src="dice-roller.js?v=2026.05.14.03"></script>
+    <script src="obsidian-importer.js?v=2026.05.14.03"></script>
+    <script type="module" src="armoria.js?v=2026.05.14.03"></script>
     <!-- Google Identity Services — loaded last so it doesn't block app init -->
     <script src="https://accounts.google.com/gsi/client"></script>
-    <script src="google-drive.js?v=2026.05.13.01"></script>
+    <script src="google-drive.js?v=2026.05.14.03"></script>
     <datalist id="encyclopediaTypes">
         <option value="Character"></option>
         <option value="Item"></option>

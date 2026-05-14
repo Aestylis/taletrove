@@ -2161,21 +2161,14 @@ async function showInfoPanel(id, type = 'feature') {
 
       if (role === 'gm') {
         _currentPanelId = id;
-        if (isContentEditMode) {
-          const indicator = el('div', { class: 'edit-mode-indicator panel-indicator' }, [
-            el('span', { class: 'indicator-dot' }),
-            el('span', { text: 'Editing' })
-          ]);
-          infoPanelControls.appendChild(indicator);
-        }
-        const editModeIconName = isContentEditMode ? 'article' : 'pencil';
-        const editIconHtml = await getIconHTML(editModeIconName, 'var(--text)');
+        const editIconName = isContentEditMode ? 'eye' : 'pencil';
+        const editIconColor = isContentEditMode ? 'var(--muted)' : 'var(--accent-orange)';
+        const editIconHtml = await getIconHTML(editIconName, editIconColor);
         if (myReqId !== _infoPanelReqId) return;
         const editModeBtn = el('button', {
-          class: 'panel-icon-btn',
-          title: isContentEditMode ? 'Switch to View Mode' : 'Enter Edit Mode',
-          'aria-label': isContentEditMode ? 'Switch to View Mode' : 'Enter Edit Mode',
-          innerHTML: editIconHtml
+          class: isContentEditMode ? 'edit-mode-toggle-btn is-editing' : 'edit-mode-toggle-btn',
+          'aria-label': isContentEditMode ? 'Done Editing' : 'Edit Article',
+          innerHTML: `${editIconHtml}<span>${isContentEditMode ? 'Done' : 'Edit'}</span>`
         });
         editModeBtn.onclick = () => toggleContentEditMode(id, type);
         infoPanelControls.appendChild(editModeBtn);
