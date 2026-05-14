@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-20",
+    "date": "2026-05-14",
+    "title": "Alpha 6.20: Unified Panel, Compact Toolbar & Tabletop Mode",
+    "summary": "The right panel now has Content and Properties tabs, the toolbar is leaner, and Map Fullscreen is now Tabletop Mode.",
+    "tags": ["Navigation", "Toolbar", "UX"],
+    "content": "<h4>Unified right panel</h4><p>The peek panel (the side sheet that opens when you click a pin or row) now has two tabs: <strong>Content</strong> for the wiki view and <strong>Properties</strong> for the form. Clicking the ··· button on any row opens the panel directly on the Properties tab. No more separate sliding sheet competing for space — everything lives in one panel.</p><h4>Compact toolbar</h4><p>The main map toolbar has been reduced from 18 buttons to 10. Area, Line, Text, and Measure tools are grouped under a single <strong>Draw ▾</strong> button that opens a labelled dropdown. Secondary tools (Load Map, Center, Free Pan, Toolbar Position, Tabletop Mode, Fullscreen) move into a <strong>⋯ More</strong> overflow menu. The tools you reach for every session stay visible; everything else is one click away.</p><h4>Clearer edit controls</h4><p>The pencil icon in article view is replaced by a labelled <strong>Edit</strong> pill button that switches to <strong>Done</strong> while editing. The current mode is always readable at a glance.</p><h4>Map onboarding hints</h4><p>A fresh map now shows a two-stage prompt: first an orange call-to-action to upload a base image, then a muted hint to place your first pin once the image is loaded. The hint only appears on your main map — secondary maps start empty by design.</p><h4>Tabletop Mode</h4><p>Map Fullscreen has been renamed to <strong>Tabletop Mode</strong>.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-13",
     "date": "2026-05-12",
     "title": "Alpha 6.13: Pinned Peek, Emoji Pins & More",
