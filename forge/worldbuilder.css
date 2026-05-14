@@ -1042,6 +1042,38 @@ header.app-header {
   color: var(--text);
 }
 
+/* --- RIGHT PANEL TABS (peek mode: Content | Properties) --- */
+.rp-tab-strip {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.rp-tab {
+  flex: 1;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.01em;
+}
+.rp-tab:hover { color: var(--text); }
+.rp-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent-orange);
+}
+.rp-props-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+}
+
 .brand-text {
   font-family: var(--font-heading);
   font-size: 26px;
