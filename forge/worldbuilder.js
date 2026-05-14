@@ -3158,6 +3158,8 @@ function syncMapEmptyState() {
   const hasPins = state.features.some(f => f.mapId === state.activeMapId);
 
   if (hasImage && hasPins) { overlay.classList.add('hidden'); return; }
+  // "No pins yet" hint only makes sense on the main map — secondary maps start empty by design
+  if (hasImage && !hasPins && state.activeMapId !== 'map-default') { overlay.classList.add('hidden'); return; }
 
   overlay.dataset.state = hasImage ? 'no-pins' : 'no-image';
   overlay.classList.remove('hidden');

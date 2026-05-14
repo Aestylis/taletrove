@@ -20,6 +20,9 @@ let _pinnedPanelReqId = 0;
 // null = closed, 'peek' = side-sheet, 'article' = full article view
 let preferredReadingLevel = null;
 
+// Active tab in the peek panel: 'content' (wiki) | 'properties' (form)
+let peekTab = 'content';
+
 function resetPropertiesState() {
   _currentPanelId = null;
 }
@@ -2099,9 +2102,31 @@ async function showInfoPanel(id, type = 'feature') {
   void contentEl.offsetWidth; // force reflow so animation re-fires
   contentEl.classList.add('panel-entering');
 
-  // Show hero skeleton immediately while the async header builds
-  const _heroSkeleton = el('div', { class: 'skeleton skeleton-hero' });
-  contentEl.appendChild(_heroSkeleton);
+  // Tab strip — shown only in peek mode
+  if (peekViewMode) {
+    const tabStrip = el('div', { class: 'rp-tab-strip' });
+    const contentTabBtn = el('button', {
+      class: `rp-tab${peekTab === 'content' ? ' active' : ''}`,
+      'data-tab': 'content',
+      text: 'Content'
+    });
+    const propsTabBtn = el('button', {
+      class: `rp-tab${peekTab === 'properties' ? ' active' : ''}`,
+      'data-tab': 'properties',
+      text: 'Properties'
+    });
+    contentTabBtn.addEventListener('click', () => { peekTab = 'content'; showInfoPanel(id, type); });
+    propsTabBtn.addEventListener('click', () => { peekTab = 'properties'; showInfoPanel(id, type); });
+    tabStrip.appendChild(contentTabBtn);
+    tabStrip.appendChild(propsTabBtn);
+    contentEl.appendChild(tabStrip);
+  }
+
+  // Show hero skeleton while async header builds (content tab only)
+  const _heroSkeleton = (peekViewMode && peekTab === 'properties')
+    ? null
+    : el('div', { class: 'skeleton skeleton-hero' });
+  if (_heroSkeleton) contentEl.appendChild(_heroSkeleton);
 
   const infoPanelControls = $('#infoPanelControls');
 
@@ -2129,12 +2154,6 @@ async function showInfoPanel(id, type = 'feature') {
         };
         infoPanelControls.appendChild(peekEditBtn);
       }
-
-      const propsIconHtml = await getIconHTML('list', 'var(--text)');
-      if (myReqId !== _infoPanelReqId) return;
-      const propsBtn = el('button', { class: 'panel-icon-btn', title: 'Properties', 'aria-label': 'Properties', innerHTML: propsIconHtml });
-      propsBtn.onclick = () => window.openPropertiesSheet?.(id, type);
-      infoPanelControls.appendChild(propsBtn);
 
       infoPanelControls.appendChild(el('span', { style: 'flex: 1;' }));
 
@@ -2228,16 +2247,35 @@ async function showInfoPanel(id, type = 'feature') {
   // Bail if a newer showInfoPanel call has started while we were building controls
   if (myReqId !== _infoPanelReqId) return;
 
-  // CONTAINERS
+  // PROPERTIES TAB (peek mode only) — render form instead of wiki content
+  if (peekViewMode && peekTab === 'properties') {
+    propertiesSheetId = id;
+    propertiesSheetType = type;
+    const propsBody = el('div', { id: 'infoPanelBody', class: 'rp-props-body' });
+    contentEl.appendChild(propsBody);
+    if (type === 'feature') {
+      const feature = state.features.find(f => f.id === id);
+      if (feature) await buildArticlePropertiesInspector(feature, propsBody, 'feature');
+    } else if (type === 'encyclopedia') {
+      const entry = state.encyclopedia.find(e => e.id === id);
+      if (entry) await buildArticlePropertiesInspector(entry, propsBody, 'encyclopedia');
+    } else if (type === 'map') {
+      const map = state.maps.find(m => m.id === id);
+      if (map) buildMapPropertiesInspector(map, propsBody);
+    }
+    return;
+  }
+
+  // CONTAINERS (content tab)
   const bodyContainer = el('div', { id: 'infoPanelBody' });
   const canvasWrapper = el('div', { class: 'canvas-wrapper' });
 
   const headerElement = await buildEntityHeader(item, { showMeta: true, isPeek: peekViewMode });
-  
+
   // FINAL CHECK: Bail if a newer request has taken over while we were building the header
   if (myReqId !== _infoPanelReqId) return;
 
-  _heroSkeleton.remove();
+  _heroSkeleton?.remove();
   contentEl.appendChild(headerElement);
 
   // Hero Image Drag and Drop
@@ -2590,7 +2628,8 @@ async function showPinnedPeekPanel(id, type = 'feature') {
 window.openBesidePanel  = openBesidePanel;
 window.closeBesidePanel = closeBesidePanel;
 
-async function enterPeekMode(id, type = 'feature') {
+async function enterPeekMode(id, type = 'feature', _tab = 'content') {
+  peekTab = _tab;
   preferredReadingLevel = 'peek';
   // Exit full article mode if active
   if (articleViewMode) {
@@ -2648,70 +2687,55 @@ let propertiesSheetId = null;
 let propertiesSheetType = 'feature';
 
 async function openPropertiesSheet(id, type) {
-  // Capture peek context before exiting (used for back button)
-  const fromPeekId   = peekViewMode ? peekViewId   : null;
-  const fromPeekType = peekViewMode ? peekViewType  : null;
+  // In article mode: use the separate #propertiesSheet sliding panel
+  if (articleViewMode) {
+    propertiesSheetId = id;
+    propertiesSheetType = type;
+    if (type === 'encyclopedia') {
+      selectedEncyclopediaEntryId = id;
+      selectedId = null;
+    } else {
+      selectedId = id;
+      selectedEncyclopediaEntryId = null;
+    }
+    window.updateSelectionStyles?.();
+    const sheet = document.getElementById('propertiesSheet');
+    const content = document.getElementById('propertiesSheetContent');
+    const titleEl = document.getElementById('propertiesSheetTitle');
+    if (!sheet || !content) return;
+    const existingBack = sheet.querySelector('#propertiesSheetBack');
+    if (existingBack) existingBack.remove();
+    content.innerHTML = '';
+    if (type === 'feature') {
+      const feature = state.features.find(f => f.id === id);
+      if (!feature) return;
+      if (titleEl) titleEl.textContent = feature.title || 'Untitled';
+      await buildArticlePropertiesInspector(feature, content, 'feature');
+    } else if (type === 'encyclopedia') {
+      const entry = state.encyclopedia.find(e => e.id === id);
+      if (!entry) return;
+      if (titleEl) titleEl.textContent = entry.name || 'Untitled';
+      await buildArticlePropertiesInspector(entry, content, 'encyclopedia');
+    } else if (type === 'map') {
+      const map = state.maps.find(m => m.id === id);
+      if (!map) return;
+      if (titleEl) titleEl.textContent = map.name || 'Untitled Map';
+      buildMapPropertiesInspector(map, content);
+    }
+    sheet.classList.add('is-open');
+    document.body.classList.add('properties-sheet-open');
+    return;
+  }
 
-  if (peekViewMode) exitPeekMode();
-
-  propertiesSheetId = id;
-  propertiesSheetType = type;
-
-  // Set selection state so form controls resolve correctly
-  if (type === 'encyclopedia') {
-    selectedEncyclopediaEntryId = id;
-    selectedId = null;
+  // Peek mode (or no panel open): show Properties tab inside #infoPanel
+  if (peekViewMode && peekViewId === id && peekViewType === type) {
+    // Same entity already peeked — just switch to properties tab
+    peekTab = 'properties';
+    await showInfoPanel(id, type);
   } else {
-    selectedId = id;
-    selectedEncyclopediaEntryId = null;
+    // Enter peek for this entity with properties tab pre-selected
+    await enterPeekMode(id, type, 'properties');
   }
-  window.updateSelectionStyles?.();
-
-  const sheet = document.getElementById('propertiesSheet');
-  const content = document.getElementById('propertiesSheetContent');
-  const titleEl = document.getElementById('propertiesSheetTitle');
-  if (!sheet || !content) return;
-
-  // Back-to-peek button — shown only when opened from peek mode
-  const existingBack = sheet.querySelector('#propertiesSheetBack');
-  if (existingBack) existingBack.remove();
-  if (fromPeekId) {
-    const backBtn = el('button', {
-      id: 'propertiesSheetBack',
-      class: 'panel-icon-btn',
-      title: 'Back to peek',
-      'aria-label': 'Back to peek'
-    });
-    getIconHTML('arrow-u-down-left', 'var(--text)').then(html => { backBtn.innerHTML = html; }).catch(() => {});
-    backBtn.onclick = () => {
-      closePropertiesSheet();
-      enterPeekMode(fromPeekId, fromPeekType);
-    };
-    const header = document.getElementById('propertiesSheetHeader');
-    if (header) header.insertBefore(backBtn, header.firstChild);
-  }
-
-  content.innerHTML = '';
-
-  if (type === 'feature') {
-    const feature = state.features.find(f => f.id === id);
-    if (!feature) return;
-    if (titleEl) titleEl.textContent = feature.title || 'Untitled';
-    await buildArticlePropertiesInspector(feature, content, 'feature');
-  } else if (type === 'encyclopedia') {
-    const entry = state.encyclopedia.find(e => e.id === id);
-    if (!entry) return;
-    if (titleEl) titleEl.textContent = entry.name || 'Untitled';
-    await buildArticlePropertiesInspector(entry, content, 'encyclopedia');
-  } else if (type === 'map') {
-    const map = state.maps.find(m => m.id === id);
-    if (!map) return;
-    if (titleEl) titleEl.textContent = map.name || 'Untitled Map';
-    buildMapPropertiesInspector(map, content);
-  }
-
-  sheet.classList.add('is-open');
-  document.body.classList.add('properties-sheet-open');
 }
 
 function closePropertiesSheet() {
