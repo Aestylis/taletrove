@@ -1007,6 +1007,41 @@ header.app-header {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* --- EDIT MODE TOGGLE BUTTON (article view) --- */
+.edit-mode-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.75rem;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--accent-orange);
+  background: rgba(var(--accent-orange-rgb), 0.08);
+  color: var(--accent-orange);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+.edit-mode-toggle-btn:hover {
+  background: rgba(var(--accent-orange-rgb), 0.18);
+}
+.edit-mode-toggle-btn .icon-container {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.edit-mode-toggle-btn.is-editing {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+.edit-mode-toggle-btn.is-editing:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
 .brand-text {
   font-family: var(--font-heading);
   font-size: 26px;
