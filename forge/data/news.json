@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-21",
+    "date": "2026-06-04",
+    "title": "Alpha 6.21: Faster Image-Heavy Worlds",
+    "summary": "The asset library now renders lightweight thumbnails instead of full-size images, so worlds with lots of art load and scroll far faster.",
+    "tags": ["Performance", "Assets", "Images"],
+    "content": "<h4>Thumbnails for the asset library</h4><p>Worlds with large image collections are now dramatically lighter to browse. The Assets panel generates a small thumbnail for each image the first time it's shown and reuses it from then on, instead of decoding the full multi-megabyte original every time. In testing, previews are roughly 30× smaller and decode more than 10× faster.</p><p>This happens automatically — existing worlds benefit the moment you open the Assets panel; there's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-20",
     "date": "2026-05-14",
     "title": "Alpha 6.20: Unified Panel, Compact Toolbar & Tabletop Mode",

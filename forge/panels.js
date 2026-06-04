@@ -875,8 +875,10 @@ async function refreshAssetsView(resetPage = true) {
     const start = page * ASSETS_PER_PAGE;
     const slice = imageKeys.slice(start, start + ASSETS_PER_PAGE);
 
+    // Asset grid shows many images at small preview size — use thumbnails (WS2) to avoid decoding
+    // full-res (multi-MB) blobs. The original `key` is preserved for drag/assign identity.
     const assetData = await Promise.all(slice.map(async key => {
-      const url = await resolveImageUrl(key);
+      const url = await resolveThumbUrl(key);
       return { key, url };
     }));
 

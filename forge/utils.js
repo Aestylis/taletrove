@@ -401,6 +401,102 @@ function revokeBlobUrl(src) {
   }
 }
 
+// ── Thumbnails (WS2) ───────────────────────────────────────────────────────────
+// Real worlds are image-bound (e.g. 280 images / 352 MB) far more than article-bound.
+// resolveThumbUrl() returns a small thumbnail blob URL, generating + caching the thumb in IDB on
+// first use (lazy backfill) so existing worlds benefit with no ingest-path changes. Asset grids
+// and map markers use it instead of resolveImageUrl() to avoid decoding multi-MB images at
+// preview size.
+const THUMB_MAX_EDGE = 256;
+const _thumbInflight = new Map();
+
+// Shared LRU bookkeeping for _blobUrlCache. On a cache hit it returns the existing URL (and marks
+// it recently-used); on a miss it evicts the oldest if full, then creates and caches a URL.
+function _cacheBlobUrl(key, blob) {
+  if (_blobUrlCache.has(key)) {
+    const cached = _blobUrlCache.get(key);
+    _blobUrlCache.delete(key);
+    _blobUrlCache.set(key, cached);
+    return cached;
+  }
+  if (_blobUrlCache.size >= MAX_BLOB_CACHE_SIZE) {
+    const oldestKey = _blobUrlCache.keys().next().value;
+    URL.revokeObjectURL(_blobUrlCache.get(oldestKey));
+    _blobUrlCache.delete(oldestKey);
+  }
+  const url = URL.createObjectURL(blob);
+  _blobUrlCache.set(key, url);
+  return url;
+}
+
+/**
+ * Downscale an image blob so its longest edge is <= maxEdge, preserving aspect ratio.
+ * Returns a WebP blob, or null if the source is vector/undecodable/already small enough.
+ */
+async function generateThumbnailBlob(blob, maxEdge = THUMB_MAX_EDGE) {
+  if (!blob || !blob.type || !blob.type.startsWith('image/')) return null;
+  if (blob.type === 'image/svg+xml') return null; // vector — already tiny & scalable
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(blob);
+  } catch {
+    return null;
+  }
+  const { width, height } = bitmap;
+  const longest = Math.max(width, height);
+  if (longest <= maxEdge) { bitmap.close?.(); return null; } // already small — full image is fine
+  const scale = maxEdge / longest;
+  const w = Math.max(1, Math.round(width * scale));
+  const h = Math.max(1, Math.round(height * scale));
+  const canvas = (typeof OffscreenCanvas !== 'undefined')
+    ? new OffscreenCanvas(w, h)
+    : Object.assign(document.createElement('canvas'), { width: w, height: h });
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close?.();
+  if (canvas.convertToBlob) return canvas.convertToBlob({ type: 'image/webp', quality: 0.82 });
+  return new Promise((res) => canvas.toBlob(res, 'image/webp', 0.82));
+}
+
+/**
+ * Resolve an image key to a small thumbnail blob URL. Generates + caches the thumb in IDB on first
+ * use. Falls back to the full image for remote URLs, vector icons, map backgrounds, undecodable
+ * blobs, or images already smaller than maxEdge.
+ */
+async function resolveThumbUrl(src, maxEdge = THUMB_MAX_EDGE) {
+  if (!src) return undefined;
+  // Thumbnail raster content/asset images and backgrounds. Custom icons (ci-) are vector and remote
+  // URLs (http) would taint the canvas — those use the full resolver. NOTE: the map/theme render
+  // paths call resolveImageUrl() directly (full res); only opt-in callers (asset grid) get thumbs.
+  if (!(src.startsWith('img-') || src.startsWith('banner-') || src.startsWith('bg-img-'))) return resolveImageUrl(src);
+
+  const thumbKey = `thumb${maxEdge}-${src}`;
+  if (_blobUrlCache.has(thumbKey)) return _cacheBlobUrl(thumbKey);
+
+  try {
+    const existing = await idbGet(thumbKey);
+    if (existing) return _cacheBlobUrl(thumbKey, existing);
+  } catch { /* fall through to (re)generate */ }
+
+  if (_thumbInflight.has(thumbKey)) return _thumbInflight.get(thumbKey);
+  const job = (async () => {
+    try {
+      const full = await idbGet(src);
+      if (!full) return resolveImageUrl(src);
+      const thumb = await generateThumbnailBlob(full, maxEdge);
+      if (!thumb) return resolveImageUrl(src); // already small / undecodable — use the full image
+      await idbSet(thumbKey, thumb);
+      return _cacheBlobUrl(thumbKey, thumb);
+    } catch {
+      return resolveImageUrl(src);
+    } finally {
+      _thumbInflight.delete(thumbKey);
+    }
+  })();
+  _thumbInflight.set(thumbKey, job);
+  return job;
+}
+
 function dataUrlToBlob(dataUrl) {
   const parts = String(dataUrl).split(',');
   const head = parts[0] || '';
