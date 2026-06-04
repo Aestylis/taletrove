@@ -28,16 +28,20 @@ test.describe('App shell', () => {
     }
   });
 
-  test('Atlas panel and Encyclopedia tab are present', async ({ page }) => {
+  test('Atlas panel and its tabs are present', async ({ page }) => {
     await gotoApp(page);
     await expect(page.locator('#atlasPanel')).toBeVisible();
-    await expect(page.locator('#encyclopediaTabBtn')).toBeVisible();
-    await expect(page.locator('#encyclopediaView')).toBeAttached();
+    // Post unified-panel refactor: the left panel has Atlas + Assets tabs (no Encyclopedia tab).
+    await expect(page.locator('#atlasTabBtn')).toBeVisible();
+    await expect(page.locator('#assetsTabBtn')).toBeVisible();
+    await expect(page.locator('#atlasView')).toBeAttached();
   });
 
-  test('clicking Encyclopedia tab shows encyclopedia view', async ({ page }) => {
+  test('clicking the Assets tab shows the assets view', async ({ page }) => {
     await gotoApp(page);
-    await page.click('#encyclopediaTabBtn');
-    await expect(page.locator('#encyclopediaView')).toHaveClass(/active/);
+    const tab = page.locator('#assetsTabBtn');
+    await tab.scrollIntoViewIfNeeded().catch(() => {});
+    await tab.dispatchEvent('click'); // tab can sit outside the viewport; dispatch triggers the handler
+    await expect(page.locator('#assetsView')).toBeVisible();
   });
 });

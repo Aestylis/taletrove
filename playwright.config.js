@@ -16,7 +16,11 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Taller-than-default viewport (Desktop Chrome defaults to 720px high) so the full vertical
+    // nav rail — calendar/timeline/help/graph/family-tree buttons sit low in it — stays on-screen
+    // and clickable. The rail does not scroll buttons into view, so a short viewport leaves them
+    // "outside of the viewport" for Playwright clicks.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 1000 } } },
   ],
 
   // Auto-start a static file server if one isn't already running.

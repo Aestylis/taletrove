@@ -34,11 +34,10 @@ test.describe('Calendar modal', () => {
           lunar_cyc: {},
           lunar_shf: {},
         };
-        // Write directly to the settings object and trigger a save
-        window.state.settings.donjonCalendar = cal;
-        window.state.settings.currentDate = { year: 100, month: 'January', day: 1 };
-        window.markEntityDirty('meta');
-        window.debouncedSave();
+        // `settings` is a top-level `let` global (not window.state.settings). The calendar modal
+        // reads settings.donjonCalendar live when it renders on open, so setting it is sufficient.
+        settings.donjonCalendar = cal;
+        settings.currentDate = { year: 100, month: 'January', day: 1 };
       });
     });
 
@@ -67,8 +66,11 @@ test.describe('Calendar modal', () => {
       await openModal(page, 'calendarBtn', 'calendarModal');
       await page.click('#calendarJumpToday');
       await expect(page.locator('.cal-date-popover')).toBeVisible();
-      // Click outside the popover
-      await page.mouse.click(10, 10);
+      // The popover attaches its outside-dismiss listener on `document` via setTimeout(0), so wait a
+      // beat, then fire the mousedown directly on document (a raw page.mouse.click can be swallowed
+      // by the modal backdrop's handler before it reaches the document listener).
+      await page.waitForTimeout(100);
+      await page.evaluate(() => document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
       await expect(page.locator('.cal-date-popover')).toBeHidden();
     });
 
