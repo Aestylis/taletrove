@@ -5,7 +5,9 @@
   "scripts": {
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "test:perf": "playwright test tests/perf --reporter=list",
+    "perf:fixtures": "node scripts/build-perf-fixtures.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",

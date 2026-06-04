@@ -61,3 +61,6 @@ node_modules/
 # Playwright test artifacts
 playwright-report/
 test-results/
+
+# Generated perf fixtures (synthetic + large — regenerate with `npm run perf:fixtures`)
+tests/perf/fixtures/
