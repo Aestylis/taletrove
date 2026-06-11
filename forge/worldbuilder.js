@@ -1450,7 +1450,8 @@ function toggleMapVisibility(mapId) {
     recordState();
     map.visibleToPlayers = !map.visibleToPlayers;
     markEntityDirty('map', map.id);
-    render({ full: true }); // Use a full render to update visibility
+    // WS3: patch the row's eye icon in place when possible; full render only when needed.
+    if (!window.updateRowVisibility?.(mapId, 'map')) render({ full: true });
     debouncedSave();
   }
 }
@@ -1632,7 +1633,8 @@ function toggleFeatureVisibility(featureId) {
     recordState();
     feature.visibleToPlayers = !feature.visibleToPlayers;
     markEntityDirty('article', feature.id);
-    render({ full: true }); // Use a full render to update visibility
+    // WS3: patch the row's eye icon in place when possible; full render only when needed.
+    if (!window.updateRowVisibility?.(featureId, 'feature')) render({ full: true });
     debouncedSave();
   }
 }
@@ -1643,7 +1645,8 @@ function toggleEncyclopediaEntryVisibility(entryId) {
     recordState();
     entry.visibleToPlayers = !entry.visibleToPlayers;
     markEntityDirty('article', entry.id);
-    render({ full: true });
+    // WS3: patch the row's eye icon in place when possible; full render only when needed.
+    if (!window.updateRowVisibility?.(entryId, 'encyclopedia')) render({ full: true });
     debouncedSave();
   }
 }

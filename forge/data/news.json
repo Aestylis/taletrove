@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-23",
+    "date": "2026-06-11",
+    "title": "Alpha 6.23: Smoother Visibility Toggles",
+    "summary": "Flipping a pin, map, or lore entry between Player-visible and GM-only now updates just that row instantly, instead of rebuilding the whole panel.",
+    "tags": ["Performance", "Navigation", "UX"],
+    "content": "<h4>No more panel flicker</h4><p>Clicking the eye icon to switch an entry between <strong>Player-visible</strong> and <strong>GM-only</strong> used to rebuild the entire navigation tree — which could scroll the panel, drop your hover, and feel janky in large worlds. Now only the row you clicked updates, in place. The change is instant and the panel stays exactly where it was.</p><p>This is the first of several render improvements making the navigation panel feel snappier as worlds grow. There's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-22",
     "date": "2026-06-11",
     "title": "Alpha 6.22: Faster First Load",

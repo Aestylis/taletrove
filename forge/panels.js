@@ -127,6 +127,46 @@ function updateSelectionStyles() {
   });
 }
 
+/**
+ * WS3 — incremental render. Patch a single tree row's visibility button in place
+ * instead of rebuilding the whole panel tree. Returns true if the row was patched;
+ * false if the caller must fall back to a full render.
+ *
+ * Safe to patch only in GM role: in player role, `visibleToPlayers` changes row
+ * membership (panels.js filters) and map layers (map.js), so a full render is required.
+ * Visibility never affects the label or alphabetical sort order, so position is stable.
+ */
+function updateRowVisibility(id, type) {
+  if (role === 'player') return false; // membership/layer change — needs full render
+
+  let row = null, entity = null;
+  if (type === 'feature') {
+    row = document.querySelector(`.feature-row[data-fid="${CSS.escape(id)}"]`);
+    entity = state.features.find(f => f.id === id);
+  } else if (type === 'encyclopedia') {
+    row = document.querySelector(`.encyclopedia-item[data-entry-id="${CSS.escape(id)}"]`);
+    entity = state.encyclopedia.find(e => e.id === id);
+  } else if (type === 'map') {
+    const node = document.querySelector(`.map-node[data-map-id="${CSS.escape(id)}"]`);
+    row = node ? node.querySelector(':scope > .map-row') : null;
+    entity = state.maps.find(m => m.id === id);
+  }
+  if (!row || !entity) return false;
+
+  const btn = row.querySelector('.row-vis-btn');
+  if (!btn) return false;
+
+  const vis = !!entity.visibleToPlayers;
+  btn.classList.toggle('is-player', vis);
+  btn.classList.toggle('is-gm', !vis);
+  btn.title = vis ? 'Visible to Players — click for GM-only' : 'GM Only — click to show players';
+  btn.setAttribute('aria-label', vis ? 'Visible to players — click for GM-only' : 'GM only — click to show players');
+  btn.setAttribute('aria-pressed', vis ? 'true' : 'false');
+  btn.innerHTML = getIconHTMLSync(vis ? 'eye' : 'eye-closed', 'currentColor');
+  return true;
+}
+window.updateRowVisibility = updateRowVisibility;
+
 let isAtlasRefreshing = false;
 let _atlasScrollHandler = null;
 let activeTags = new Set();  // currently selected tag filters
@@ -1619,7 +1659,8 @@ function showAtlasContextMenu(e, type, id, name) {
       feature.visibleToPlayers = !feature.visibleToPlayers;
       markEntityDirty('article', id);
       debouncedSave();
-      render();
+      // WS3: patch the row's eye icon in place when possible; full render only when needed.
+      if (!updateRowVisibility(id, 'feature')) render({ full: true });
     };
     const divider = el('li', { class: 'divider' });
     const duplicateItem = el('li', { text: 'Duplicate' });
@@ -1707,7 +1748,8 @@ function showAtlasContextMenu(e, type, id, name) {
       entry.visibleToPlayers = !entry.visibleToPlayers;
       markEntityDirty('article', id);
       debouncedSave();
-      refreshEncyclopediaView();
+      // WS3: patch the row's eye icon in place when possible; full refresh only when needed.
+      if (!updateRowVisibility(id, 'encyclopedia')) refreshEncyclopediaView();
     };
     const divider = el('li', { class: 'divider' });
     const duplicateItem = el('li', { text: 'Duplicate' });
