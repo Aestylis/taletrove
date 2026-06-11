@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-22",
+    "date": "2026-06-11",
+    "title": "Alpha 6.22: Faster First Load",
+    "summary": "The app now paints its interface before its libraries finish loading, so it appears on screen noticeably sooner — especially on slower connections.",
+    "tags": ["Performance", "Startup"],
+    "content": "<h4>Quicker startup</h4><p>TaleTrove's scripts and third-party libraries (the map engine, content sanitizer, and others) now load in the background instead of blocking the page while they download. The interface paints first and the libraries finish loading in parallel, so the app appears on screen sooner — the difference is most noticeable on slower connections or the very first visit before anything is cached.</p><p>Everything loads in the same order as before, so behaviour is unchanged — it just gets out of your way faster. There's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-21",
     "date": "2026-06-04",
     "title": "Alpha 6.21: Faster Image-Heavy Worlds",
