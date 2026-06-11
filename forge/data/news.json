@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-24",
+    "date": "2026-06-11",
+    "title": "Alpha 6.24: Lighter Popups, Avatars & Timelines",
+    "summary": "Map popups, family-tree portraits, and timeline cards now use lightweight thumbnails instead of full-size images, so image-heavy worlds feel lighter everywhere.",
+    "tags": ["Performance", "Images", "Maps"],
+    "content": "<h4>Thumbnails everywhere they fit</h4><p>The thumbnail system introduced for the asset library now also powers map pin popups, family-tree avatars, and timeline & gantt event cards. These spots show images at small sizes, so they no longer decode the full multi-megabyte original — they reuse the same small thumbnail, which is generated once and cached.</p><p>Full-size images are still used where they matter: article hero banners, the lightbox, and the map itself. As always, existing worlds benefit automatically — there's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-23",
     "date": "2026-06-11",
     "title": "Alpha 6.23: Smoother Visibility Toggles",

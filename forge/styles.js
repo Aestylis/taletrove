@@ -557,7 +557,8 @@ async function buildEntityMetaStrip(item) {
  * @returns {Promise<HTMLElement>} The hero div element
  */
 async function buildPopupHeader(item) {
-  const heroUrl = item.heroImageKey ? await resolveImageUrl(item.heroImageKey) : null;
+  // WS2: map popups are small + not lightbox-linked, so a 256px thumb is plenty.
+  const heroUrl = item.heroImageKey ? await resolveThumbUrl(item.heroImageKey) : null;
   const iconHtml = await getItemIconHTML(item);
   const titleText = item.title || item.name || '(untitled)';
 

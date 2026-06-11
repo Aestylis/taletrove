@@ -395,7 +395,8 @@ async function ftLoadAvatars() {
   for (const node of _ftNodes.values()) {
     if (!node.heroImageKey) continue;
     try {
-      const url = await resolveImageUrl(node.heroImageKey);
+      // WS2: family-tree avatars are small (~48–64px) — use a thumbnail, not the full image.
+      const url = await resolveThumbUrl(node.heroImageKey);
       if (!url || !_ftModal) continue;
       const avatar = _ftModal.querySelector(`[data-ft-id="${CSS.escape(node.id)}"] .ft-node-avatar`);
       if (avatar) {

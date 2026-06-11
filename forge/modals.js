@@ -637,7 +637,7 @@ async function showCalendarModal() {
       if (event.ownerType === 'encyclopedia') {
         const ownerEntry = state.encyclopedia.find(e => e.id === event.ownerId);
         if (ownerEntry && ownerEntry.heroImageKey) {
-          event.heroImageUrl = await resolveImageUrl(ownerEntry.heroImageKey);
+          event.heroImageUrl = await resolveThumbUrl(ownerEntry.heroImageKey); // WS2: small timeline/gantt card
         }
       }
     }
@@ -907,7 +907,7 @@ async function renderVerticalTimeline(allEvents, contentEl, modal) {
 
     const eventColor = event.color || event.dateData?.color;
     if (owner.heroImageKey) {
-      const imageUrl = await resolveImageUrl(owner.heroImageKey);
+      const imageUrl = await resolveThumbUrl(owner.heroImageKey); // WS2: small timeline card
       if (imageUrl) {
         card.style.backgroundImage = `url('${imageUrl}')`;
       } else {
