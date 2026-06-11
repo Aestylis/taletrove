@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-25",
+    "date": "2026-06-11",
+    "title": "Alpha 6.25: Under-the-Hood Maintenance",
+    "summary": "Internal code reorganization for long-term stability — the command palette now lives in its own module. No behavior changes.",
+    "tags": ["Maintenance"],
+    "content": "<h4>Code health</h4><p>This release begins an internal reorganization of TaleTrove's largest source file to keep the app maintainable as it grows. The Ctrl+K command palette has moved into its own module, with new automated tests covering it. Nothing changes in how the app looks or behaves — this work is about keeping future updates fast and safe.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-24",
     "date": "2026-06-11",
     "title": "Alpha 6.24: Lighter Popups, Avatars & Timelines",
