@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-37",
+    "date": "2026-06-12",
+    "title": "Alpha 6.37: Stylesheet Cleanup",
+    "tags": ["Polish", "Performance"],
+    "summary": "Removed ~325 lines of dead CSS left over from the old Project Hub layout — every deleted rule was verified unused before removal. No visual changes.",
+    "content": "<h4>Under-the-hood housekeeping</h4><p>The stylesheet carried leftover rules from the Project Hub's previous design (the old top nav bar, action card grid, system list, and cloud-sync card) plus a few stray artifacts: duplicate scrollbar and box-sizing rules and two stray characters. All of it was verified unused against the app's markup and scripts, then removed. The hub looks and behaves exactly as before — the stylesheet is just ~325 lines lighter.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-36",
     "date": "2026-06-12",
     "title": "Alpha 6.36: Reduced Motion & Pin Names",

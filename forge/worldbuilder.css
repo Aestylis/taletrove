@@ -868,29 +868,8 @@ body.has-map-bg #map {
 }
 
 /* --- Universal UI Polish & Sophistication --- */
+/* Scrollbar styles live in the "Scrollbar Styles" block (~line 5910) */
 
-/* Modern AAA Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--scrollbar-track);
-  transition: background 0.2s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-/* Global Easing for AAA Feel */
 * {
   box-sizing: border-box;
 }
@@ -1139,10 +1118,6 @@ header.app-header {
   margin-left: 4px;
   align-self: flex-start;
   margin-top: 4px;
-}
-
-* {
-  box-sizing: border-box
 }
 
 /* Skip link — visually hidden until focused (keyboard accessibility) */
@@ -5954,6 +5929,7 @@ path.leaflet-interactive.leaflet-feature-selected {
   background-color: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
   border: 2px solid var(--scrollbar-track);
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -12335,8 +12311,7 @@ button.drag-over { outline: 2px dashed var(--accent); }
   object-fit: contain;
   display: block;
 }
-\
-\
+
 /* --- PROJECT HUB (2026 Modernization) --- */
 .modal-overlay.is-hub {
     position: fixed !important;
@@ -12680,42 +12655,11 @@ button.drag-over { outline: 2px dashed var(--accent); }
     overflow-y: auto;
 }
 
-/* --- HUB TOP NAV BAR (legacy, kept for safety) --- */
-.hub-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 1rem 1.5rem !important;
-    border-bottom: 1px solid var(--border) !important;
-    background: var(--card) !important;
-    margin-bottom: 0 !important;
-    height: 60px !important;
-    flex-shrink: 0 !important;
-    border-radius: 16px 16px 0 0 !important;
-}
-
-.hub-header-brand {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    min-width: 300px !important; /* Prevent title drift */
-}
-
 .hub-logo {
     width: 40px !important;
     height: 40px !important;
     margin: 0 !important;
     flex-shrink: 0 !important;
-}
-
-.hub-header h1 {
-    font-family: var(--font-heading) !important;
-    font-size: 1.75rem !important;
-    margin: 0 !important;
-    letter-spacing: 0.05em !important;
-    color: var(--text) !important;
-    text-transform: uppercase !important;
-    white-space: nowrap !important;
 }
 
 .hub-content .modal-close {
@@ -12745,16 +12689,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
     background: var(--surface-hover);
     border-color: var(--border);
     color: var(--text);
-}
-
-.hub-sections {
-    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) minmax(220px, 260px);
-    gap: 2.5rem;
-    padding: 10px 2rem 3rem 2rem;
-}
-
-.hub-sections:not(.hidden) {
-    display: grid;
 }
 
 .hub-section h3 {
@@ -12807,55 +12741,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
 .project-card h2 {
     font-size: 1.25rem;
     margin: 0 0 0.25rem 0;
-    color: var(--text);
-}
-
-.hub-action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.hub-action-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.hub-action-card:hover {
-    background: var(--surface-hover);
-    border-color: var(--accent-orange);
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-xl);
-}
-
-.hub-action-card .icon-wrap {
-    width: 40px;
-    height: 40px;
-    background: var(--bg);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.hub-action-card .icon-container {
-    width: 24px;
-    height: 24px;
-    background-color: var(--accent-orange);
-}
-
-.hub-action-card span {
-    font-weight: 600;
-    font-size: 14px;
     color: var(--text);
 }
 
@@ -12923,105 +12808,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
     display: none;
 }
 
-.hub-system-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.hub-system-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-}
-
-.hub-system-list li > div {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.hub-system-list li:hover:not(.has-control) {
-    background: var(--surface-hover);
-    border-color: var(--accent-orange);
-    transform: translateX(4px);
-}
-
-.hub-system-list .icon-container {
-    width: 18px;
-    height: 18px;
-    background-color: var(--muted);
-}
-
-.theme-light .hub-system-list .icon-container {
-    background-color: var(--text); /* Higher contrast in light mode */
-}
-
-.hub-footer {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-}
-
-/* --- HUB IMPORT DROP ZONE --- */
-
-@keyframes kofi-cup-bob {
-    0%, 100% { transform: translateY(0) rotate(-4deg); }
-    50%       { transform: translateY(-4px) rotate(4deg); }
-}
-
-.kofi-btn,
-.kofi-btn:link,
-.kofi-btn:visited {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.1rem;
-    background: var(--accent-orange);
-    color: var(--primary-btn-text) !important;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    transition: box-shadow 0.2s, transform 0.15s;
-}
-
-.kofi-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 18px rgba(var(--accent-orange-rgb), 0.45);
-    text-decoration: none;
-    color: var(--primary-btn-text) !important;
-}
-
-.kofi-btn:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-.kofi-btn__cup {
-    height: 20px;
-    flex-shrink: 0;
-    animation: kofi-cup-bob 2.4s ease-in-out infinite;
-    transform-origin: center bottom;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .kofi-btn__cup { animation: none; }
-}
-
 /* --- RECENT WORLDS (Project Hub) --- */
 .hub-section--full {
     grid-column: 1 / -1;
@@ -13084,10 +12870,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 @media (max-width: 900px) {
-    .hub-sections {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
     .hub-content {
         height: auto;
         padding: 2rem;
@@ -13096,31 +12878,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
 
 
 /* --- PROJECT HUB THEME ADAPTATION --- */
-.hub-header h1 {
-    color: var(--text) !important;
-}
-
-.theme-light .hub-header h1 {
-    color: #1a1612 !important; /* Darker for light mode contrast */
-}
-
-.theme-light .hub-system-list li {
-    color: #1a1612;
-    border-color: rgba(0, 0, 0, 0.1);
-}
-
-.hub-action-card:hover span {
-    color: var(--accent-orange) !important;
-}
-
-.hub-system-list li:hover:not(.has-control) span {
-    color: var(--accent-orange) !important;
-}
-
-.hub-system-list li:hover:not(.has-control) .icon-container {
-    background-color: var(--accent-orange) !important;
-}
-
 /* Hub background uses --surface-glass token */
 .modal-overlay.is-hub {
     background: var(--surface-glass) !important;
@@ -13131,10 +12888,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
 .theme-light .modal-overlay.is-hub {
     /* More translucent to allow glass blur to be visible */
     background: rgba(242, 240, 235, 0.8) !important;
-}
-
-.theme-light .hub-header {
-    background: rgba(0, 0, 0, 0.02) !important;
 }
 
 /* --- PROJECT HUB BUTTON STYLES --- */
@@ -13235,8 +12988,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
     background-color: var(--text);
 }
 
-/* --- HUB CLOUD SYNC --- */
-
 .hub-primary-btn--ghost {
     background: transparent;
     color: var(--text);
@@ -13246,79 +12997,6 @@ button.drag-over { outline: 2px dashed var(--accent); }
 .hub-primary-btn--ghost:hover {
     background: var(--card-hover);
     filter: none;
-}
-
-.hub-cloud-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.hub-cloud-card.hub-cloud-unconfigured {
-    border-style: dashed;
-    opacity: 0.7;
-}
-
-.hub-cloud-connected .hub-cloud-identity {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.hub-cloud-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-}
-
-.hub-cloud-avatar--initials {
-    background: var(--accent);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.hub-cloud-name {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.hub-cloud-email {
-    font-size: 12px;
-}
-
-.hub-cloud-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.hub-cloud-actions .hub-primary-btn {
-    flex: 1;
-}
-
-.hub-cloud-signout {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0;
-    text-align: left;
-    text-decoration: underline;
-    align-self: flex-start;
-}
-
-.hub-cloud-signout:hover {
-    color: var(--text);
 }
 
 /* ── Drive File Picker ───────────────────────────────────────────────────── */
