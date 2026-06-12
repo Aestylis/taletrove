@@ -201,13 +201,14 @@
   --bg: #cfccd6; /* Deepest - Map Background */
   --panel: #f2f0eb; /* Medium - Sidebars */
   --header-bg: #ffffff; /* Brighter - Header Bar */
-  --muted: #8a7d70;
+  --muted: #6b6055; /* darkened for WCAG AA on panel/card (was #8a7d70, 3.5:1) */
   --text: #3d352e;
   --accent-magenta:     #c92a91;
   --accent-magenta-rgb: 201, 42, 145;
-  --accent-orange: #25a8b5;
-  --danger: #e63946;
-  --gm: #a57400;
+  --accent-orange: #117383; /* darkened for WCAG AA as text + white button labels (was #25a8b5, 2.5:1) */
+  --accent-orange-rgb: 17, 115, 131;
+  --danger: #c5303c; /* darkened for WCAG AA (was #e63946, 3.7:1) */
+  --gm: #8a6100; /* darkened for WCAG AA (was #a57400, 3.6:1) */
   --player: #2f7d1f;
   --border: #e0d9cb;
   --card: #ffffff;
@@ -225,8 +226,8 @@
   --tooltip-text: var(--text);
   --map-banner-text-color: var(--text);
   --map-banner-icon-color: var(--muted);
-  --primary-btn-text: var(--bg);
-  --danger-btn-text: var(--bg);
+  --primary-btn-text: #ffffff; /* was var(--bg) — 1.8:1 on the accent */
+  --danger-btn-text: #ffffff; /* was var(--bg) — 2.6:1 on danger */
   --toolbar-icon-color: var(--muted);
   /* Surface hover — distinct from white card for subtle hover affordance */
   --surface-hover: #e9e5dc;
@@ -1198,21 +1199,9 @@ button.primary {
   border-color: transparent;
 }
 
-.theme-light button.primary {
-  background: var(--accent-orange);
-  color: var(--bg);
-  border-color: transparent;
-}
-
 button.danger {
   background: var(--danger);
   color: var(--danger-btn-text);
-  border-color: transparent;
-}
-
-.theme-light button.danger {
-  background: var(--danger);
-  color: var(--bg);
   border-color: transparent;
 }
 
@@ -1384,16 +1373,8 @@ aside {
 }
 
 .toolbar button.primary {
-  color: var(--text);
+  color: var(--primary-btn-text);
   background: var(--accent-orange);
-}
-
-.theme-dark .toolbar button.primary {
-  color: #1a0b00;
-}
-
-.theme-light .toolbar button.primary {
-  color: var(--bg);
 }
 
 
@@ -9700,8 +9681,7 @@ a.wiki-link.is-broken:hover {
 }
 
 /* Ensure monster content text stays dark regardless of theme */
-.theme-dark .callout-monster .callout-content,
-.theme-dark .callout-monster .callout-title {
+.theme-dark .callout-monster .callout-content {
   color: #1a1a1a;
 }
 .theme-dark .callout-monster .callout-title { color: var(--monster-color); }

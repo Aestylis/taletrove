@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-31",
+    "date": "2026-06-12",
+    "title": "Alpha 6.31: Light Theme Readability",
+    "tags": ["Polish", "Accessibility"],
+    "summary": "Light theme text and buttons now meet WCAG AA contrast — darker accent, danger, and muted colors, and legible button labels.",
+    "content": "<h4>Light theme contrast pass</h4><p>The Parchment light theme got a readability overhaul: primary and danger buttons now use white labels on darker backgrounds (previously near-invisible), and the muted, accent, danger, and GM colors were darkened to meet WCAG AA contrast on panels and cards. Accent-tinted glows in light mode now match the teal accent instead of orange.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-30",
     "date": "2026-06-11",
     "title": "Alpha 6.30: Security Hardening",
