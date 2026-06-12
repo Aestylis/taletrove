@@ -182,7 +182,12 @@ function setLoadingState(isLoading, text = "Processing...") {
     overlay.classList.remove('hidden');
     // Safety: Auto-hide after 30 seconds in case an operation hangs (increased from 15 for large projects)
     clearTimeout(loadingTimeout);
-    loadingTimeout = setTimeout(() => setLoadingState(false), 30000);
+    loadingTimeout = setTimeout(() => {
+      setLoadingState(false);
+      if (typeof showToast === 'function') {
+        showToast('This is taking longer than expected — the operation may still be running.');
+      }
+    }, 30000);
   } else {
     // Small delay to prevent flickering on fast operations
     setTimeout(() => {

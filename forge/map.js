@@ -1023,7 +1023,16 @@ async function featureToLayer(feat) {
   if (geometryType === 'point') {
     const [lng, lat] = feat.geojson.geometry.coordinates;
     const icon = await createMarkerIcon(feat);
-    layer = L.marker([lat, lng], { icon });
+    layer = L.marker([lat, lng], { icon, alt: feat.title || feat.name || 'Map pin' });
+    // divIcon markers render a <div>, so Leaflet's alt option never reaches the DOM —
+    // pins are tabbable (and have a focus ring) but anonymous without this.
+    layer.on('add', () => {
+      const elm = layer.getElement();
+      if (elm) {
+        elm.setAttribute('role', 'button');
+        elm.setAttribute('aria-label', feat.title || feat.name || 'Map pin');
+      }
+    });
   }
   else if (geometryType === 'polygon') {
     const coords = feat.geojson.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);

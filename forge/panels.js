@@ -228,6 +228,7 @@ async function refreshAtlasTree() {
     const wasFilterFocused = oldFilterInput && document.activeElement === oldFilterInput;
     const oldQuery = oldFilterInput ? oldFilterInput.value : '';
     const cursorPosition = oldFilterInput ? oldFilterInput.selectionStart : 0;
+    const oldScrollTop = container.scrollTop; // restore after the full rebuild below
     // Keep bar expanded if there is an active query
     if (oldQuery) filterBarExpanded = true;
     container.innerHTML = '';
@@ -858,6 +859,7 @@ async function refreshAtlasTree() {
   isAtlasRefreshing = false;
   await refreshEncyclopediaView(); // populate the inline lore section
   await refreshSessionsView();    // populate the GM-only sessions section
+  container.scrollTop = oldScrollTop; // after lore/sessions land, so full height exists
 } catch (e) {
   console.error("Atlas Refresh failed", e);
   isAtlasRefreshing = false;

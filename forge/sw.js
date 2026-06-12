@@ -1,6 +1,6 @@
 // Bump CACHE_NAME on every deploy (same cadence as ?v= strings in index.html).
 // Old caches with a different name are deleted on activate.
-const CACHE_NAME = 'taletrove-2026.06.12e';
+const CACHE_NAME = 'taletrove-2026.06.12f';
 const STATIC_ASSETS = [
   './',
   './index.html',

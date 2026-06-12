@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-36",
+    "date": "2026-06-12",
+    "title": "Alpha 6.36: Reduced Motion & Pin Names",
+    "tags": ["Accessibility", "Polish"],
+    "summary": "The app now honors your system's reduced-motion preference, map pins announce their names to screen readers, and the left panel keeps its scroll position across refreshes.",
+    "content": "<h4>Motion, names, and small fixes</h4><p>If your OS asks for reduced motion, TaleTrove now collapses all animations and transitions app-wide. Map pins carry their entity name for screen readers (they were tabbable but anonymous). The world panel no longer jumps to the top when it refreshes, and if a long operation stalls past 30 seconds you now get a toast instead of the spinner silently vanishing.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-35",
     "date": "2026-06-12",
     "title": "Alpha 6.35: Dialog Focus Management",

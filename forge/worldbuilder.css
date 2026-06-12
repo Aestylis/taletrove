@@ -15800,3 +15800,16 @@ a.image-search-license-chip:hover {
   pointer-events: none;
   z-index: 2;
 }
+
+/* ── prefers-reduced-motion ───────────────────────────────────────────────────
+   Collapse every transition/animation for users who ask for reduced motion.
+   Individual surfaces with bespoke handling (hub, modals.js runtime check)
+   are already compatible — this is the global floor. Keep last in the file. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
