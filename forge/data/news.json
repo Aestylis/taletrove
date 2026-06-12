@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-32",
+    "date": "2026-06-12",
+    "title": "Alpha 6.32: Theme Preset Button Contrast",
+    "tags": ["Polish", "Accessibility"],
+    "summary": "Primary buttons are now legible in all 16 color theme presets — 8 presets had button labels below WCAG AA contrast.",
+    "content": "<h4>Preset contrast pass</h4><p>A contrast audit across all 16 color theme presets found 8 with hard-to-read primary button labels (Dracula, One Dark, Tokyo Night, Solarized, Nord Light, One Light, Rosé Pine Dawn, Summer Breeze). Each now uses a palette-native label color that meets WCAG AA (4.5:1+) against its accent. A new audit script (<code>scripts/check-preset-contrast.js</code>) guards future presets.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-31",
     "date": "2026-06-12",
     "title": "Alpha 6.31: Light Theme Readability",

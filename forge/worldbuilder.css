@@ -260,7 +260,7 @@
   --panel-translucent-darker: rgba(25, 26, 33, 0.96);
   --toolbar-bg:               rgba(68, 71, 90, 0.92);
   --scrollbar-thumb:  #6272A4;
-  --primary-btn-text: #F8F8F2;
+  --primary-btn-text: #282A36; /* dracula bg — 5.9:1 on the purple accent (was #F8F8F2, 2.3:1) */
 }
 
 /* ── One Dark ── */
@@ -282,7 +282,7 @@
   --panel-translucent-darker: rgba(26, 29, 35, 0.96);
   --toolbar-bg:               rgba(44, 49, 58, 0.92);
   --scrollbar-thumb:  #4B5363;
-  --primary-btn-text: #F8F8F2;
+  --primary-btn-text: #282C34; /* onedark bg — 5.9:1 on the blue accent (was #F8F8F2, 2.2:1) */
 }
 
 /* ── Tokyo Night ── */
@@ -304,7 +304,7 @@
   --panel-translucent-darker: rgba(19, 19, 26, 0.96);
   --toolbar-bg:               rgba(30, 32, 48, 0.92);
   --scrollbar-thumb:  #3D4663;
-  --primary-btn-text: #F8F8F2;
+  --primary-btn-text: #1A1B26; /* tokyonight bg — 6.8:1 on the blue accent (was #F8F8F2, 2.4:1) */
 }
 
 /* ── Nord ── */
@@ -434,7 +434,7 @@
   --panel-translucent-darker: rgba(253, 246, 227, 0.97);
   --toolbar-bg:               rgba(238, 232, 213, 0.94);
   --scrollbar-thumb:  #C0B9A8;
-  --primary-btn-text: #FDF6E3;
+  --primary-btn-text: #00212B; /* deep base03 — 4.6:1 on the blue accent (was #FDF6E3, 3.4:1) */
   --label-bg:         rgba(253, 246, 227, 0.92);
 }
 
@@ -503,7 +503,7 @@
   --panel-translucent-darker: rgba(236, 239, 244, 0.97);
   --toolbar-bg:               rgba(216, 222, 233, 0.94);
   --scrollbar-thumb:  #B0BAC8;
-  --primary-btn-text: #FFFFFF;
+  --primary-btn-text: #0E1116; /* near-black — 4.7:1 on the mid-tone nord blue (white was 4.0:1) */
   --label-bg:         rgba(255, 255, 255, 0.92);
 }
 
@@ -549,7 +549,7 @@
   --panel-translucent-darker: rgba(250, 250, 250, 0.97);
   --toolbar-bg:               rgba(234, 234, 235, 0.96);
   --scrollbar-thumb:  #CECECE;
-  --primary-btn-text: #FFFFFF;
+  --primary-btn-text: #0E1116; /* near-black — 4.7:1 on the mid-tone blue accent (white was 4.1:1) */
   --label-bg:         rgba(255, 255, 255, 0.92);
 }
 
@@ -572,7 +572,7 @@
   --panel-translucent-darker: rgba(250, 244, 237, 0.97);
   --toolbar-bg:               rgba(223, 217, 204, 0.94);
   --scrollbar-thumb:  #C9BFB4;
-  --primary-btn-text: #FFFAF3;
+  --primary-btn-text: #26233A; /* rosé pine ink — 5.3:1 on the rose accent (was #FFFAF3, 2.8:1) */
   --label-bg:         rgba(255, 250, 243, 0.92);
 }
 
@@ -603,7 +603,7 @@
   --toolbar-divider:  rgba(60, 43, 24, 0.15);
   --toolbar-icon-color: #8a7250;
   --scrollbar-thumb:  #c4a870;
-  --primary-btn-text: #fffaf0;
+  --primary-btn-text: #142d3d; /* deep sea navy — 5.3:1 on the cerulean accent (was #fffaf0, 2.6:1) */
   --danger-btn-text:  #fffaf0;
   --label-bg:         rgba(255, 250, 240, 0.92);
   --label-border:     rgba(60, 43, 24, 0.15);
