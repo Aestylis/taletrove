@@ -33,6 +33,21 @@ function _detachDragScroll() {
   }
 }
 
+// Keyboard operability for tree rows (atlas tree, encyclopedia, sessions): the panel
+// re-renders from scratch constantly, so one delegated listener on the static #atlasPanel
+// outlives every refresh. Enter/Space on a focused row activates its click handler.
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('atlasPanel');
+  if (!panel) return;
+  panel.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const row = e.target.closest('.tree-row');
+    if (!row || e.target !== row) return; // inner buttons/inputs handle their own keys
+    e.preventDefault(); // keep Space from scrolling the panel
+    row.click();
+  });
+});
+
 function buildPanelEmptyState(iconName, heading, sub, cta = null) {
   const children = [
     el('div', { class: 'panel-empty-icon', style: `-webkit-mask-image: url('ui-icons/${iconName}.svg'); mask-image: url('ui-icons/${iconName}.svg');` }),
@@ -326,7 +341,7 @@ async function refreshAtlasTree() {
       const iconHtml = await getSidebarIconHTML(f);
       const itemIcon = el('div', { class: 'item-icon', innerHTML: iconHtml });
 
-      const featureRow = el('div', { class: `tree-row feature-row`, 'data-fid': f.id, tabindex: '0' });
+      const featureRow = el('div', { class: `tree-row feature-row`, 'data-fid': f.id, tabindex: '0', role: 'button' });
       const featureDetails = [itemIcon, el('span', { class: 'tree-label', text: f.title || '(untitled)' })];
 
       if (role === 'gm') {
@@ -378,7 +393,7 @@ async function refreshAtlasTree() {
       `<div class="folder-icon-default">${getIconHTMLSync('folder', 'currentColor')}</div>` +
       `<div class="folder-icon-caret">${getIconHTMLSync(isFolderCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
 
-    const folderRow = el('div', { class: 'tree-row folder-row', 'data-folder-id': folder.id, onclick: (e) => { e.stopPropagation(); toggleFolderCollapsed(folder.id); } });
+    const folderRow = el('div', { class: 'tree-row folder-row', 'data-folder-id': folder.id, tabindex: '0', role: 'button', 'aria-expanded': String(!isFolderCollapsed), onclick: (e) => { e.stopPropagation(); toggleFolderCollapsed(folder.id); } });
     if (query && !itemsToShow.has(folder.id)) folderRow.classList.add('ghost');
     if (role === 'gm') folderRow.addEventListener('contextmenu', (e) => showAtlasContextMenu(e, 'folder', folder.id, folder.name));
 
@@ -426,7 +441,7 @@ async function refreshAtlasTree() {
 
     const mapLabel = el('span', { class: 'tree-label', text: mapData.name });
 
-    const mapRow = el('div', { class: `tree-row map-row`, onclick: () => navigateToMap(mapData.id, { skipInfoPanel: true }) });
+    const mapRow = el('div', { class: `tree-row map-row`, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id, { skipInfoPanel: true }) });
     if (query && !itemsToShow.has(mapData.id)) mapRow.classList.add('ghost');
 
     let bannerUrl = await resolveImageUrl(`banner-${mapData.id}`);
@@ -1043,6 +1058,7 @@ async function buildEncyclopediaEntryItem(entry) {
     'data-entry-id': entry.id,
     'data-first-letter': (entry.name || '').charAt(0).toUpperCase() || '#',
     tabindex: '0',
+    role: 'button',
     draggable: role === 'gm',
     title: role === 'gm' && !entry.mapId ? 'Drag onto the map to place a pin' : '',
     onclick: (e) => {
@@ -1219,6 +1235,9 @@ async function refreshEncyclopediaView() {
       `<div class="folder-icon-caret">${getIconHTMLSync(isCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
     const folderRow = el('div', {
       class: 'tree-row folder-row',
+      tabindex: '0',
+      role: 'button',
+      'aria-expanded': String(!isCollapsed),
       oncontextmenu: role === 'gm' ? (e) => showAtlasContextMenu(e, 'encyclopedia-folder', folder.id, folder.name) : null
     });
     folderRow.addEventListener('click', (e) => { e.stopPropagation(); toggleEncyclopediaFolderCollapsed(folder.id); });
@@ -1339,6 +1358,7 @@ async function refreshSessionsView() {
           class: `session-item encyclopedia-item tree-row${selectedEncyclopediaEntryId === session.id ? ' selected' : ''}`,
           'data-entry-id': session.id,
           tabindex: '0',
+          role: 'button',
           onclick: () => { if (window.navigateAndPeek) window.navigateAndPeek(session.id, 'encyclopedia'); },
           oncontextmenu: (e) => showAtlasContextMenu(e, 'encyclopedia', session.id, session.name)
         }, [numBadge, nameSpan, el('div', { style: 'flex-grow:1' }), dateSpan, rowActions].filter(Boolean));

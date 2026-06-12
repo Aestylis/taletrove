@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-34",
+    "date": "2026-06-12",
+    "title": "Alpha 6.34: Keyboard Navigation for the World Tree",
+    "tags": ["Accessibility"],
+    "summary": "Maps, folders, pins, lore entries, and sessions in the left panel can now be opened with Enter or Space — no mouse required.",
+    "content": "<h4>Keyboard-operable tree</h4><p>Every row in the world panel (maps, folders, pins, lore entries, sessions) is now focusable and activates with Enter or Space, matching its click behavior. Folder rows also announce their expanded/collapsed state to screen readers (<code>aria-expanded</code>). A new automated test suite locks in these accessibility basics.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-33",
     "date": "2026-06-12",
     "title": "Alpha 6.33: Screen Reader Basics",
