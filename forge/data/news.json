@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-28",
+    "date": "2026-06-11",
+    "title": "Alpha 6.28: Under-the-Hood Maintenance, Part 4",
+    "summary": "Internal code reorganization continues — global keyboard shortcuts now live in their own module. No behavior changes.",
+    "tags": ["Maintenance"],
+    "content": "<h4>Code health</h4><p>The global keyboard shortcuts — undo/redo, Ctrl+S export, Ctrl+K palette, tool switching, Escape layering, and the rest — have moved into their own module as the internal reorganization continues. Every shortcut works exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-27",
     "date": "2026-06-11",
     "title": "Alpha 6.27: Under-the-Hood Maintenance, Part 3",
