@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-30",
+    "date": "2026-06-11",
+    "title": "Alpha 6.30: Security Hardening",
+    "summary": "Tightened how the offline cache decides which hosts count as trusted CDNs. No visible changes.",
+    "tags": ["Maintenance"],
+    "content": "<h4>Under the hood</h4><p>The offline service worker now matches trusted CDN hosts exactly instead of by substring, closing a theoretical avenue for look-alike domains to be treated as trusted. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-29",
     "date": "2026-06-11",
     "title": "Alpha 6.29: Theme & Style Repairs",

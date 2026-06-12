@@ -1,6 +1,6 @@
 // Bump CACHE_NAME on every deploy (same cadence as ?v= strings in index.html).
 // Old caches with a different name are deleted on activate.
-const CACHE_NAME = 'taletrove-2026.06.11h';
+const CACHE_NAME = 'taletrove-2026.06.11i';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -74,11 +74,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // CDNs: cache-first. Local: stale-while-revalidate.
-  const isCDN = url.hostname.includes('unpkg.com') ||
-                url.hostname.includes('cdn.jsdelivr.net') ||
-                url.hostname.includes('cdnjs.cloudflare.com') ||
-                url.hostname.includes('fonts.googleapis.com') ||
-                url.hostname.includes('fonts.gstatic.com');
+  // Exact host or dot-boundary subdomain match only — a bare substring check
+  // would also match hostile hosts like "unpkg.com.evil.example".
+  const CDN_HOSTS = ['unpkg.com', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com',
+                     'fonts.googleapis.com', 'fonts.gstatic.com'];
+  const isCDN = CDN_HOSTS.some((h) => url.hostname === h || url.hostname.endsWith('.' + h));
 
   // Pass through external API calls (e.g. api.github.com) — don't intercept
   const isLocal = url.hostname === self.location.hostname || url.hostname === 'localhost' || url.hostname === '127.0.0.1';
