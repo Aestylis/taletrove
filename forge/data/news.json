@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-29",
+    "date": "2026-06-11",
+    "title": "Alpha 6.29: Theme & Style Repairs",
+    "summary": "A sweep of internal style fixes: restored hover highlights in the light theme, rounded corners that had silently gone square, and the heading font setting now applies to article headings.",
+    "tags": ["Fixes"],
+    "content": "<h4>Style fixes</h4><p>A deep audit of the stylesheet turned up a batch of silently broken styles, now repaired: hover highlights work again in the light theme, several buttons and popovers regained their rounded corners, and a number of badges and labels that had lost their colors are back. If you pick a custom heading font in Settings, article and peek-view headings now actually use it.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-28",
     "date": "2026-06-11",
     "title": "Alpha 6.28: Under-the-Hood Maintenance, Part 4",

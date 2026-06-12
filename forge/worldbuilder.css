@@ -118,6 +118,54 @@
   --accent-magenta-16: rgba(var(--accent-magenta-rgb), 0.16);
 }
 
+/* ─── Aliases for legacy/imported token names ───────────────────────────────
+   These names are referenced throughout the stylesheet (and some JS template
+   literals) but were never defined, so every declaration using them was
+   invalid at computed-value time. Each maps to the real token vocabulary.
+   Declared on body as well as :root: theme classes live on body, and var()
+   inside a custom property resolves on the declaring element — :root alone
+   would freeze these to the fallback palette and ignore the active theme. */
+:root, body {
+  --accent: var(--accent-orange);
+  --accent-cyan: var(--accent-orange);
+  --accent-red: var(--danger);
+  --accent-subtle: var(--accent-orange-16);
+  --primary: var(--accent-orange);
+  --on-accent: var(--primary-btn-text, #fff);
+
+  --text-primary: var(--text);
+  --text-header: var(--text);
+  --text-muted: var(--muted);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--muted);
+
+  --surface: var(--panel);
+  --surface-1: var(--panel);
+  --surface-2: var(--card);
+  --bg-2: var(--panel);
+  --bg-3: var(--card);
+  --surface-3: var(--surface-hover);
+  --surface-thin-glass: var(--surface-thick-glass);
+  --bg-alt: var(--bg);
+  --input-bg: var(--card);
+  --hover: var(--surface-hover);
+  --bg-hover: var(--surface-hover);
+  --card-hover: var(--surface-hover);
+  --panel-hover: var(--surface-hover);
+  --state-hover: var(--surface-hover);
+
+  --border-1: var(--border);
+  --border-subtle: var(--border);
+  --border-hover: var(--muted);
+
+  --radius-card: var(--radius-lg);
+  --shadow-2xl: var(--shadow-xl);
+  --success: #4caf50;
+  --warning: #f4a261;
+  --error: var(--danger);
+  --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
 /* Nocturne Dark Theme */
 .theme-dark {
   --bg: #0f0f12; /* Deepest - Map Background */
@@ -181,7 +229,7 @@
   --danger-btn-text: var(--bg);
   --toolbar-icon-color: var(--muted);
   /* Surface hover — distinct from white card for subtle hover affordance */
-  --surface-hover: var(--surface-hover);
+  --surface-hover: #e9e5dc;
   /* Map label pill — readable on light map backgrounds */
   --label-bg: rgba(255, 255, 255, 0.88);
   --label-border: rgba(0, 0, 0, 0.18);
@@ -3018,7 +3066,7 @@ textarea[disabled] {
   flex: 1;
   padding: 0.35rem 0;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--muted);
   font-size: 0.82rem;
@@ -3063,7 +3111,7 @@ textarea[disabled] {
   font-size: 1.35rem;
   height: 44px;
   cursor: pointer;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -4512,7 +4560,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 0.75rem 1rem;
   border-left: 3px solid var(--gm);
   background-color: color-mix(in srgb, var(--gm) 10%, transparent);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   color: var(--text);
   text-align: left;
   font-size: 0.875rem;
@@ -5611,7 +5659,7 @@ body:not(.no-cats) #map::before {
   box-sizing: border-box;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   color: var(--text);
   padding: 0.5rem 0.75rem;
   font-family: 'Inter', sans-serif;
@@ -5631,7 +5679,7 @@ body:not(.no-cats) #map::before {
   padding: 0.4rem 0;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 500;
@@ -5646,7 +5694,7 @@ body:not(.no-cats) #map::before {
   padding: 0.35rem 0;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   color: var(--muted);
   font-size: 0.75rem;
   font-weight: 500;
@@ -6968,7 +7016,7 @@ border: 1px solid var(--border);
 }
 
 .panel-empty-heading {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--text);
@@ -8619,7 +8667,7 @@ aside#atlasPanel>.section {
 /* --- TEMPLATE MANAGER MODAL --- */
 
 .settings-section-heading {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 1.0rem;
   font-weight: 600;
   color: var(--text);
@@ -8869,7 +8917,7 @@ aside#atlasPanel>.section {
   font-size: 0.65rem;
   font-weight: 500;
   color: var(--text-tertiary);
-  background: rgba(var(--fg-rgb, 255 255 255), 0.07);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   border-radius: var(--radius-full);
   padding: 0 5px;
   line-height: 1.5;
@@ -11283,7 +11331,7 @@ mark {
   z-index: 9999;
   background: color-mix(in srgb, var(--card) 85%, transparent);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 0.75rem 1rem;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
   backdrop-filter: blur(16px);
@@ -11513,7 +11561,7 @@ mark {
 .assets-page-btn {
   background: none;
   border: 1px solid var(--border-1);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
   padding: 0.15rem 0.6rem;
@@ -11690,7 +11738,7 @@ mark {
   z-index: 1;
 
   /* Initial state: collapsed at center */
-  --radius: 80px;
+  --radial-distance: 80px; /* menu item distance from center (not a corner radius) */
   transform: translate(-50%, -50%)
              rotate(var(--angle))
              translate(0)
@@ -11719,7 +11767,7 @@ mark {
 #featureRadialMenu.is-open .radial-btn:not(.radial-sub-btn) {
   transform: translate(-50%, -50%)
              rotate(var(--angle))
-             translate(var(--radius))
+             translate(var(--radial-distance))
              rotate(45deg)
              scale(1);
   opacity: 1;
@@ -13040,7 +13088,7 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 .hub-recent-name {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 600;
     line-height: 1.15;
@@ -14484,7 +14532,7 @@ body.article-mode .canvas-block h2,
 body.peek-mode .canvas-block h2,
 body.article-mode .canvas-block h3,
 body.peek-mode .canvas-block h3 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-heading);
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -14786,7 +14834,7 @@ body.peek-mode #infoPanelHero::before {
   right: 0;
   width: 360px;
   height: calc(100% - 52px);
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: var(--surface-thick-glass);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-left: 1px solid var(--border);
