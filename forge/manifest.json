@@ -1,7 +1,7 @@
 {
   "name": "TaleTrove",
   "short_name": "TaleTrove",
-  "version": "0.6.0-alpha",
+  "version": "0.6.25-alpha",
   "description": "Free, local-first worldbuilding app for writers and GMs. Create maps, lore, and timelines with total privacy.",
   "start_url": "./index.html",
   "scope": "./",

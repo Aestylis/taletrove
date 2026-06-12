@@ -23,7 +23,7 @@ Build living, interactive maps of your world. Every pin, region, and lore entry 
 - **Image Search** — Browse and insert CC-licensed images from Wikimedia Commons without leaving the app.
 - **Google Drive Sync** — Save and open worlds from your own Google Drive (no TaleTrove server involved — your data stays yours).
 - **GM / Player Roles** — Export a sanitized player bundle: GM-only content is stripped automatically.
-- **Fullscreen Map Mode** — Distraction-free map for display on a TV or second screen, with Roll Higher, Darling (RHD) initiative integration.
+- **Tabletop Mode** — Distraction-free fullscreen map for display on a TV or second screen, with Roll Higher, Darling (RHD) initiative integration (per-player seat glow).
 - **PWA** — Installable and fully offline-capable after first load.
 
 ---

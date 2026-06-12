@@ -19,14 +19,15 @@ python -m http.server   # or: npx serve
 
 Open `http://localhost:8000/forge/`. That's it — no install step, no build step.
 
-All source files are under `forge/`. The entry point is `forge/index.html`. Read `forge/STATUS.md` for the current backlog and known issues.
+All source files are under `forge/`. The entry point is `forge/index.html`. Check the GitHub issues for the current backlog and known issues.
 
 ## How to contribute
 
 1. Open an issue first for anything non-trivial — I'd rather align on direction before you spend time on it.
 2. Fork the repo, make your changes on a feature branch.
 3. Test in Chrome (the app uses IndexedDB and File System Access API — Chrome gives the fullest support).
-4. Open a PR with a clear description of what changed and why.
+4. Run the regression suite: `npm install` once, then `npx playwright test tests/` — it must stay green.
+5. Open a PR with a clear description of what changed and why.
 
 There are no strict PR templates or checklists right now. Just write clearly and I'll work with you.
 

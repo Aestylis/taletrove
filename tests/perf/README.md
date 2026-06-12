@@ -50,6 +50,20 @@ DATE        SET            full→thumb         bytes total      decode
 2026-06-04  50 @1500px     255KB→7KB (35×)    12.4MB→0.4MB     424ms→26ms (16.3×)
 ```
 
+## Results since baseline (2026-06-11)
+
+- **WS1 shipped (0.6.22)** — all CDN libs + classic app scripts now `defer`: parse/first-paint no
+  longer block on script download. Win is on *uncached* first loads; the warm-reload numbers above
+  barely move (see script-eval caveat below). Guarded by `tests/map.spec.js` (Leaflet init order).
+- **WS2 shipped (0.6.21 + 0.6.24)** — asset grid, map popups, family-tree avatars, and timeline
+  cards render from lazy `thumb256-*` WebP thumbnails (~30× smaller, ~13× faster decode; see image
+  table above). Guarded by `tests/thumbnails.spec.js` + `tests/ws2-consumers.spec.js`.
+- **WS3 shipped (0.6.23)** — visibility toggles patch one tree row in place instead of a full
+  panel rebuild. Guarded by `tests/ws3-incremental.spec.js` (DOM-node identity).
+- **WS5 measured & skipped** — `search.spec.js`: `performGlobalSearch` is ~2–4 ms/query on the 5k
+  fixture (median of 7), well under a frame even undebounced per keystroke. A search index is not
+  justified; the spec stays as a regression guard.
+
 ## Findings (2026-06-04)
 
 1. **Startup is data-independent up to 5,000 articles.** DCL holds flat at ~200 ms from 50→5,000
