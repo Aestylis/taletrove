@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-26",
+    "date": "2026-06-11",
+    "title": "Alpha 6.26: Under-the-Hood Maintenance, Part 2",
+    "summary": "Internal code reorganization continues — project import/export now lives in its own module. No behavior changes.",
+    "tags": ["Maintenance"],
+    "content": "<h4>Code health</h4><p>This release continues the internal reorganization of TaleTrove's largest source file. All project import and export logic — saving, loading, player exports, encrypted bundles, and world snapshots — has moved into its own module, fully covered by the data-safety and export round-trip test suites added in recent releases. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-25",
     "date": "2026-06-11",
     "title": "Alpha 6.25: Under-the-Hood Maintenance",
