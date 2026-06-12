@@ -612,6 +612,7 @@ async function refreshAtlasTree() {
   const clearBtn = el('button', {
     class: 'panel-filter-clear',
     title: 'Clear filter',
+    'aria-label': 'Clear filter',
     style: oldQuery ? '' : 'display:none',
     innerHTML: getIconHTMLSync('x', 'currentColor'),
   });
@@ -671,6 +672,7 @@ async function refreshAtlasTree() {
   const tagFilterBtn = el('button', {
     class: `panel-tag-filter-btn${activeTags.size > 0 ? ' has-active' : ''}`,
     title: activeTags.size > 0 ? `Tag filter active (${activeTags.size})` : 'Filter by tags',
+    'aria-label': activeTags.size > 0 ? `Tag filter active (${activeTags.size})` : 'Filter by tags',
   });
   tagFilterBtn.innerHTML = getIconHTMLSync('tag', 'currentColor');
   if (activeTags.size > 0) {

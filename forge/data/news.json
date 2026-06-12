@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-33",
+    "date": "2026-06-12",
+    "title": "Alpha 6.33: Screen Reader Basics",
+    "tags": ["Accessibility"],
+    "summary": "Toasts and loading states are now announced to screen readers, and every icon-only button has an accessible name.",
+    "content": "<h4>Screen reader support</h4><p>Toast notifications and the loading overlay are now live regions (<code>aria-live</code>), so screen readers announce saves, errors, and progress as they happen. All 27 icon-only buttons (close buttons, zoom controls, timeline tools) now carry <code>aria-label</code>s — including the image cropper close button, which previously had no accessible name at all.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-32",
     "date": "2026-06-12",
     "title": "Alpha 6.32: Theme Preset Button Contrast",

@@ -50,7 +50,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@700&family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Space+Grotesk:wght@400;500;600&family=Nunito:wght@400;500;600&family=Ubuntu:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="worldbuilder.css?v=2026.06.12.02">
+    <link rel="stylesheet" href="worldbuilder.css?v=2026.06.12.03">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
           integrity="sha384-6LFfkTKLRlzFtgx8xsWyBdKGpcMMQTkv+dB7rAbugeJAu1Ym2q1Aji1cjHBG12Xh" crossorigin="anonymous">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
@@ -142,7 +142,7 @@
             <div class="hub-pane-area">
                 <div class="hub-pane-header">
                     <h1 class="hub-pane-title" id="hubPaneTitle">My World</h1>
-                    <button class="modal-close js-modal-close" title="Close">
+                    <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                         <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                     </button>
                 </div>
@@ -416,7 +416,7 @@
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="confirmModalTitle">Are you sure?</h3>
-                <button id="confirmModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                <button id="confirmModalCloseBtn" class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -435,7 +435,7 @@
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="alertModalTitle">Notice</h3>
-                <button id="alertModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                <button id="alertModalCloseBtn" class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -453,7 +453,7 @@
         <div class="modal-content">
             <div class="side-sheet-header">
                 <h3>Help</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -476,7 +476,7 @@
         <div class="modal-content">
             <div class="side-sheet-header">
                 <h3>Feedback</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -535,7 +535,7 @@
     </div>
     <div id="addImageModal" class="modal-overlay hidden js-modal-overlay">
         <div class="modal-content">
-            <button class="modal-close js-modal-close" title="Close">
+            <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
             </button>
             <h3>Add an Image</h3>
@@ -565,7 +565,7 @@
     </div>
     <div id="welcomeModal" class="modal-overlay hidden js-modal-overlay">
         <div class="modal-content welcome-modal-content">
-            <button class="modal-close js-modal-close" title="Close">
+            <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
             </button>
             <img src="TaleTrove.svg" alt="TaleTrove" class="welcome-logo">
@@ -994,17 +994,17 @@
             <!-- Map Zoom Slider (Google Maps style) -->
             <div class="map-zoom-controls" id="mapZoomControls">
                 <div class="map-zoom-controls-body">
-                    <button id="zoomInBtn" class="icon-btn" title="Zoom In">
+                    <button id="zoomInBtn" class="icon-btn" title="Zoom In" aria-label="Zoom In">
                         <div class="icon-container"></div>
                     </button>
                     <div class="map-zoom-slider-wrap">
                         <input type="range" id="mapZoomSlider" min="-5" max="8" step="0.1" value="0">
                     </div>
-                    <button id="zoomOutBtn" class="icon-btn" title="Zoom Out">
+                    <button id="zoomOutBtn" class="icon-btn" title="Zoom Out" aria-label="Zoom Out">
                         <div class="icon-container"></div>
                     </button>
                 </div>
-                <button id="toggleZoomBtn" class="icon-btn" title="Show/Hide Zoom Controls">
+                <button id="toggleZoomBtn" class="icon-btn" title="Show/Hide Zoom Controls" aria-label="Show/Hide Zoom Controls">
                     <div class="icon-container"></div>
                 </button>
             </div>
@@ -1029,7 +1029,7 @@
     <div id="propertiesSheet" role="complementary" aria-label="Entity Properties">
         <div class="side-sheet-header" id="propertiesSheetHeader">
             <h3 id="propertiesSheetTitle">Properties</h3>
-            <button id="propertiesSheetClose" class="modal-close-simple" title="Close">
+            <button id="propertiesSheetClose" class="modal-close-simple" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg'); width: 18px; height: 18px; background-color: currentColor; mask-size: contain; mask-repeat: no-repeat; mask-position: center;"></div>
             </button>
         </div>
@@ -1044,7 +1044,7 @@
         <div class="modal-content icon-picker">
             <div class="side-sheet-header">
                 <h3>Choose an Icon</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -1065,7 +1065,7 @@
         <div class="modal-content image-search-sheet">
             <div class="side-sheet-header">
                 <h3>Search Images</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -1084,7 +1084,7 @@
         <div class="modal-content icon-picker">
             <div class="side-sheet-header">
                 <h3>Choose a Pin Shape</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -1099,7 +1099,7 @@
         <div class="modal-content color-picker">
             <div class="side-sheet-header">
                 <h3 id="colorPickerTitle">Choose a Color</h3>
-                <button class="modal-close-simple js-modal-close" title="Close">
+                <button class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -1112,7 +1112,7 @@
         </div>
     </div>
     <div id="imageLightboxModal" class="modal-overlay hidden js-modal-overlay">
-        <button class="modal-close js-modal-close" title="Close">
+        <button class="modal-close js-modal-close" title="Close" aria-label="Close">
             <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
         </button>
         <img src="" alt="Full-size view" id="lightboxImage">
@@ -1121,7 +1121,7 @@
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="inputModalTitle">Enter a name</h3>
-                <button id="inputModalCloseBtn" class="modal-close-simple js-modal-close" title="Close">
+                <button id="inputModalCloseBtn" class="modal-close-simple js-modal-close" title="Close" aria-label="Close">
                     <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
                 </button>
             </div>
@@ -1139,7 +1139,7 @@
     </div>
     <div id="imageUrlModal" class="modal-overlay hidden js-modal-overlay">
         <div class="modal-content">
-            <button class="modal-close js-modal-close" title="Close">
+            <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
             </button>
             <h3>Add Image from URL</h3>
@@ -1155,7 +1155,7 @@
     <div id="tutorialOverlay" class="tutorial-overlay hidden js-modal-overlay">
         <div id="tutorialSpotlight"></div>
         <div id="tutorialTextbox" class="tutorial-textbox">
-            <button id="tutorialCloseBtn" class="tutorial-close-btn" title="End Tutorial">
+            <button id="tutorialCloseBtn" class="tutorial-close-btn" title="End Tutorial" aria-label="End Tutorial">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
             </button>
             <div id="tutorialText"></div>
@@ -1180,17 +1180,17 @@
     <div id="loadingOverlay" class="modal-overlay hidden" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; color: white;">
             <div class="lds-ripple"><div></div><div></div></div>
-            <div id="loadingOverlayText" style="font-size: 1.25rem; font-weight: 500; font-family: 'Inter', sans-serif; letter-spacing: 0.5px;">Processing...</div>
+            <div id="loadingOverlayText" role="status" style="font-size: 1.25rem; font-weight: 500; font-family: 'Inter', sans-serif; letter-spacing: 0.5px;">Processing...</div>
         </div>
     </div>
-    <div id="toastContainer" class="toast-stack"></div>
+    <div id="toastContainer" class="toast-stack" role="status" aria-live="polite"></div>
     <div id="appStatusIndicator" class="status-indicator hidden">
         <div class="spinner"></div>
         <span id="appStatusText">Loading...</span>
     </div>
     <div id="cropperModal" class="modal-overlay hidden">
         <div class="modal-content is-large">
-            <button id="cropperCloseBtn" class="modal-close">
+            <button id="cropperCloseBtn" class="modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
             </button>
             <h3>Position Hero Image</h3>
@@ -1209,20 +1209,20 @@
             <div class="graph-modal-header">
                 <span class="graph-modal-title">Global Timeline</span>
                 <div class="graph-modal-actions">
-                    <button id="toggleEncyclopediaEventsBtn" class="icon-btn" title="Toggle Encyclopedia Events">
+                    <button id="toggleEncyclopediaEventsBtn" class="icon-btn" title="Toggle Encyclopedia Events" aria-label="Toggle Encyclopedia Events">
                         <div class="icon-container"></div>
                     </button>
                     <div class="seg" id="timelineViewSeg">
-                        <button data-view="vertical" class="active" title="Vertical list view"><div class="icon-container"></div></button>
-                        <button data-view="gantt" title="Horizontal gantt view"><div class="icon-container"></div></button>
+                        <button data-view="vertical" class="active" title="Vertical list view" aria-label="Vertical list view"><div class="icon-container"></div></button>
+                        <button data-view="gantt" title="Horizontal gantt view" aria-label="Horizontal gantt view"><div class="icon-container"></div></button>
                     </div>
                     <div id="timelineZoomControls" class="hidden">
-                        <button id="timelineJumpToDateBtn" class="icon-btn" title="Jump to date">
+                        <button id="timelineJumpToDateBtn" class="icon-btn" title="Jump to date" aria-label="Jump to date">
                             <div class="icon-container" style="-webkit-mask-image: url('ui-icons/calendar.svg'); mask-image: url('ui-icons/calendar.svg');"></div>
                         </button>
-                        <button id="timelineZoomOutBtn" class="icon-btn" title="Zoom out"><div class="icon-container"></div></button>
-                        <button id="timelineZoomResetBtn" class="icon-btn" title="Reset zoom"><div class="icon-container"></div></button>
-                        <button id="timelineZoomInBtn" class="icon-btn" title="Zoom in"><div class="icon-container"></div></button>
+                        <button id="timelineZoomOutBtn" class="icon-btn" title="Zoom out" aria-label="Zoom out"><div class="icon-container"></div></button>
+                        <button id="timelineZoomResetBtn" class="icon-btn" title="Reset zoom" aria-label="Reset zoom"><div class="icon-container"></div></button>
+                        <button id="timelineZoomInBtn" class="icon-btn" title="Zoom in" aria-label="Zoom in"><div class="icon-container"></div></button>
                     </div>
                     <button class="graph-close-btn js-modal-close" aria-label="Close" title="Close"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div></button>
                 </div>
@@ -1256,34 +1256,34 @@
         </div>
     </div>
     <div id="dice-box"></div>
-    <script defer src="utils.js?v=2026.06.12.02"></script>
-    <script defer src="state.js?v=2026.06.12.02"></script>
-    <script defer src="data.js?v=2026.06.12.02"></script>
-    <script defer src="styles.js?v=2026.06.12.02"></script>
-    <script defer src="data/blocks.js?v=2026.06.12.02"></script>
-    <script defer src="markdown-extensions.js?v=2026.06.12.02"></script>
-    <script defer src="worldbuilder.js?v=2026.06.12.02"></script>
-    <script defer src="import-export.js?v=2026.06.12.02"></script>
-    <script defer src="command-palette.js?v=2026.06.12.02"></script>
-    <script defer src="keyboard-shortcuts.js?v=2026.06.12.02"></script>
-    <script defer src="map.js?v=2026.06.12.02"></script>
-    <script defer src="grid.js?v=2026.06.12.02"></script>
-    <script defer src="ui.js?v=2026.06.12.02"></script>
-    <script defer src="panels.js?v=2026.06.12.02"></script>
-    <script defer src="image-search.js?v=2026.06.12.02"></script>
-    <script defer src="relational-graph.js?v=2026.06.12.02"></script>
-    <script defer src="family-tree.js?v=2026.06.12.02"></script>
-    <script defer src="inspector.js?v=2026.06.12.02"></script>
-    <script defer src="block-editor.js?v=2026.06.12.02"></script>
-    <script defer src="modals.js?v=2026.06.12.02"></script>
-    <script defer src="generator.js?v=2026.06.12.02"></script>
-    <script defer src="tutorial.js?v=2026.06.12.02"></script>
-    <script type="module" src="dice-roller.js?v=2026.06.12.02"></script>
-    <script defer src="obsidian-importer.js?v=2026.06.12.02"></script>
-    <script type="module" src="armoria.js?v=2026.06.12.02"></script>
+    <script defer src="utils.js?v=2026.06.12.03"></script>
+    <script defer src="state.js?v=2026.06.12.03"></script>
+    <script defer src="data.js?v=2026.06.12.03"></script>
+    <script defer src="styles.js?v=2026.06.12.03"></script>
+    <script defer src="data/blocks.js?v=2026.06.12.03"></script>
+    <script defer src="markdown-extensions.js?v=2026.06.12.03"></script>
+    <script defer src="worldbuilder.js?v=2026.06.12.03"></script>
+    <script defer src="import-export.js?v=2026.06.12.03"></script>
+    <script defer src="command-palette.js?v=2026.06.12.03"></script>
+    <script defer src="keyboard-shortcuts.js?v=2026.06.12.03"></script>
+    <script defer src="map.js?v=2026.06.12.03"></script>
+    <script defer src="grid.js?v=2026.06.12.03"></script>
+    <script defer src="ui.js?v=2026.06.12.03"></script>
+    <script defer src="panels.js?v=2026.06.12.03"></script>
+    <script defer src="image-search.js?v=2026.06.12.03"></script>
+    <script defer src="relational-graph.js?v=2026.06.12.03"></script>
+    <script defer src="family-tree.js?v=2026.06.12.03"></script>
+    <script defer src="inspector.js?v=2026.06.12.03"></script>
+    <script defer src="block-editor.js?v=2026.06.12.03"></script>
+    <script defer src="modals.js?v=2026.06.12.03"></script>
+    <script defer src="generator.js?v=2026.06.12.03"></script>
+    <script defer src="tutorial.js?v=2026.06.12.03"></script>
+    <script type="module" src="dice-roller.js?v=2026.06.12.03"></script>
+    <script defer src="obsidian-importer.js?v=2026.06.12.03"></script>
+    <script type="module" src="armoria.js?v=2026.06.12.03"></script>
     <!-- Google Identity Services — loaded last so it doesn't block app init -->
     <script defer src="https://accounts.google.com/gsi/client"></script>
-    <script defer src="google-drive.js?v=2026.06.12.02"></script>
+    <script defer src="google-drive.js?v=2026.06.12.03"></script>
     <datalist id="encyclopediaTypes">
         <option value="Character"></option>
         <option value="Item"></option>
