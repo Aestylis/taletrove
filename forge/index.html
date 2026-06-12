@@ -50,7 +50,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@700&family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Space+Grotesk:wght@400;500;600&family=Nunito:wght@400;500;600&family=Ubuntu:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="worldbuilder.css?v=2026.06.12.04">
+    <link rel="stylesheet" href="worldbuilder.css?v=2026.06.12.05">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
           integrity="sha384-6LFfkTKLRlzFtgx8xsWyBdKGpcMMQTkv+dB7rAbugeJAu1Ym2q1Aji1cjHBG12Xh" crossorigin="anonymous">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
@@ -66,7 +66,7 @@
 
 <body>
     <a class="skip-link" href="#mapContainer">Skip to map</a>
-    <div id="projectActionsModal" class="modal-overlay hidden is-hub js-modal-overlay">
+    <div id="projectActionsModal" class="modal-overlay hidden is-hub js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content hub-content">
 
             <!-- UNIFIED SIDEBAR -->
@@ -412,7 +412,7 @@
         </div>
     </div>
 
-    <div id="confirmModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="confirmModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="confirmModalTitle">Are you sure?</h3>
@@ -431,7 +431,7 @@
             </div>
         </div>
     </div>
-    <div id="alertModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="alertModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="alertModalTitle">Notice</h3>
@@ -449,7 +449,7 @@
             </div>
         </div>
     </div>
-    <div id="helpModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" data-persistent="true">
+    <div id="helpModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" data-persistent="true" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="side-sheet-header">
                 <h3>Help</h3>
@@ -472,7 +472,7 @@
             </div>
         </div>
     </div>
-    <div id="bugReportModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="bugReportModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="side-sheet-header">
                 <h3>Feedback</h3>
@@ -533,7 +533,7 @@
             </div>
         </div>
     </div>
-    <div id="addImageModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="addImageModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content">
             <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
@@ -546,7 +546,7 @@
             </div>
         </div>
     </div>
-    <div id="sampleWorldModal" class="modal-overlay hidden">
+    <div id="sampleWorldModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
         <div class="modal-content welcome-modal-content">
             <img src="TaleTrove.svg" alt="TaleTrove" class="welcome-logo">
             <h3>Welcome to TaleTrove</h3>
@@ -563,7 +563,7 @@
             </p>
         </div>
     </div>
-    <div id="welcomeModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="welcomeModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content welcome-modal-content">
             <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
@@ -1040,7 +1040,7 @@
         <div id="minimapBack">← Back to Map</div>
         <div id="minimapMapName"></div>
     </div>
-    <div id="iconPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="iconPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content icon-picker">
             <div class="side-sheet-header">
                 <h3>Choose an Icon</h3>
@@ -1061,7 +1061,7 @@
             <div id="iconPickerEmojiPanel" class="hidden side-sheet-body"></div>
         </div>
     </div>
-    <div id="imageSearchModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="imageSearchModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content image-search-sheet">
             <div class="side-sheet-header">
                 <h3>Search Images</h3>
@@ -1080,7 +1080,7 @@
             </div>
         </div>
     </div>
-    <div id="pinShapePickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="pinShapePickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content icon-picker">
             <div class="side-sheet-header">
                 <h3>Choose a Pin Shape</h3>
@@ -1095,7 +1095,7 @@
             <div id="pinShapePickerGrid" class="icon-grid side-sheet-body"></div>
         </div>
     </div>
-    <div id="colorPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="colorPickerModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content color-picker">
             <div class="side-sheet-header">
                 <h3 id="colorPickerTitle">Choose a Color</h3>
@@ -1111,13 +1111,13 @@
             </div>
         </div>
     </div>
-    <div id="imageLightboxModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="imageLightboxModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <button class="modal-close js-modal-close" title="Close" aria-label="Close">
             <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
         </button>
         <img src="" alt="Full-size view" id="lightboxImage">
     </div>
-    <div id="inputModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="inputModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content is-dialog">
             <div class="modal-header">
                 <h3 id="inputModalTitle">Enter a name</h3>
@@ -1137,7 +1137,7 @@
             </div>
         </div>
     </div>
-    <div id="imageUrlModal" class="modal-overlay hidden js-modal-overlay">
+    <div id="imageUrlModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content">
             <button class="modal-close js-modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
@@ -1152,7 +1152,7 @@
             </div>
         </div>
     </div>
-    <div id="tutorialOverlay" class="tutorial-overlay hidden js-modal-overlay">
+    <div id="tutorialOverlay" class="tutorial-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div id="tutorialSpotlight"></div>
         <div id="tutorialTextbox" class="tutorial-textbox">
             <button id="tutorialCloseBtn" class="tutorial-close-btn" title="End Tutorial" aria-label="End Tutorial">
@@ -1168,7 +1168,7 @@
             </div>
         </div>
     </div>
-    <div id="newsModal" class="modal-overlay hidden js-modal-overlay is-side-sheet">
+    <div id="newsModal" class="modal-overlay hidden js-modal-overlay is-side-sheet" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="side-sheet-header">
                 <h3>What's New</h3>
@@ -1188,7 +1188,7 @@
         <div class="spinner"></div>
         <span id="appStatusText">Loading...</span>
     </div>
-    <div id="cropperModal" class="modal-overlay hidden">
+    <div id="cropperModal" class="modal-overlay hidden js-modal-overlay" role="dialog" aria-modal="true">
         <div class="modal-content is-large">
             <button id="cropperCloseBtn" class="modal-close" title="Close" aria-label="Close">
                 <div class="icon-container" style="-webkit-mask-image: url('ui-icons/x.svg'); mask-image: url('ui-icons/x.svg');"></div>
@@ -1204,7 +1204,7 @@
             </div>
         </div>
     </div>
-    <div id="timelineModal" class="modal-overlay hidden js-modal-overlay is-fullscreen">
+    <div id="timelineModal" class="modal-overlay hidden js-modal-overlay is-fullscreen" role="dialog" aria-modal="true">
         <div class="modal-content is-large">
             <div class="graph-modal-header">
                 <span class="graph-modal-title">Global Timeline</span>
@@ -1230,7 +1230,7 @@
             <div id="timelineViewerContent" class="timeline-viewer"></div>
         </div>
     </div>
-    <div id="calendarModal" class="modal-overlay hidden js-modal-overlay is-fullscreen">
+    <div id="calendarModal" class="modal-overlay hidden js-modal-overlay is-fullscreen" role="dialog" aria-modal="true">
         <div class="modal-content is-large">
             <div class="graph-modal-header">
                 <span class="graph-modal-title" id="calendarModalTitle">Calendar</span>
@@ -1256,34 +1256,34 @@
         </div>
     </div>
     <div id="dice-box"></div>
-    <script defer src="utils.js?v=2026.06.12.04"></script>
-    <script defer src="state.js?v=2026.06.12.04"></script>
-    <script defer src="data.js?v=2026.06.12.04"></script>
-    <script defer src="styles.js?v=2026.06.12.04"></script>
-    <script defer src="data/blocks.js?v=2026.06.12.04"></script>
-    <script defer src="markdown-extensions.js?v=2026.06.12.04"></script>
-    <script defer src="worldbuilder.js?v=2026.06.12.04"></script>
-    <script defer src="import-export.js?v=2026.06.12.04"></script>
-    <script defer src="command-palette.js?v=2026.06.12.04"></script>
-    <script defer src="keyboard-shortcuts.js?v=2026.06.12.04"></script>
-    <script defer src="map.js?v=2026.06.12.04"></script>
-    <script defer src="grid.js?v=2026.06.12.04"></script>
-    <script defer src="ui.js?v=2026.06.12.04"></script>
-    <script defer src="panels.js?v=2026.06.12.04"></script>
-    <script defer src="image-search.js?v=2026.06.12.04"></script>
-    <script defer src="relational-graph.js?v=2026.06.12.04"></script>
-    <script defer src="family-tree.js?v=2026.06.12.04"></script>
-    <script defer src="inspector.js?v=2026.06.12.04"></script>
-    <script defer src="block-editor.js?v=2026.06.12.04"></script>
-    <script defer src="modals.js?v=2026.06.12.04"></script>
-    <script defer src="generator.js?v=2026.06.12.04"></script>
-    <script defer src="tutorial.js?v=2026.06.12.04"></script>
-    <script type="module" src="dice-roller.js?v=2026.06.12.04"></script>
-    <script defer src="obsidian-importer.js?v=2026.06.12.04"></script>
-    <script type="module" src="armoria.js?v=2026.06.12.04"></script>
+    <script defer src="utils.js?v=2026.06.12.05"></script>
+    <script defer src="state.js?v=2026.06.12.05"></script>
+    <script defer src="data.js?v=2026.06.12.05"></script>
+    <script defer src="styles.js?v=2026.06.12.05"></script>
+    <script defer src="data/blocks.js?v=2026.06.12.05"></script>
+    <script defer src="markdown-extensions.js?v=2026.06.12.05"></script>
+    <script defer src="worldbuilder.js?v=2026.06.12.05"></script>
+    <script defer src="import-export.js?v=2026.06.12.05"></script>
+    <script defer src="command-palette.js?v=2026.06.12.05"></script>
+    <script defer src="keyboard-shortcuts.js?v=2026.06.12.05"></script>
+    <script defer src="map.js?v=2026.06.12.05"></script>
+    <script defer src="grid.js?v=2026.06.12.05"></script>
+    <script defer src="ui.js?v=2026.06.12.05"></script>
+    <script defer src="panels.js?v=2026.06.12.05"></script>
+    <script defer src="image-search.js?v=2026.06.12.05"></script>
+    <script defer src="relational-graph.js?v=2026.06.12.05"></script>
+    <script defer src="family-tree.js?v=2026.06.12.05"></script>
+    <script defer src="inspector.js?v=2026.06.12.05"></script>
+    <script defer src="block-editor.js?v=2026.06.12.05"></script>
+    <script defer src="modals.js?v=2026.06.12.05"></script>
+    <script defer src="generator.js?v=2026.06.12.05"></script>
+    <script defer src="tutorial.js?v=2026.06.12.05"></script>
+    <script type="module" src="dice-roller.js?v=2026.06.12.05"></script>
+    <script defer src="obsidian-importer.js?v=2026.06.12.05"></script>
+    <script type="module" src="armoria.js?v=2026.06.12.05"></script>
     <!-- Google Identity Services — loaded last so it doesn't block app init -->
     <script defer src="https://accounts.google.com/gsi/client"></script>
-    <script defer src="google-drive.js?v=2026.06.12.04"></script>
+    <script defer src="google-drive.js?v=2026.06.12.05"></script>
     <datalist id="encyclopediaTypes">
         <option value="Character"></option>
         <option value="Item"></option>

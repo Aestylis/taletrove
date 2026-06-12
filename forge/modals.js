@@ -2134,17 +2134,42 @@ function initModals() {
 
     // Handle Opening/Closing via class changes
     let lastHidden = overlay.classList.contains('hidden');
+    let lastVisible = isSideSheet ? overlay.classList.contains('is-open') : !lastHidden;
+    let focusReturnEl = null; // the trigger element to restore focus to on close
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          const isHidden = overlay.classList.contains('hidden');
-          if (isHidden !== lastHidden) {
-            lastHidden = isHidden;
-            const isHubOrFs = overlay.classList.contains('is-fullscreen') || overlay.classList.contains('is-hub');
-            if (isHubOrFs && window.setAppShellScaled) {
-              window.setAppShellScaled(!isHidden);
-            }
+        if (mutation.attributeName !== 'class') return;
+        const isHidden = overlay.classList.contains('hidden');
+        if (isHidden !== lastHidden) {
+          lastHidden = isHidden;
+          const isHubOrFs = overlay.classList.contains('is-fullscreen') || overlay.classList.contains('is-hub');
+          if (isHubOrFs && window.setAppShellScaled) {
+            window.setAppShellScaled(!isHidden);
           }
+        }
+        // Focus management: save the trigger on open, restore it on close.
+        const isVisible = isSideSheet ? overlay.classList.contains('is-open') : !isHidden;
+        if (isVisible === lastVisible) return;
+        lastVisible = isVisible;
+        if (isVisible) {
+          focusReturnEl = (document.activeElement instanceof HTMLElement && !overlay.contains(document.activeElement))
+            ? document.activeElement : null;
+          // Only move focus if the opener didn't already place it inside the modal
+          // (showInputModal and the calendar focus their own fields synchronously).
+          if (!overlay.contains(document.activeElement)) {
+            const target = overlay.querySelector('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])')
+              || overlay.querySelector('button:not([disabled]):not(.js-modal-close):not(.modal-close):not(.modal-close-simple)')
+              || overlay.querySelector('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])');
+            target?.focus();
+          }
+        } else if (focusReturnEl) {
+          // Restore only if focus is still trapped in the closing modal (or fell to body) —
+          // never yank it away from something the user has since focused elsewhere.
+          if (document.contains(focusReturnEl) &&
+              (overlay.contains(document.activeElement) || document.activeElement === document.body)) {
+            focusReturnEl.focus();
+          }
+          focusReturnEl = null;
         }
       });
     });

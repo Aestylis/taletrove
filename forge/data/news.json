@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-35",
+    "date": "2026-06-12",
+    "title": "Alpha 6.35: Dialog Focus Management",
+    "tags": ["Accessibility"],
+    "summary": "Dialogs now announce themselves to screen readers, move focus in when they open, and return focus to where you were when they close.",
+    "content": "<h4>Dialog semantics & focus</h4><p>All 21 dialogs now carry proper <code>role=\"dialog\"</code> semantics. Opening a dialog moves keyboard focus to its first meaningful control; closing it returns focus to the element that opened it — so keyboard users never lose their place. The image cropper also gained Escape-to-close and click-outside-to-close, matching every other dialog.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-34",
     "date": "2026-06-12",
     "title": "Alpha 6.34: Keyboard Navigation for the World Tree",

@@ -30,6 +30,33 @@ test.describe('A11y basics', () => {
     expect(offenders, `buttons without accessible names:\n${offenders.join('\n')}`).toHaveLength(0);
   });
 
+  test('modals get dialog semantics, move focus in, and restore it on close', async ({ page }) => {
+    await gotoApp(page);
+    const r = await page.evaluate(async () => {
+      const wait = () => new Promise(res => setTimeout(res, 50));
+      const trigger = document.getElementById('zoomInBtn');
+      trigger.focus();
+      showAlertModal('Focus Test', 'Testing focus management.');
+      await wait();
+      const modal = document.getElementById('alertModal');
+      const focusInModal = modal.contains(document.activeElement);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await wait();
+      return {
+        role: modal.getAttribute('role'),
+        ariaModal: modal.getAttribute('aria-modal'),
+        focusInModal,
+        modalClosed: modal.classList.contains('hidden'),
+        focusRestored: document.activeElement === trigger,
+      };
+    });
+    expect(r.role).toBe('dialog');
+    expect(r.ariaModal).toBe('true');
+    expect(r.focusInModal, 'focus must move into the open modal').toBe(true);
+    expect(r.modalClosed).toBe(true);
+    expect(r.focusRestored, 'focus must return to the trigger on close').toBe(true);
+  });
+
   test('tree rows activate with Enter and Space', async ({ page }) => {
     await gotoApp(page);
     await page.waitForSelector('.map-row');
