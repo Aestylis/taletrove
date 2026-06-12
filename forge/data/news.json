@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-27",
+    "date": "2026-06-11",
+    "title": "Alpha 6.27: Under-the-Hood Maintenance, Part 3",
+    "summary": "Internal code reorganization continues — Google Drive backup and restore now live alongside the rest of the import/export module. No behavior changes.",
+    "tags": ["Maintenance"],
+    "content": "<h4>Code health</h4><p>The Google Drive integration — backing up your world to Drive, opening worlds from Drive, and the connection status shown in the project hub — has joined the import/export module introduced in Alpha 6.26. This keeps all the ways a world enters or leaves TaleTrove in one place. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-26",
     "date": "2026-06-11",
     "title": "Alpha 6.26: Under-the-Hood Maintenance, Part 2",

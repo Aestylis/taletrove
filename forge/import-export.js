@@ -505,3 +505,198 @@ async function handleImportFile(file) {
 }
 
 window._handleImportFile = handleImportFile;
+// --- Google Drive save / open + hub connection UI ---
+// window.googleDrive.init(_onDriveStatusChange) is called from worldbuilder.js's
+// DOMContentLoaded handler (after all deferred scripts evaluate); the project-hub action
+// dispatch calls handleDriveSave / window.openDriveFilePicker at click time.
+
+function _onDriveStatusChange(isConnected, userInfo) {
+  renderDriveHub(isConnected, userInfo);
+}
+
+const _GDRIVE_LOGO_SVG = `<svg viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;flex-shrink:0">
+  <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+  <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0-1.2 4.5h27.5z" fill="#00ac47"/>
+  <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 11.5z" fill="#ea4335"/>
+  <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+  <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+  <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+</svg>`;
+
+function renderDriveHub(isConnected, userInfo) {
+  const configured = window.googleDrive?.isConfigured?.();
+
+  // Project card: button + divider always visible when Drive is configured.
+  // Clicking "Backup to Google Drive" connects automatically if needed —
+  // no separate connect step required.
+  const driveSaveBtn = $('#hubDriveSaveBtn');
+  const driveDivider = $('#hubDriveDivider');
+  if (driveSaveBtn) {
+    driveSaveBtn.classList.toggle('hidden', !configured);
+    if (driveDivider) driveDivider.classList.toggle('hidden', !configured);
+    if (configured) {
+      driveSaveBtn.innerHTML = `${_GDRIVE_LOGO_SVG}<span>Backup to Google Drive</span>`;
+    }
+  }
+
+  // Open World card: "From Google Drive" button — connect-on-demand, same as backup button.
+  const driveOpenBtn = $('#hubDriveOpenBtn');
+  const openDriveDivider = $('#hubOpenDriveDivider');
+  if (driveOpenBtn) {
+    driveOpenBtn.classList.toggle('hidden', !configured);
+    if (openDriveDivider) openDriveDivider.classList.toggle('hidden', !configured);
+    if (configured) {
+      driveOpenBtn.innerHTML = `${_GDRIVE_LOGO_SVG}<span>Open from Google Drive</span>`;
+    }
+  }
+
+  // Project card: Drive status line — shown when connected, with disconnect button
+  const driveStatus = $('#hubDriveStatus');
+  const driveStatusEmail = $('#hubDriveStatusEmail');
+  if (driveStatus) {
+    if (configured && isConnected) {
+      driveStatus.classList.remove('hidden');
+      if (driveStatusEmail) driveStatusEmail.textContent = userInfo?.email || 'Connected to Google Drive';
+    } else {
+      driveStatus.classList.add('hidden');
+    }
+  }
+
+  // User chip popover: Drive status + disconnect — only shown when a live token exists
+  const driveSection = $('#userPopoverDriveSection');
+  if (driveSection) {
+    driveSection.innerHTML = '';
+    const hasActiveToken = window.googleDrive?.isConnected?.() ?? false;
+    if (configured && isConnected && hasActiveToken) {
+      const label = escapeHtml(userInfo?.email || 'Google Drive');
+      driveSection.innerHTML = `
+        <div class="user-popover-drive">
+          <div class="user-popover-drive__status">${_GDRIVE_LOGO_SVG}<span>${label}</span></div>
+          <button class="user-popover-drive__disconnect">Disconnect</button>
+        </div>`;
+      driveSection.querySelector('.user-popover-drive__disconnect')
+        .addEventListener('click', () => {
+          window.googleDrive?.signOut();
+          $('#userChipPopover')?.classList.add('hidden');
+        });
+      driveSection.classList.remove('hidden');
+    } else {
+      driveSection.classList.add('hidden');
+    }
+  }
+}
+
+async function handleDriveSave() {
+  const worldName = (settings.projectName || state.maps[0]?.name || 'My World').replace(/[^a-z0-9_\- ]/gi, '_');
+  try {
+    setLoadingState(true, 'Preparing for Drive…');
+    const blob = await buildWorldBlob();
+    // Don't clear — googleDrive.save owns the overlay from here through completion
+    setLoadingState(true, 'Saving to Google Drive…');
+    await window.googleDrive.save(worldName, blob);
+  } catch (e) {
+    setLoadingState(false);
+    showAlertModal('Drive Save Error', e.message);
+  }
+}
+
+async function openDriveFilePicker() {
+  const modal = $('#projectActionsModal');
+  if (!modal) return;
+
+  // Show the hub if it isn't already open
+  modal.classList.remove('hidden');
+
+  // Transition: Overview → Drive picker (same animation as Overview → Settings)
+  const overview = $('#hubViewOverview');
+  const driveView = $('#hubViewDriveOpen');
+  if (!overview || !driveView) return;
+
+  const container = $('#hubDriveFileListContainer');
+  if (!container) return;
+
+  // Show a spinner while fetching
+  container.innerHTML = '<p class="muted" style="padding: 0.5rem 0;">Loading worlds from Google Drive…</p>';
+
+  if (!overview.classList.contains('hidden')) {
+    overview.classList.add('hub-view-exit-left');
+    driveView.classList.remove('hidden');
+    driveView.classList.add('hub-view-enter-right');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      driveView.classList.remove('hub-view-enter-right');
+    }));
+    setTimeout(() => {
+      overview.classList.add('hidden');
+      overview.classList.remove('hub-view-exit-left');
+    }, 600);
+  }
+
+  $('#hubTitle').textContent = 'Open from Google Drive';
+  $('#hubMainLogo').classList.add('hidden');
+  $('#hubBackBtn').classList.remove('hidden');
+
+  // Fetch file list (triggers auth if needed via _requireAuth)
+  const files = await window.googleDrive?.list();
+  if (!files) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '';
+
+  if (files.length === 0) {
+    container.appendChild(el('p', { class: 'muted', style: 'margin-top: 2rem;', text: 'No TaleTrove worlds found in your Google Drive.' }));
+    return;
+  }
+
+  const list = el('ul', { class: 'hub-drive-file-list' });
+  files.forEach(f => {
+    const date = new Date(f.modifiedTime).toLocaleDateString(undefined, { dateStyle: 'medium' });
+    const size = f.size ? `${(f.size / 1024 / 1024).toFixed(1)} MB` : '';
+    const meta = [date, size].filter(Boolean).join(' · ');
+
+    const openBtn = el('button', { class: 'hub-primary-btn hub-primary-btn--ghost hub-drive-file-open', text: 'Open' });
+
+    const iconEl = el('div', { class: 'icon-container', style: "-webkit-mask-image:url('ui-icons/map-trifold.svg');mask-image:url('ui-icons/map-trifold.svg');" });
+
+    const item = el('li', { class: 'hub-drive-file-item', tabindex: '0' }, [
+      el('div', { class: 'hub-drive-file-item__info' }, [
+        iconEl,
+        el('div', { class: 'hub-drive-file-item__text' }, [
+          el('span', { class: 'hub-drive-file-name', text: f.name }),
+          el('span', { class: 'hub-drive-file-meta muted', text: meta }),
+        ]),
+      ]),
+      openBtn,
+    ]);
+
+    const load = async () => {
+      setLoadingState(true, 'Downloading from Google Drive…');
+      try {
+        const blob = await window.googleDrive.load(f.id);
+        if (blob) {
+          const file = new File([blob], f.name);
+          setLoadingState(true, 'Importing World…');
+          await window._handleImportFile(file);
+          setLoadingState(false);
+          modal.classList.add('hidden');
+        } else {
+          setLoadingState(false);
+        }
+      } catch (e) {
+        setLoadingState(false);
+        showAlertModal('Drive Open Failed', e.message);
+      }
+    };
+
+    item.addEventListener('click', load);
+    item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') load(); });
+    openBtn.addEventListener('click', e => { e.stopPropagation(); load(); });
+    list.appendChild(item);
+  });
+
+  container.appendChild(list);
+}
+
+window.openDriveFilePicker = openDriveFilePicker;
+window.renderDriveHub = renderDriveHub;
