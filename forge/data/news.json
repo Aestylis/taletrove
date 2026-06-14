@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-38",
+    "date": "2026-06-14",
+    "title": "Alpha 6.38: CSS Specificity Cleanup",
+    "tags": ["Polish"],
+    "summary": "Removed 19 redundant !important overrides from the Project Hub and side-sheet styles. The cascade now resolves on specificity alone, so the rules are easier to maintain. No visual or behavioural changes.",
+    "content": "<h4>Under-the-hood housekeeping</h4><p>The Project Hub and side-sheet overlays leaned on a stack of <code>!important</code> overrides — including one that forced a counter-rule just to hide the hub again. Because those selectors already out-rank the rules they compete with, the <code>!important</code> flags were redundant. We removed 19 of them; the hub, side-sheets, and light-theme glass all open, close, and animate exactly as before. Verified across both themes with no console errors.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-37",
     "date": "2026-06-12",
     "title": "Alpha 6.37: Stylesheet Cleanup",

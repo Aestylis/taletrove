@@ -12314,25 +12314,25 @@ button.drag-over { outline: 2px dashed var(--accent); }
 
 /* --- PROJECT HUB (2026 Modernization) --- */
 .modal-overlay.is-hub {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: rgba(0, 0, 0, 0.55) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    z-index: var(--z-modal) !important;
-    overflow: hidden !important;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: var(--z-modal);
+    overflow: hidden;
 }
 
-/* .is-hub uses display:flex !important which beats .hidden { display:none }.
-   This rule restores correct hide behaviour when both classes are present. */
+/* .modal-overlay.is-hub (0,2,0) out-specifies .hidden { display:none } (0,1,0),
+   so this (0,3,0) rule is required to restore hide behaviour when both are present. */
 .modal-overlay.is-hub.hidden {
-    display: none !important;
+    display: none;
 }
 
 .hub-content {
@@ -12880,14 +12880,14 @@ button.drag-over { outline: 2px dashed var(--accent); }
 /* --- PROJECT HUB THEME ADAPTATION --- */
 /* Hub background uses --surface-glass token */
 .modal-overlay.is-hub {
-    background: var(--surface-glass) !important;
-    backdrop-filter: blur(40px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    background: var(--surface-glass);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
 }
 
 .theme-light .modal-overlay.is-hub {
     /* More translucent to allow glass blur to be visible */
-    background: rgba(242, 240, 235, 0.8) !important;
+    background: rgba(242, 240, 235, 0.8);
 }
 
 /* --- PROJECT HUB BUTTON STYLES --- */
@@ -13123,9 +13123,10 @@ button.drag-over { outline: 2px dashed var(--accent); }
 }
 
 .modal-overlay.is-side-sheet {
-    /* Always display:flex — overrides .hidden { display:none } so the element stays in
-       the layout tree and CSS transitions always fire (same technique as #infoPanel). */
-    display: flex !important;
+    /* Always display:flex — .is-side-sheet (0,2,0) out-specifies .hidden { display:none }
+       (0,1,0) so the element stays in the layout tree and CSS transitions always fire
+       (same technique as #infoPanel). */
+    display: flex;
     position: fixed;
     top: 52px;                      /* below toolbar */
     right: 0;
