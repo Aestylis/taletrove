@@ -1,5 +1,5 @@
 
-const APP_VERSION = '0.6.38-alpha';
+const APP_VERSION = '0.6.39-alpha';
 let TAXONOMY = {};
 let NEWS_DATA = [];
 let ICON_MANIFEST = [];
@@ -171,11 +171,13 @@ async function save() {
 }
 
 async function _performSave() {
+  // UI settings live in localStorage and must persist even when no entity is
+  // dirty (e.g. marker size / dice settings changed via a bare save() call).
+  saveLS('worldSettings', settings);
   if (_dirtyKeys.size === 0) return;
 
   if (window.showSaving) window.showSaving();
-  saveLS('worldSettings', settings);
-  
+
   const toWrite = new Set(_dirtyKeys);
   _dirtyKeys.clear();
 

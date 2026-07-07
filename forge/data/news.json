@@ -1,5 +1,13 @@
 [
   {
+    "id": "alpha-6-39",
+    "date": "2026-07-07",
+    "title": "Alpha 6.39: Save-Reliability, Security & Stability Fixes",
+    "tags": ["Fix", "Security"],
+    "summary": "Fixed several cases where changes weren't persisted on reload (map image, map overlay, linked maps, marker size, dice settings). Hardened map labels against HTML/CSS injection, prevented a crash when deleting your only map, and closed a right-click-menu listener leak.",
+    "content": "<h4>Your changes now stick</h4><p>A handful of edits were quietly not being written to disk because they skipped the internal \"mark dirty\" step the save routine relies on: replacing a map's base image, assigning a map overlay, adding or removing linked maps on an article, and changing the global marker size or dice colour/theme. All of these now persist correctly across a reload. Settings that live in local storage are also flushed on every save, not only when a world entity changed.</p><h4>Security & stability</h4><ul><li>Roundtable seat names are now HTML-escaped before display, closing a stored-XSS gap on the Tabletop map overlay.</li><li>Map text-label rotation and font size are validated as numbers before being written to CSS, closing a style-injection gap.</li><li>Deleting your only map now shows a friendly notice instead of crashing.</li><li>The right-click map menu no longer leaves stray document listeners behind when opened rapidly.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-38",
     "date": "2026-06-14",
     "title": "Alpha 6.38: CSS Specificity Cleanup",

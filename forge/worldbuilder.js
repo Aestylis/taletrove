@@ -1869,6 +1869,10 @@ function handleBulkUpdate(propertiesToUpdate, isDelete = false) {
 }
 
 function deleteMapWithConfirmation(mapId, mapName) {
+  if (state.maps.length <= 1) {
+    showAlertModal('Cannot Delete Map', 'This is your only map. Create another map before deleting this one.');
+    return;
+  }
   showConfirmationModal(
     'Delete Map?',
     `Are you sure you want to delete the map "${mapName}" and all its content? This cannot be undone.`,

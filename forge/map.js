@@ -685,6 +685,7 @@ async function setMapImage(mapId, imageSource) {
     }
 
     render({ full: true });
+    markEntityDirty('map', mapId);
     await save();
 
   } catch (err) {
@@ -714,6 +715,7 @@ async function setOverlayImage(imageSource) {
     const url = await resolveImageUrl(imageKey);
     applyOverlayURL(url, activeMap);
     window.syncOverlayButtons?.();
+    markEntityDirty('map', activeMap.id);
     await save();
   } catch (err) {
     console.error('setOverlayImage failed', err);
@@ -852,6 +854,7 @@ function addTextFeature(latlng, text) {
   };
   state.articles.push(feat);
   syncArticleViews();
+  markEntityDirty('article', feat.id);
   return feat;
 }
 
@@ -946,8 +949,9 @@ async function syncSingleLayer(feature) {
       const chromeStyle = isPlain
         ? ''
         : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-      const textAngleStyle = feature.angle ? `transform: rotate(${feature.angle}deg);` : '';
-      const textStyle = `font-size:${feature.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
+      const _angle = Number(feature.angle) || 0;
+      const textAngleStyle = _angle ? `transform: rotate(${_angle}deg);` : '';
+      const textStyle = `font-size:${Number(feature.fontSize) || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feature.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feature.bold ? 'bold' : 'normal'}; font-style:${feature.italic ? 'italic' : 'none'}; text-decoration:${feature.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
       layer.setIcon(L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feature.text || '')}</div>`, iconSize: null }));
     }
     // Point/Marker Updates (Atlas Pins and Encyclopedia Lore-Pins)
@@ -1073,8 +1077,9 @@ async function featureToLayer(feat) {
     const chromeStyle = isPlain
       ? ''
       : `background:${_labelBg}; border:1px solid ${_labelBorder}; padding:0.1rem 0.35rem; border-radius:4px; backdrop-filter:blur(2px);`;
-    const textAngleStyle = feat.angle ? `transform: rotate(${feat.angle}deg);` : '';
-    const textStyle = `font-size:${feat.fontSize || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
+    const _angle = Number(feat.angle) || 0;
+    const textAngleStyle = _angle ? `transform: rotate(${_angle}deg);` : '';
+    const textStyle = `font-size:${Number(feat.fontSize) || DEFAULT_GEOMETRY_STYLES.text.fontSize}px; color:${safeCssColor(feat.fontColor) || DEFAULT_GEOMETRY_STYLES.text.fontColor}; font-family:${safeFamily}; font-weight:${feat.bold ? 'bold' : 'normal'}; font-style:${feat.italic ? 'italic' : 'none'}; text-decoration:${feat.underline ? 'underline' : 'none'}; white-space:nowrap; ${chromeStyle} ${textShadowStyle} ${textAngleStyle}`;
     const icon = L.divIcon({ className: 'text-label-wrapper', html: `<div style="${textStyle}">${escapeHtml(feat.text || '')}</div>`, iconSize: null });
     layer = L.marker([lat, lng], { icon });
   }
@@ -1395,27 +1400,21 @@ async function onFeatureClick(feat, layer, ev) {
   if (window.enterPeekMode) window.enterPeekMode(feat.id, type);
 }
 
-let _radialDismissHandler = null;
-let _radialKeyHandler = null;
+let _radialAbort = null; // aborts the active radial menu's document listeners
 let _radialFeat = null;
 let _radialLayerEl = null; // layer element highlighted during radial menu
 
 function dismissRadialMenu() {
-  const menu = document.getElementById('featureRadialMenu');
-  if (!menu) return;
-  menu.classList.remove('is-open');
-  // Remove after transition
-  setTimeout(() => {
-    if (menu.parentNode) menu.parentNode.removeChild(menu);
-  }, 350);
-  if (_radialDismissHandler) {
-    document.removeEventListener('mousedown', _radialDismissHandler, true);
-    _radialDismissHandler = null;
-  }
-  if (_radialKeyHandler) {
-    document.removeEventListener('keydown', _radialKeyHandler);
-    _radialKeyHandler = null;
-  }
+  const menus = document.querySelectorAll('#featureRadialMenu');
+  if (!menus.length && !_radialAbort) return; // nothing open — matches the original early-out
+  // Detach listeners first so an in-flight (setTimeout-deferred) registration
+  // tied to an already-aborted signal becomes a no-op — no orphaned listeners.
+  if (_radialAbort) { _radialAbort.abort(); _radialAbort = null; }
+  // Remove every radial menu node (a fast re-open can briefly leave two).
+  menus.forEach(menu => {
+    menu.classList.remove('is-open');
+    setTimeout(() => { if (menu.parentNode) menu.parentNode.removeChild(menu); }, 350);
+  });
   // Remove selection highlight from the old pin only if it isn't actually selected.
   // If it IS in multiSelectedIds, updateSelectionStyles() will keep/restore the class.
   if (_radialLayerEl && _radialFeat && !multiSelectedIds.has(_radialFeat.id)) {
@@ -1594,17 +1593,16 @@ async function showFeatureRadialMenu(feat, screenX, screenY) {
     });
   });
 
-  _radialDismissHandler = (e) => {
-    if (!menu.contains(e.target)) dismissRadialMenu();
-  };
+  _radialAbort = new AbortController();
+  const _sig = _radialAbort.signal;
   setTimeout(() => {
-    document.addEventListener('mousedown', _radialDismissHandler, true);
+    document.addEventListener('mousedown',
+      (e) => { if (!menu.contains(e.target)) dismissRadialMenu(); },
+      { capture: true, signal: _sig });
   }, 50);
-
-  _radialKeyHandler = (e) => {
-    if (e.key === 'Escape') dismissRadialMenu();
-  };
-  document.addEventListener('keydown', _radialKeyHandler);
+  document.addEventListener('keydown',
+    (e) => { if (e.key === 'Escape') dismissRadialMenu(); },
+    { signal: _sig });
 }
 
 function showConfirmRadialDelete(feat) {
@@ -1713,15 +1711,16 @@ async function showMapContextMenu(latlng, screenX, screenY) {
     requestAnimationFrame(() => { menu.classList.add('is-open'); });
   });
 
-  _radialDismissHandler = (e) => {
-    if (!menu.contains(e.target)) dismissRadialMenu();
-  };
-  setTimeout(() => document.addEventListener('mousedown', _radialDismissHandler, true), 50);
-
-  _radialKeyHandler = (e) => {
-    if (e.key === 'Escape') dismissRadialMenu();
-  };
-  document.addEventListener('keydown', _radialKeyHandler);
+  _radialAbort = new AbortController();
+  const _sig = _radialAbort.signal;
+  setTimeout(() => {
+    document.addEventListener('mousedown',
+      (e) => { if (!menu.contains(e.target)) dismissRadialMenu(); },
+      { capture: true, signal: _sig });
+  }, 50);
+  document.addEventListener('keydown',
+    (e) => { if (e.key === 'Escape') dismissRadialMenu(); },
+    { signal: _sig });
 }
 
 // --- Global Exports ---
@@ -2124,7 +2123,7 @@ function _rhdDrawSeats() {
     tab.className        = 'rhd-seat-tab';
     tab.dataset.seatName = seat.name.toLowerCase();
     tab.dataset.edge     = edge;
-    tab.innerHTML        = '<span>' + seat.name + '</span>';
+    tab.innerHTML        = '<span>' + escapeHtml(seat.name) + '</span>';
 
     if (edge === 'north' || edge === 'south') tab.style.cssText = `left:${Math.round(sx)}px; transform:translateX(-50%)`;
     else                                      tab.style.cssText = `top:${Math.round(sy)}px;  transform:translateY(-50%)`;

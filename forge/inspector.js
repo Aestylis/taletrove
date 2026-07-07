@@ -266,6 +266,7 @@ async function buildLinkedMapsSection(article, form) {
         onclick: () => {
           recordState();
           article.linkedMapIds = article.linkedMapIds.filter(id => id !== mid);
+          markEntityDirty('article', article.id);
           const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
           debouncedSave();
         }
@@ -284,6 +285,7 @@ async function buildLinkedMapsSection(article, form) {
     recordState();
     if (!article.linkedMapIds) article.linkedMapIds = [];
     article.linkedMapIds.push(newMapId);
+    markEntityDirty('article', article.id);
     const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
     debouncedSave();
   }, 'Add a map link...');
