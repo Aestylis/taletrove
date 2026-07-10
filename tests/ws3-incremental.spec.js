@@ -53,6 +53,9 @@ test.describe('WS3 — incremental row render', () => {
 
     // Boot once to get an IDB context, seed a known world, reload into it.
     await gotoApp(page);
+    // Flush the debounced blank-world save queued by dismissing first-run modals — under
+    // parallel-suite load it otherwise fires AFTER seedWorld and clobbers worldState-meta.
+    await page.evaluate(async () => { try { if (window.flushSave) await window.flushSave(); } catch (_) {} });
     await clearWorld(page);
     await seedWorld(page, makeWorld());
     await page.reload();
@@ -60,13 +63,22 @@ test.describe('WS3 — incremental row render', () => {
     await page.waitForFunction(() =>
       typeof state !== 'undefined' && state.features && state.features.length >= 3);
 
-    const r = await page.evaluate(async (mapId) => {
-      // Ensure the map is expanded so its feature rows render, then rebuild the tree once.
+    // The boot-time render({full:true}) (navigateToMap's 200ms finally-timer, stretched under
+    // parallel-suite load) races us in two ways: refreshAtlasTree() has a reentrancy guard
+    // (panels.js `isAtlasRefreshing`) that silently DROPS concurrent calls, and a rebuild wipes
+    // the tree synchronously (`container.innerHTML = ''`) before repopulating it across awaits.
+    // So a single blind refresh can no-op, and a found row can vanish before the next evaluate.
+    // Fix: do the whole attempt (expand → refresh → sentinel → toggle → verify) in ONE evaluate.
+    // Once the row is found, everything after is synchronous — atomic within one JS task — and
+    // the toggle only ever runs on the attempt that finds the row, so retries never double-toggle.
+    const attemptToggle = () => page.evaluate(async (mapId) => {
       if (typeof collapsedNodes !== 'undefined') collapsedNodes.delete(mapId);
-      await refreshAtlasTree();
-
       const fid = 'art-ws3-0';
-      const row = document.querySelector(`.feature-row[data-fid="${fid}"]`);
+      let row = document.querySelector(`.feature-row[data-fid="${fid}"]`);
+      if (!row) {
+        await refreshAtlasTree(); // may be dropped by the guard — caller retries
+        row = document.querySelector(`.feature-row[data-fid="${fid}"]`);
+      }
       if (!row) return { found: false };
 
       // Sentinel: survives only if the node is NOT replaced by a rebuild.
@@ -87,6 +99,12 @@ test.describe('WS3 — incremental row render', () => {
         visAfter: state.features.find(f => f.id === fid).visibleToPlayers,
       };
     }, MAP_ID);
+
+    let r = await attemptToggle();
+    for (let i = 0; i < 100 && !r.found; i++) {
+      await page.waitForTimeout(200);
+      r = await attemptToggle();
+    }
 
     console.log('  WS3 incremental:', JSON.stringify(r));
 
