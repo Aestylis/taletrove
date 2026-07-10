@@ -1192,30 +1192,6 @@ function onMapClickForText(e) {
   debouncedSetMode('pointer')
 }
 
-function selectFeatureSilent(id) {
-  if (!id) return;
-  selectedEncyclopediaEntryId = null;
-  multiSelectedIds.clear();
-  multiSelectedIds.add(id);
-  selectedId = id;
-  render();
-  window.expandToItem(id);
-  window.highlightItemInAtlas(id);
-  updateSelectionStyles();
-}
-
-function selectEncyclopediaEntrySilent(entryId) {
-  if (!entryId) return;
-  selectedId = null;
-  multiSelectedIds.clear();
-  selectedEncyclopediaEntryId = entryId;
-  multiSelectedIds.add(entryId);
-  render();
-  window.expandToEncyclopediaItem(entryId);
-  window.highlightItemInEncyclopedia(entryId);
-  updateSelectionStyles();
-}
-
 /**
  * A lightweight selection function that updates the selected ID and 
  * redraws the inspector/highlights without opening the side panel.
@@ -1614,17 +1590,6 @@ async function deleteCustomIcon(iconKey) {
 if (typeof window !== 'undefined') {
   // ... other functions
   window.deleteCustomIcon = deleteCustomIcon;
-}
-
-function renameMap(mapId, newName) {
-  recordState();
-  const map = state.maps.find(m => m.id === mapId);
-  if (map) {
-    map.name = newName;
-    markEntityDirty('map', map.id);
-    render({ full: true }); // Use a full render to update Atlas
-    debouncedSave();
-  }
 }
 
 function toggleFeatureVisibility(featureId) {
@@ -2587,21 +2552,6 @@ function selectBlock(ownerId, blockId, ownerType = 'feature') {
   }
 }
 
-function removeOverlayImage() {
-  recordState();
-  const activeMap = state.maps.find(m => m.id === state.activeMapId);
-  if (activeMap && activeMap.overlayKey) {
-    activeMap.overlayKey = null;
-    markEntityDirty('map', activeMap.id);
-
-    // This existing function will handle removing the layer and updating the toolbar buttons
-    applyOverlayURL(null, activeMap);
-
-    render();
-    debouncedSave();
-  }
-}
-
 async function handleNewProject() {
   const onConfirm = async () => {
     // 1. Read settings to preserve BEFORE any clearing (synchronous, cannot fail)
@@ -2773,38 +2723,6 @@ function handleAtlasDrop(evt) {
   render({ full: true });
 }
 
-function applyTemplateToFeature(featureId, templateId) {
-  const feature = state.features.find(f => f.id === featureId);
-  const template = getTaxonomyItem(templateId);
-
-  if (!feature || !template) return;
-
-  recordState(); // Record the state for undo/redo.
-
-  // Update core properties
-  feature.featureType = templateId;
-  feature.domain = template.domain;
-  feature.category = template.category;
-
-  // Apply default visual properties from the new template
-  const geometryType = template.geometry || feature.geometry;
-  if (geometryType === 'point') {
-    feature.iconClass = template.icon;
-    feature.iconColor = template.color;
-    feature.pinIconColor = '#ffffff'; // Reset pin icon color
-  } else if (geometryType === 'polygon') {
-    feature.color = template.color;
-    feature.fillOpacity = template.fillOpacity;
-  } else if (geometryType === 'polyline') {
-    feature.color = template.color;
-    feature.weight = template.weight;
-    feature.dashArray = template.dashArray;
-  }
-
-  markEntityDirty('article', featureId);
-  render(); // Re-render the UI to show changes on the map and in the inspector.
-  debouncedSave(); // Save the new state.
-}
 async function detectAndWarnMissingImages() {
   const activeMap = state.maps.find(m => m.id === state.activeMapId) || state.maps[0];
   const missing = [];

@@ -1,9 +1,22 @@
 [
   {
+    "id": "alpha-6-40",
+    "date": "2026-07-10",
+    "title": "Alpha 6.40: Cleanup & Snappier Search",
+    "tags": [
+      "Improvement"
+    ],
+    "summary": "Debounced the command palette and icon/shape picker searches so typing stays smooth in large worlds, removed dead code, and quieted leftover debug logging during project export.",
+    "content": "<h4>Snappier search fields</h4><p>The command palette and the icon and pin-shape picker searches now wait for a brief pause in typing before filtering, instead of rescanning on every keystroke. In large worlds this keeps typing smooth; pressing Enter or the arrow keys in the command palette still acts on your full, up-to-date query.</p><h4>Housekeeping</h4><ul><li>Removed five unused internal functions left over from earlier refactors.</li><li>Project export no longer prints debug messages to the browser console.</li></ul><p>Questions or feedback: <a href='mailto:support@taletrove.app'>support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-39",
     "date": "2026-07-07",
     "title": "Alpha 6.39: Save-Reliability, Security & Stability Fixes",
-    "tags": ["Fix", "Security"],
+    "tags": [
+      "Fix",
+      "Security"
+    ],
     "summary": "Fixed several cases where changes weren't persisted on reload (map image, map overlay, linked maps, marker size, dice settings). Hardened map labels against HTML/CSS injection, prevented a crash when deleting your only map, and closed a right-click-menu listener leak.",
     "content": "<h4>Your changes now stick</h4><p>A handful of edits were quietly not being written to disk because they skipped the internal \"mark dirty\" step the save routine relies on: replacing a map's base image, assigning a map overlay, adding or removing linked maps on an article, and changing the global marker size or dice colour/theme. All of these now persist correctly across a reload. Settings that live in local storage are also flushed on every save, not only when a world entity changed.</p><h4>Security & stability</h4><ul><li>Roundtable seat names are now HTML-escaped before display, closing a stored-XSS gap on the Tabletop map overlay.</li><li>Map text-label rotation and font size are validated as numbers before being written to CSS, closing a style-injection gap.</li><li>Deleting your only map now shows a friendly notice instead of crashing.</li><li>The right-click map menu no longer leaves stray document listeners behind when opened rapidly.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -11,7 +24,9 @@
     "id": "alpha-6-38",
     "date": "2026-06-14",
     "title": "Alpha 6.38: CSS Specificity Cleanup",
-    "tags": ["Polish"],
+    "tags": [
+      "Polish"
+    ],
     "summary": "Removed 19 redundant !important overrides from the Project Hub and side-sheet styles. The cascade now resolves on specificity alone, so the rules are easier to maintain. No visual or behavioural changes.",
     "content": "<h4>Under-the-hood housekeeping</h4><p>The Project Hub and side-sheet overlays leaned on a stack of <code>!important</code> overrides — including one that forced a counter-rule just to hide the hub again. Because those selectors already out-rank the rules they compete with, the <code>!important</code> flags were redundant. We removed 19 of them; the hub, side-sheets, and light-theme glass all open, close, and animate exactly as before. Verified across both themes with no console errors.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -19,7 +34,10 @@
     "id": "alpha-6-37",
     "date": "2026-06-12",
     "title": "Alpha 6.37: Stylesheet Cleanup",
-    "tags": ["Polish", "Performance"],
+    "tags": [
+      "Polish",
+      "Performance"
+    ],
     "summary": "Removed ~325 lines of dead CSS left over from the old Project Hub layout — every deleted rule was verified unused before removal. No visual changes.",
     "content": "<h4>Under-the-hood housekeeping</h4><p>The stylesheet carried leftover rules from the Project Hub's previous design (the old top nav bar, action card grid, system list, and cloud-sync card) plus a few stray artifacts: duplicate scrollbar and box-sizing rules and two stray characters. All of it was verified unused against the app's markup and scripts, then removed. The hub looks and behaves exactly as before — the stylesheet is just ~325 lines lighter.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -27,7 +45,10 @@
     "id": "alpha-6-36",
     "date": "2026-06-12",
     "title": "Alpha 6.36: Reduced Motion & Pin Names",
-    "tags": ["Accessibility", "Polish"],
+    "tags": [
+      "Accessibility",
+      "Polish"
+    ],
     "summary": "The app now honors your system's reduced-motion preference, map pins announce their names to screen readers, and the left panel keeps its scroll position across refreshes.",
     "content": "<h4>Motion, names, and small fixes</h4><p>If your OS asks for reduced motion, TaleTrove now collapses all animations and transitions app-wide. Map pins carry their entity name for screen readers (they were tabbable but anonymous). The world panel no longer jumps to the top when it refreshes, and if a long operation stalls past 30 seconds you now get a toast instead of the spinner silently vanishing.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -35,7 +56,9 @@
     "id": "alpha-6-35",
     "date": "2026-06-12",
     "title": "Alpha 6.35: Dialog Focus Management",
-    "tags": ["Accessibility"],
+    "tags": [
+      "Accessibility"
+    ],
     "summary": "Dialogs now announce themselves to screen readers, move focus in when they open, and return focus to where you were when they close.",
     "content": "<h4>Dialog semantics & focus</h4><p>All 21 dialogs now carry proper <code>role=\"dialog\"</code> semantics. Opening a dialog moves keyboard focus to its first meaningful control; closing it returns focus to the element that opened it — so keyboard users never lose their place. The image cropper also gained Escape-to-close and click-outside-to-close, matching every other dialog.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -43,7 +66,9 @@
     "id": "alpha-6-34",
     "date": "2026-06-12",
     "title": "Alpha 6.34: Keyboard Navigation for the World Tree",
-    "tags": ["Accessibility"],
+    "tags": [
+      "Accessibility"
+    ],
     "summary": "Maps, folders, pins, lore entries, and sessions in the left panel can now be opened with Enter or Space — no mouse required.",
     "content": "<h4>Keyboard-operable tree</h4><p>Every row in the world panel (maps, folders, pins, lore entries, sessions) is now focusable and activates with Enter or Space, matching its click behavior. Folder rows also announce their expanded/collapsed state to screen readers (<code>aria-expanded</code>). A new automated test suite locks in these accessibility basics.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -51,7 +76,9 @@
     "id": "alpha-6-33",
     "date": "2026-06-12",
     "title": "Alpha 6.33: Screen Reader Basics",
-    "tags": ["Accessibility"],
+    "tags": [
+      "Accessibility"
+    ],
     "summary": "Toasts and loading states are now announced to screen readers, and every icon-only button has an accessible name.",
     "content": "<h4>Screen reader support</h4><p>Toast notifications and the loading overlay are now live regions (<code>aria-live</code>), so screen readers announce saves, errors, and progress as they happen. All 27 icon-only buttons (close buttons, zoom controls, timeline tools) now carry <code>aria-label</code>s — including the image cropper close button, which previously had no accessible name at all.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -59,7 +86,10 @@
     "id": "alpha-6-32",
     "date": "2026-06-12",
     "title": "Alpha 6.32: Theme Preset Button Contrast",
-    "tags": ["Polish", "Accessibility"],
+    "tags": [
+      "Polish",
+      "Accessibility"
+    ],
     "summary": "Primary buttons are now legible in all 16 color theme presets — 8 presets had button labels below WCAG AA contrast.",
     "content": "<h4>Preset contrast pass</h4><p>A contrast audit across all 16 color theme presets found 8 with hard-to-read primary button labels (Dracula, One Dark, Tokyo Night, Solarized, Nord Light, One Light, Rosé Pine Dawn, Summer Breeze). Each now uses a palette-native label color that meets WCAG AA (4.5:1+) against its accent. A new audit script (<code>scripts/check-preset-contrast.js</code>) guards future presets.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -67,7 +97,10 @@
     "id": "alpha-6-31",
     "date": "2026-06-12",
     "title": "Alpha 6.31: Light Theme Readability",
-    "tags": ["Polish", "Accessibility"],
+    "tags": [
+      "Polish",
+      "Accessibility"
+    ],
     "summary": "Light theme text and buttons now meet WCAG AA contrast — darker accent, danger, and muted colors, and legible button labels.",
     "content": "<h4>Light theme contrast pass</h4><p>The Parchment light theme got a readability overhaul: primary and danger buttons now use white labels on darker backgrounds (previously near-invisible), and the muted, accent, danger, and GM colors were darkened to meet WCAG AA contrast on panels and cards. Accent-tinted glows in light mode now match the teal accent instead of orange.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
@@ -76,7 +109,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.30: Security Hardening",
     "summary": "Tightened how the offline cache decides which hosts count as trusted CDNs. No visible changes.",
-    "tags": ["Maintenance"],
+    "tags": [
+      "Maintenance"
+    ],
     "content": "<h4>Under the hood</h4><p>The offline service worker now matches trusted CDN hosts exactly instead of by substring, closing a theoretical avenue for look-alike domains to be treated as trusted. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -84,7 +119,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.29: Theme & Style Repairs",
     "summary": "A sweep of internal style fixes: restored hover highlights in the light theme, rounded corners that had silently gone square, and the heading font setting now applies to article headings.",
-    "tags": ["Fixes"],
+    "tags": [
+      "Fixes"
+    ],
     "content": "<h4>Style fixes</h4><p>A deep audit of the stylesheet turned up a batch of silently broken styles, now repaired: hover highlights work again in the light theme, several buttons and popovers regained their rounded corners, and a number of badges and labels that had lost their colors are back. If you pick a custom heading font in Settings, article and peek-view headings now actually use it.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -92,7 +129,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.28: Under-the-Hood Maintenance, Part 4",
     "summary": "Internal code reorganization continues — global keyboard shortcuts now live in their own module. No behavior changes.",
-    "tags": ["Maintenance"],
+    "tags": [
+      "Maintenance"
+    ],
     "content": "<h4>Code health</h4><p>The global keyboard shortcuts — undo/redo, Ctrl+S export, Ctrl+K palette, tool switching, Escape layering, and the rest — have moved into their own module as the internal reorganization continues. Every shortcut works exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -100,7 +139,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.27: Under-the-Hood Maintenance, Part 3",
     "summary": "Internal code reorganization continues — Google Drive backup and restore now live alongside the rest of the import/export module. No behavior changes.",
-    "tags": ["Maintenance"],
+    "tags": [
+      "Maintenance"
+    ],
     "content": "<h4>Code health</h4><p>The Google Drive integration — backing up your world to Drive, opening worlds from Drive, and the connection status shown in the project hub — has joined the import/export module introduced in Alpha 6.26. This keeps all the ways a world enters or leaves TaleTrove in one place. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -108,7 +149,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.26: Under-the-Hood Maintenance, Part 2",
     "summary": "Internal code reorganization continues — project import/export now lives in its own module. No behavior changes.",
-    "tags": ["Maintenance"],
+    "tags": [
+      "Maintenance"
+    ],
     "content": "<h4>Code health</h4><p>This release continues the internal reorganization of TaleTrove's largest source file. All project import and export logic — saving, loading, player exports, encrypted bundles, and world snapshots — has moved into its own module, fully covered by the data-safety and export round-trip test suites added in recent releases. Nothing changes in how the app looks or behaves.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -116,7 +159,9 @@
     "date": "2026-06-11",
     "title": "Alpha 6.25: Under-the-Hood Maintenance",
     "summary": "Internal code reorganization for long-term stability — the command palette now lives in its own module. No behavior changes.",
-    "tags": ["Maintenance"],
+    "tags": [
+      "Maintenance"
+    ],
     "content": "<h4>Code health</h4><p>This release begins an internal reorganization of TaleTrove's largest source file to keep the app maintainable as it grows. The Ctrl+K command palette has moved into its own module, with new automated tests covering it. Nothing changes in how the app looks or behaves — this work is about keeping future updates fast and safe.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -124,7 +169,11 @@
     "date": "2026-06-11",
     "title": "Alpha 6.24: Lighter Popups, Avatars & Timelines",
     "summary": "Map popups, family-tree portraits, and timeline cards now use lightweight thumbnails instead of full-size images, so image-heavy worlds feel lighter everywhere.",
-    "tags": ["Performance", "Images", "Maps"],
+    "tags": [
+      "Performance",
+      "Images",
+      "Maps"
+    ],
     "content": "<h4>Thumbnails everywhere they fit</h4><p>The thumbnail system introduced for the asset library now also powers map pin popups, family-tree avatars, and timeline & gantt event cards. These spots show images at small sizes, so they no longer decode the full multi-megabyte original — they reuse the same small thumbnail, which is generated once and cached.</p><p>Full-size images are still used where they matter: article hero banners, the lightbox, and the map itself. As always, existing worlds benefit automatically — there's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -132,7 +181,11 @@
     "date": "2026-06-11",
     "title": "Alpha 6.23: Smoother Visibility Toggles",
     "summary": "Flipping a pin, map, or lore entry between Player-visible and GM-only now updates just that row instantly, instead of rebuilding the whole panel.",
-    "tags": ["Performance", "Navigation", "UX"],
+    "tags": [
+      "Performance",
+      "Navigation",
+      "UX"
+    ],
     "content": "<h4>No more panel flicker</h4><p>Clicking the eye icon to switch an entry between <strong>Player-visible</strong> and <strong>GM-only</strong> used to rebuild the entire navigation tree — which could scroll the panel, drop your hover, and feel janky in large worlds. Now only the row you clicked updates, in place. The change is instant and the panel stays exactly where it was.</p><p>This is the first of several render improvements making the navigation panel feel snappier as worlds grow. There's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -140,7 +193,10 @@
     "date": "2026-06-11",
     "title": "Alpha 6.22: Faster First Load",
     "summary": "The app now paints its interface before its libraries finish loading, so it appears on screen noticeably sooner — especially on slower connections.",
-    "tags": ["Performance", "Startup"],
+    "tags": [
+      "Performance",
+      "Startup"
+    ],
     "content": "<h4>Quicker startup</h4><p>TaleTrove's scripts and third-party libraries (the map engine, content sanitizer, and others) now load in the background instead of blocking the page while they download. The interface paints first and the libraries finish loading in parallel, so the app appears on screen sooner — the difference is most noticeable on slower connections or the very first visit before anything is cached.</p><p>Everything loads in the same order as before, so behaviour is unchanged — it just gets out of your way faster. There's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -148,7 +204,11 @@
     "date": "2026-06-04",
     "title": "Alpha 6.21: Faster Image-Heavy Worlds",
     "summary": "The asset library now renders lightweight thumbnails instead of full-size images, so worlds with lots of art load and scroll far faster.",
-    "tags": ["Performance", "Assets", "Images"],
+    "tags": [
+      "Performance",
+      "Assets",
+      "Images"
+    ],
     "content": "<h4>Thumbnails for the asset library</h4><p>Worlds with large image collections are now dramatically lighter to browse. The Assets panel generates a small thumbnail for each image the first time it's shown and reuses it from then on, instead of decoding the full multi-megabyte original every time. In testing, previews are roughly 30× smaller and decode more than 10× faster.</p><p>This happens automatically — existing worlds benefit the moment you open the Assets panel; there's nothing to enable.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -156,7 +216,11 @@
     "date": "2026-05-14",
     "title": "Alpha 6.20: Unified Panel, Compact Toolbar & Tabletop Mode",
     "summary": "The right panel now has Content and Properties tabs, the toolbar is leaner, and Map Fullscreen is now Tabletop Mode.",
-    "tags": ["Navigation", "Toolbar", "UX"],
+    "tags": [
+      "Navigation",
+      "Toolbar",
+      "UX"
+    ],
     "content": "<h4>Unified right panel</h4><p>The peek panel (the side sheet that opens when you click a pin or row) now has two tabs: <strong>Content</strong> for the wiki view and <strong>Properties</strong> for the form. Clicking the ··· button on any row opens the panel directly on the Properties tab. No more separate sliding sheet competing for space — everything lives in one panel.</p><h4>Compact toolbar</h4><p>The main map toolbar has been reduced from 18 buttons to 10. Area, Line, Text, and Measure tools are grouped under a single <strong>Draw ▾</strong> button that opens a labelled dropdown. Secondary tools (Load Map, Center, Free Pan, Toolbar Position, Tabletop Mode, Fullscreen) move into a <strong>⋯ More</strong> overflow menu. The tools you reach for every session stay visible; everything else is one click away.</p><h4>Clearer edit controls</h4><p>The pencil icon in article view is replaced by a labelled <strong>Edit</strong> pill button that switches to <strong>Done</strong> while editing. The current mode is always readable at a glance.</p><h4>Map onboarding hints</h4><p>A fresh map now shows a two-stage prompt: first an orange call-to-action to upload a base image, then a muted hint to place your first pin once the image is loaded. The hint only appears on your main map — secondary maps start empty by design.</p><h4>Tabletop Mode</h4><p>Map Fullscreen has been renamed to <strong>Tabletop Mode</strong>.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -164,7 +228,11 @@
     "date": "2026-05-12",
     "title": "Alpha 6.13: Pinned Peek, Emoji Pins & More",
     "summary": "Open a second article beside your current one, plus emoji map pins, Info Table block, asset URL import, and security fixes.",
-    "tags": ["Navigation", "Map", "Blocks"],
+    "tags": [
+      "Navigation",
+      "Map",
+      "Blocks"
+    ],
     "content": "<h4>Pinned Peek — open articles side by side</h4><p>While reading an article, hover any linked entity chip and click the pin icon to open that article in a supporting pane alongside your current one. The pinned pane is read-only and stays locked while you continue reading. Press <strong>Escape</strong> or click the × to close it, or click the book icon to navigate to the full article.</p><h4>Emoji pin icons</h4><p>The icon picker now has an <strong>Emoji</strong> tab with over 100 curated fantasy icons across six categories. Pick an emoji as a map pin just like any other icon.</p><h4>Info Table block</h4><p>A new <strong>Info Table</strong> block type adds a structured label–value table to any article. Good for stats, attributes, and quick-reference properties. Add it with the <code>/</code> slash command palette.</p><h4>Import images from URL</h4><p>The Assets panel has a <strong>+ URL</strong> button. Paste any <code>https://</code> image URL to fetch and store it directly — no manual download needed.</p><h4>Stability & fixes</h4><ul><li>Fullscreen toolbar auto-hides after 3s of inactivity.</li><li>DOMPurify fallback: raw HTML is never injected if the library fails to load.</li><li>Emoji pins now render at proper size on the map.</li><li>Hero image remove button is now top-right, hidden until hover.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -172,7 +240,10 @@
     "date": "2026-05-08",
     "title": "Alpha 6.2: Map Clustering & Bug Fixes",
     "summary": "Dense pin maps now cluster automatically, text labels can be rotated, and several map label bugs are fixed.",
-    "tags": ["Map", "Bug Fix"],
+    "tags": [
+      "Map",
+      "Bug Fix"
+    ],
     "content": "<h4>Pin clustering</h4><p>Map pins now cluster automatically when zoomed out. Click a cluster to zoom in and see individual pins. Clusters expand with a spider layout at maximum zoom.</p><h4>Text label rotation</h4><p>Text geometry features now support a rotation angle. Use the slider or number input in the inspector to rotate area labels to match your map's geography.</p><h4>Bug fixes</h4><ul><li><strong>Area label centering:</strong> Area name labels were losing their centering after collision detection ran, causing them to appear offset from their coat-of-arms badge. Fixed.</li><li><strong>Area label zoom drift:</strong> Area labels were drifting away from their polygon centroid when zooming, because collision detection was incorrectly treating them as moveable. Area labels are now pinned to their centroid and excluded from push logic.</li><li><strong>Panel toggle:</strong> The left-panel pull tab no longer slides on mousedown.</li><li><strong>Pin labels after navigation:</strong> Clicking a pin in the Atlas panel now reliably shows its label after the map flies to it.</li><li><strong>Area tooltip:</strong> Hovering over an area polygon no longer shows a redundant name tooltip.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -180,7 +251,10 @@
     "date": "2026-03-24",
     "title": "Alpha 6: Session Layer",
     "summary": "GM session tracking, YouTube embeds, a unified left panel, and a round of UX polish.",
-    "tags": ["Sessions", "GM"],
+    "tags": [
+      "Sessions",
+      "GM"
+    ],
     "content": "<h4>Session tracking for GMs</h4><p>The left panel now has a dedicated <strong>SESSIONS</strong> section. Log play sessions directly from the panel, no article required. Atlas, Lore, and Sessions share one scrollable list.</p><h4>What's new</h4><ul><li><strong>Sessions panel:</strong> Create and manage play session records in the left panel. GM-only.</li><li><strong>YouTube embeds:</strong> Paste a YouTube URL into an Embed block for an inline player. Good for ambience playlists stored inside your world.</li><li><strong>Bug reporter:</strong> Use the bug icon in the nav rail to report issues or request features. Opens a pre-filled GitHub Issues form.</li><li><strong>Appearance:</strong> Reworked theme and general settings with a live map preview.</li><li><strong>UX cleanup:</strong> Tutorial steps, toolbar overlay menu, settings layout, and icon picker all tidied up.</li><li><strong>Sample world:</strong> Aethermoor updated with richer articles, coat-of-arms areas, and a complete session log.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
   },
   {
@@ -188,7 +262,10 @@
     "date": "2026-03-12",
     "title": "Welcome to TaleTrove Alpha",
     "summary": "TaleTrove is feature-complete for the Alpha. Build your world, explore its connections, and let us know what you think.",
-    "tags": ["Welcome", "Alpha"],
+    "tags": [
+      "Welcome",
+      "Alpha"
+    ],
     "content": "<h4>Your world is ready to be built.</h4><p>Welcome to TaleTrove - a local-first world-building atlas for game masters, writers, and world-builders. Everything you create lives on your device. No accounts, no subscriptions, no cloud required.</p><h4>What's here</h4><ul><li><strong>Atlas:</strong> Place pins, draw regions, and trace routes on any map image. Every feature can hold rich notes, images, and linked lore.</li><li><strong>Encyclopedia:</strong> A structured library of People, Things, and Events - each one connected to the map and to each other through a typed link system.</li><li><strong>Relationships:</strong> The Relational Graph and Family Tree views show the connections in your world at a glance.</li><li><strong>Timeline:</strong> A calendar, vertical timeline, and Gantt view keep your world's history organised across any custom time system.</li><li><strong>Google Drive Sync:</strong> Back up and open worlds directly from your own Google Drive. Your data stays yours.</li><li><strong>Player Export:</strong> Share a sanitised version of your world with players, with GM-only content automatically stripped.</li><li><strong>Obsidian Import:</strong> Already have a vault? Import your notes directly from an Obsidian vault folder - markdown content, frontmatter tags, and wiki-links all carry over into the Encyclopedia.</li></ul><h4>Alpha means feedback matters</h4><p>TaleTrove is feature-complete for the Alpha outside of a small wishlist. The one big item still on the horizon is <strong>WebRTC multiplayer</strong> - real-time sharing so a whole table can explore the same world together.</p><p>Everything else is in your hands now. If something feels off, breaks, or could be better, we want to hear it. Reach us at <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a> - every report helps.</p><p>Go build something worth exploring.</p>"
   }
 ]

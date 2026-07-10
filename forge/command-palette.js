@@ -240,23 +240,37 @@ function initCommandPalette() {
 
   const input = document.getElementById('cpInput');
   if (input) {
-    input.addEventListener('input', () => renderCpResults(input.value));
+    // Debounce keystroke renders (each one rescans every article), but flush any
+    // pending render before keyboard navigation/execution so fast typists never
+    // arrow through or Enter on a stale result list.
+    const debouncedCpRender = debounce(() => { cpRenderPending = false; renderCpResults(input.value); }, 150);
+    let cpRenderPending = false;
+    const flushCpRender = () => {
+      if (!cpRenderPending) return;
+      debouncedCpRender.cancel();
+      cpRenderPending = false;
+      renderCpResults(input.value);
+    };
+    input.addEventListener('input', () => { cpRenderPending = true; debouncedCpRender(); });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
         closeCommandPalette();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
+        flushCpRender();
         _cpActiveIndex = Math.min(_cpActiveIndex + 1, _cpItems.length - 1);
         updateCpActiveHighlight();
         scrollCpActiveIntoView();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        flushCpRender();
         _cpActiveIndex = Math.max(_cpActiveIndex - 1, 0);
         updateCpActiveHighlight();
         scrollCpActiveIntoView();
       } else if (e.key === 'Enter') {
         e.preventDefault();
+        flushCpRender();
         if (_cpActiveIndex >= 0 && _cpItems[_cpActiveIndex]) {
           executeCpItem(_cpItems[_cpActiveIndex]);
         }

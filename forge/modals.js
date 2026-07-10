@@ -2319,7 +2319,8 @@ function initModals() {
     iconPickerModal.populateGrid = populateIconGrid;
     populateIconGrid();
 
-    iconSearchInput.addEventListener('input', () => {
+    // Debounced: the grid holds hundreds of items and each keystroke walks all of them.
+    iconSearchInput.addEventListener('input', debounce(() => {
       const query = normalizeForSearch(iconSearchInput.value.trim());
       const items = iconGrid.querySelectorAll('.icon-grid-item');
       items.forEach(item => {
@@ -2334,7 +2335,7 @@ function initModals() {
           || synonyms.some(s => normalizeForSearch(s).includes(query));
         item.style.display = matches ? 'flex' : 'none';
       });
-    });
+    }, 150));
 
     const closeIconPicker = () => {
       window.currentTargetFeatureForIcon = null;
@@ -2491,7 +2492,8 @@ function initModals() {
     pinShapePickerModal.populateGrid = populateShapeGrid;
     populateShapeGrid();
 
-    shapeSearchInput.addEventListener('input', () => {
+    // Debounced to match the icon-picker search above.
+    shapeSearchInput.addEventListener('input', debounce(() => {
       const query = shapeSearchInput.value.toLowerCase().trim();
       const items = shapeGrid.querySelectorAll('.icon-grid-item');
       items.forEach(item => {
@@ -2502,7 +2504,7 @@ function initModals() {
         const name = item.dataset.shapeName.toLowerCase();
         item.style.display = name.includes(query) ? 'flex' : 'none';
       });
-    });
+    }, 150));
 
     customShapeFile.addEventListener('change', async (e) => {
       const file = e.target.files[0];

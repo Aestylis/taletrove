@@ -45,7 +45,6 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
   
   setLoadingState(true, "Preparing Project...");
   const zip = new JSZip();
-  console.log("Starting project export...");
 
   // 1. Create a Set to collect all unique image/blob keys from the entire project.
   //    Seed with any extra keys passed by the caller (e.g. orphaned asset-library images).
@@ -94,8 +93,6 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
   // From custom icons – use the already-cached manifest instead of scanning all IDB keys.
   CUSTOM_ICON_MANIFEST.forEach(key => allKeysToExport.add(key));
 
-  console.log(`Found ${allKeysToExport.size} unique image/blob keys to export:`, Array.from(allKeysToExport));
-
   // 2. Asynchronously get each file from IndexedDB and add it to the zip.
   const filePromises = Array.from(allKeysToExport).map(async (key) => {
     if (key) { // Safety check for null/undefined keys
@@ -110,7 +107,6 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
 
   // Wait for all files to be added to the zip object.
   await Promise.all(filePromises);
-  console.log("Finished adding files to zip.");
 
   // 3. Add the main world.json file.
   zip.file('world.json', JSON.stringify(clone, null, 2));
@@ -140,12 +136,10 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
 
       showToast("Project exported successfully!");
       setLoadingState(false);
-      console.log("Streaming project export complete.");
       return;
     } catch (err) {
       setLoadingState(false);
       if (err.name === 'AbortError') {
-        console.log("Export cancelled by user.");
         return;
       }
       console.error("Streaming export failed, falling back to in-memory:", err);
@@ -159,7 +153,6 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
   let finalContent = out;
 
   if (password) {
-    console.log("Encrypting project (in-memory fallback)...");
     const buffer = await out.arrayBuffer();
     // encryptData now natively outputs the TEN2 format.
     const encrypted = await encryptData(new Uint8Array(buffer), password);
@@ -173,7 +166,6 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
   a.remove();
   URL.revokeObjectURL(url);
   setLoadingState(false);
-  console.log("Project download initiated.");
 }
 
 function sanitizeForPlayer(full) {
