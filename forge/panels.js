@@ -595,137 +595,151 @@ async function _buildAtlasFlatRowEl(rowDesc) {
   return rowEl;
 }
 
-// --- Phase M: atlas tree windowing state ---
-let _atlasFlatRows = [];
-let _atlasRowH = 32;               // uniform row height (all kinds share .tree-row min-height); calibrated from real rows
-let _atlasWindow = { start: -1, end: -1 };
+// --- Phase M: windowed virtual segments (atlas tree = instance #1, lore list = instance #2) ---
 let _atlasVirtualOn = false;
-let _atlasDragFreeze = false;      // during a drag: window may only EXTEND, never recycle rows
-let _atlasSliceToken = 0;
-let _atlasScrollRaf = null;
-let _atlasVirtualEls = null;       // { container, treeContainer, topSpacer, bottomSpacer }
+let _vsegScrollRaf = null;
 const ATLAS_OVERSCAN = 10;
+const _virtualSegments = [];
 
-/** Entry point for the virtual renderer: computes the flat model and renders the first window. */
-async function _renderAtlasVirtualSegment(container, treeContainer, ctx) {
-  _atlasFlatRows = _computeAtlasFlatRows(ctx);
-  const topSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-top' });
-  const bottomSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-bottom' });
-  // Pre-size to the full estimated segment height so scrollTop restoration (which happens
-  // before the first slice — treeContainer is still detached here) isn't clamped.
-  bottomSpacer.style.height = `${_atlasFlatRows.length * _atlasRowH}px`;
-  treeContainer.append(topSpacer, bottomSpacer);
-  _atlasVirtualEls = { container, treeContainer, topSpacer, bottomSpacer };
-  _atlasWindow = { start: -1, end: -1 };
+/**
+ * Creates a windowed virtual-list segment: a flat row model rendered as
+ * [top spacer | viewport±overscan rows | bottom spacer] inside `mountEl`, sliced against the
+ * `#atlasView` scroll position. Uniform row height, calibrated as the average across the whole
+ * materialized window. During drags the window only EXTENDS (never recycles) so SortableJS's
+ * list never mutates under the ghost.
+ * opts: { buildRowEl(rowDesc) → Promise<el|null>, makeSortable(mountEl, seg) | null }
+ */
+function _makeVirtualSegment(opts) {
+  const seg = {
+    rows: [], rowH: 32, window: { start: -1, end: -1 },
+    dragFreeze: false, sliceToken: 0, els: null,
 
-  if (role === 'gm') {
+    /** Installs spacers + Sortable into a freshly built (possibly detached) mount element.
+     *  No slice happens here — the owning refresh calls seg.slice(true) after assembly +
+     *  scroll restore, when geometry is live. Bottom spacer is pre-sized so scrollTop
+     *  restoration isn't clamped. */
+    setup(container, mountEl, rows) {
+      seg.rows = rows;
+      const topSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-top' });
+      const bottomSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-bottom' });
+      bottomSpacer.style.height = `${rows.length * seg.rowH}px`;
+      mountEl.append(topSpacer, bottomSpacer);
+      seg.els = { container, mountEl, topSpacer, bottomSpacer };
+      seg.window = { start: -1, end: -1 };
+      if (role === 'gm' && opts.makeSortable) opts.makeSortable(mountEl, seg);
+    },
+
+    desiredRange() {
+      const v = seg.els;
+      const N = seg.rows.length;
+      const H = seg.rowH;
+      const cRect = v.container.getBoundingClientRect();
+      const tRect = v.mountEl.getBoundingClientRect();
+      const viewTop = cRect.top - tRect.top; // how far the container has scrolled into this segment
+      let start = Math.max(0, Math.floor(viewTop / H) - ATLAS_OVERSCAN);
+      const end = Math.min(N, Math.max(start, Math.ceil((viewTop + v.container.clientHeight) / H) + ATLAS_OVERSCAN));
+      start = Math.min(start, end); // viewport fully past the segment → empty tail window, sane spacers
+      return { start, end };
+    },
+
+    /** (Re)materializes the visible window between the spacers. */
+    async slice(force = false) {
+      const v = seg.els;
+      if (!v || !v.mountEl.isConnected) return;
+      const N = seg.rows.length;
+      let { start, end } = seg.desiredRange();
+
+      if (seg.dragFreeze && seg.window.start >= 0) {
+        // Mid-drag: never remove rows from under SortableJS — only extend the window.
+        start = Math.min(start, seg.window.start);
+        end = Math.max(end, seg.window.end);
+        if (start === seg.window.start && end === seg.window.end) return;
+        await seg.extend(start, end);
+        return;
+      }
+
+      if (!force && start === seg.window.start && end === seg.window.end) return;
+      const token = ++seg.sliceToken;
+      const els = await Promise.all(seg.rows.slice(start, end).map(r => opts.buildRowEl(r)));
+      if (token !== seg.sliceToken || !v.mountEl.isConnected) return; // superseded by a newer slice
+
+      let n = v.topSpacer.nextSibling;
+      while (n && n !== v.bottomSpacer) { const next = n.nextSibling; n.remove(); n = next; }
+      const frag = document.createDocumentFragment();
+      els.forEach((rowEl, i) => {
+        if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); }
+      });
+      v.bottomSpacer.before(frag);
+      v.topSpacer.style.height = `${start * seg.rowH}px`;
+      v.bottomSpacer.style.height = `${Math.max(0, (N - end) * seg.rowH)}px`;
+      seg.window = { start, end };
+
+      // Row-height calibration: average across the WHOLE materialized window (a two-row sample
+      // drifts by whole rows at 5000-article scale; the average keeps index math aligned).
+      const rowEls2 = [];
+      for (let c = v.topSpacer.nextElementSibling; c && c !== v.bottomSpacer; c = c.nextElementSibling) rowEls2.push(c);
+      if (rowEls2.length >= 3) {
+        const firstTop = rowEls2[0].getBoundingClientRect().top;
+        const lastBottom = rowEls2[rowEls2.length - 1].getBoundingClientRect().bottom;
+        const measured = (lastBottom - firstTop) / rowEls2.length;
+        if (measured > 8 && Math.abs(measured - seg.rowH) > 0.5) {
+          seg.rowH = measured;
+          seg.window = { start: -1, end: -1 };
+          await seg.slice(true);
+          return;
+        }
+      }
+      updateSelectionStyles();
+    },
+
+    /** Drag-freeze extension: appends rows at the window edges without touching existing ones. */
+    async extend(start, end) {
+      const v = seg.els;
+      const prev = seg.window;
+      if (start < prev.start) {
+        const els = await Promise.all(seg.rows.slice(start, prev.start).map(r => opts.buildRowEl(r)));
+        const frag = document.createDocumentFragment();
+        els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); } });
+        v.topSpacer.after(frag);
+      }
+      if (end > prev.end) {
+        const els = await Promise.all(seg.rows.slice(prev.end, end).map(r => opts.buildRowEl(r)));
+        const frag = document.createDocumentFragment();
+        els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(prev.end + i); frag.appendChild(rowEl); } });
+        v.bottomSpacer.before(frag);
+      }
+      v.topSpacer.style.height = `${start * seg.rowH}px`;
+      v.bottomSpacer.style.height = `${Math.max(0, (seg.rows.length - end) * seg.rowH)}px`;
+      seg.window = { start, end };
+    },
+  };
+  _virtualSegments.push(seg);
+  return seg;
+}
+
+const _atlasSeg = _makeVirtualSegment({
+  buildRowEl: (rowDesc) => _buildAtlasFlatRowEl(rowDesc),
+  makeSortable(mountEl, seg) {
     // One Sortable over the whole flat list. Lore rows and spacers are not draggable
-    // (legacy parity: lore-in-map items never had a Sortable). Recycling freezes during
-    // drags (_atlasDragFreeze) so the list never mutates under SortableJS.
-    atlasSortable.push(new Sortable(treeContainer, {
+    // (legacy parity: lore-in-map items never had a Sortable).
+    atlasSortable.push(new Sortable(mountEl, {
       group: 'atlas', animation: 150, delay: 150, delayOnTouchOnly: false,
       ghostClass: 'sortable-ghost', multiDrag: true, selectedClass: 'selected',
       fallbackOnBody: true, forceFallback: true,
       scroll: document.getElementById('atlasPanel'), scrollSensitivity: 60, scrollSpeed: 8,
       draggable: '.feature-row, .folder-row, .map-row',
-      onStart: () => { _attachDragScroll(); _atlasDragFreeze = true; },
+      onStart: () => { _attachDragScroll(); seg.dragFreeze = true; },
       onMove: _atlasDragOnMove,
-      onEnd: (evt) => { _detachDragScroll(); _atlasDragFreeze = false; _handleFlatAtlasDrop(evt); },
+      onEnd: (evt) => { _detachDragScroll(); seg.dragFreeze = false; _handleFlatAtlasDrop(evt); },
     }));
-  }
-  // NOTE: no slice here — treeContainer is not yet attached (geometry would be garbage).
-  // _refreshAtlasTreeNow performs the first _sliceAtlasWindow(true) after assembly + scroll restore.
-}
-
-function _atlasDesiredRange() {
-  const v = _atlasVirtualEls;
-  const N = _atlasFlatRows.length;
-  const H = _atlasRowH;
-  const cRect = v.container.getBoundingClientRect();
-  const tRect = v.treeContainer.getBoundingClientRect();
-  const viewTop = cRect.top - tRect.top; // how far the container has scrolled into the tree segment
-  let start = Math.max(0, Math.floor(viewTop / H) - ATLAS_OVERSCAN);
-  const end = Math.min(N, Math.max(start, Math.ceil((viewTop + v.container.clientHeight) / H) + ATLAS_OVERSCAN));
-  start = Math.min(start, end); // viewport fully past the segment → empty tail window, sane spacers
-  return { start, end };
-}
-
-/** (Re)materializes the visible window between the spacers. */
-async function _sliceAtlasWindow(force = false) {
-  const v = _atlasVirtualEls;
-  if (!v || !v.treeContainer.isConnected) return;
-  const N = _atlasFlatRows.length;
-  let { start, end } = _atlasDesiredRange();
-
-  if (_atlasDragFreeze && _atlasWindow.start >= 0) {
-    // Mid-drag: never remove rows from under SortableJS — only extend the window.
-    start = Math.min(start, _atlasWindow.start);
-    end = Math.max(end, _atlasWindow.end);
-    if (start === _atlasWindow.start && end === _atlasWindow.end) return;
-    await _extendAtlasWindow(start, end);
-    return;
-  }
-
-  if (!force && start === _atlasWindow.start && end === _atlasWindow.end) return;
-  const token = ++_atlasSliceToken;
-  const els = await Promise.all(_atlasFlatRows.slice(start, end).map(r => _buildAtlasFlatRowEl(r)));
-  if (token !== _atlasSliceToken || !v.treeContainer.isConnected) return; // superseded by a newer slice
-
-  let n = v.topSpacer.nextSibling;
-  while (n && n !== v.bottomSpacer) { const next = n.nextSibling; n.remove(); n = next; }
-  const frag = document.createDocumentFragment();
-  els.forEach((rowEl, i) => {
-    if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); }
-  });
-  v.bottomSpacer.before(frag);
-  v.topSpacer.style.height = `${start * _atlasRowH}px`;
-  v.bottomSpacer.style.height = `${Math.max(0, (N - end) * _atlasRowH)}px`;
-  _atlasWindow = { start, end };
-
-  // Row-height calibration: average across the WHOLE materialized window (a two-row sample
-  // drifts by whole rows at 5000-article scale; the average keeps index math aligned).
-  const rowEls2 = [];
-  for (let c = v.topSpacer.nextElementSibling; c && c !== v.bottomSpacer; c = c.nextElementSibling) rowEls2.push(c);
-  if (rowEls2.length >= 3) {
-    const firstTop = rowEls2[0].getBoundingClientRect().top;
-    const lastBottom = rowEls2[rowEls2.length - 1].getBoundingClientRect().bottom;
-    const measured = (lastBottom - firstTop) / rowEls2.length;
-    if (measured > 8 && Math.abs(measured - _atlasRowH) > 0.5) {
-      _atlasRowH = measured;
-      _atlasWindow = { start: -1, end: -1 };
-      await _sliceAtlasWindow(true);
-      return;
-    }
-  }
-  updateSelectionStyles();
-}
-
-/** Drag-freeze extension: appends rows at the window edges without touching existing ones. */
-async function _extendAtlasWindow(start, end) {
-  const v = _atlasVirtualEls;
-  const prev = _atlasWindow;
-  if (start < prev.start) {
-    const els = await Promise.all(_atlasFlatRows.slice(start, prev.start).map(r => _buildAtlasFlatRowEl(r)));
-    const frag = document.createDocumentFragment();
-    els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); } });
-    v.topSpacer.after(frag);
-  }
-  if (end > prev.end) {
-    const els = await Promise.all(_atlasFlatRows.slice(prev.end, end).map(r => _buildAtlasFlatRowEl(r)));
-    const frag = document.createDocumentFragment();
-    els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(prev.end + i); frag.appendChild(rowEl); } });
-    v.bottomSpacer.before(frag);
-  }
-  v.topSpacer.style.height = `${start * _atlasRowH}px`;
-  v.bottomSpacer.style.height = `${Math.max(0, (_atlasFlatRows.length - end) * _atlasRowH)}px`;
-  _atlasWindow = { start, end };
-}
+  },
+});
 
 function _onAtlasScroll() {
-  if (!_atlasVirtualOn || _atlasScrollRaf) return;
-  _atlasScrollRaf = requestAnimationFrame(() => {
-    _atlasScrollRaf = null;
-    _sliceAtlasWindow();
+  if (!_atlasVirtualOn || _vsegScrollRaf) return;
+  _vsegScrollRaf = requestAnimationFrame(() => {
+    _vsegScrollRaf = null;
+    for (const seg of _virtualSegments) seg.slice();
   });
 }
 
@@ -759,14 +773,14 @@ function _resolveFlatDropTarget(rows, insertIndex) {
 
 /** onEnd handler for the flat-mode Sortable: maps the DOM drop position back to the flat model. */
 function _handleFlatAtlasDrop(evt) {
-  const v = _atlasVirtualEls;
+  const v = _atlasSeg.els;
   if (!v) return;
   recordState();
 
   const item = evt.item;
   const draggedId = item.dataset.fid || item.dataset.folderId || item.dataset.mapId;
   if (!draggedId) { render({ full: true }); return; }
-  const draggedFlatIdx = _atlasFlatRows.findIndex(r =>
+  const draggedFlatIdx = _atlasSeg.rows.findIndex(r =>
     r.id === draggedId && (r.kind === 'feature' || r.kind === 'folder' || r.kind === 'map'));
 
   // DOM index of the dropped item among materialized rows (spacers excluded)
@@ -776,9 +790,9 @@ function _handleFlatAtlasDrop(evt) {
   if (!n || n === v.bottomSpacer) { render({ full: true }); return; }
 
   // Insertion index in "rows excluding the dragged row" coordinates.
-  const rowsExcl = draggedFlatIdx >= 0 ? _atlasFlatRows.filter((r, i) => i !== draggedFlatIdx) : _atlasFlatRows;
-  const startExcl = (draggedFlatIdx !== -1 && draggedFlatIdx < _atlasWindow.start)
-    ? _atlasWindow.start - 1 : _atlasWindow.start;
+  const rowsExcl = draggedFlatIdx >= 0 ? _atlasSeg.rows.filter((r, i) => i !== draggedFlatIdx) : _atlasSeg.rows;
+  const startExcl = (draggedFlatIdx !== -1 && draggedFlatIdx < _atlasSeg.window.start)
+    ? _atlasSeg.window.start - 1 : _atlasSeg.window.start;
   let { mapId, folderId } = _resolveFlatDropTarget(rowsExcl, startExcl + domIdx);
 
   // Cycle guard (legacy parity): a map dropped into its own descendant retargets to the active map.
@@ -1300,7 +1314,7 @@ async function _refreshAtlasTreeNow() {
   _atlasVirtualOn = loadLS('atlasVirtualTree', true);
   if (_atlasVirtualOn) {
     // Phase M: windowed flat-row renderer — DOM capped by viewport, not world size.
-    await _renderAtlasVirtualSegment(container, treeContainer, ctx);
+    _atlasSeg.setup(container, treeContainer, _computeAtlasFlatRows(ctx));
   } else {
     // Legacy nested renderer (kill switch: saveLS('atlasVirtualTree', false)).
     await _buildAtlasLevel(ctx, null, treeContainer);
@@ -1356,7 +1370,7 @@ async function _refreshAtlasTreeNow() {
   await refreshEncyclopediaView(); // populate the inline lore section
   await refreshSessionsView();    // populate the GM-only sessions section
   container.scrollTop = oldScrollTop; // after lore/sessions land, so full height exists
-  if (_atlasVirtualOn) await _sliceAtlasWindow(true); // first slice: geometry is now live
+  if (_atlasVirtualOn) await _atlasSeg.slice(true); // first slice: geometry is now live
 } catch (e) {
   console.error("Atlas Refresh failed", e);
 }

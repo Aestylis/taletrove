@@ -47,7 +47,7 @@ test.describe('Phase M — virtual atlas tree', () => {
       const tc = document.querySelector('#atlasTreeContainer');
       const materialized = tc.querySelectorAll('.tree-row').length;
       const spacers = tc.querySelectorAll('.atlas-vspacer').length;
-      const flatTotal = _atlasFlatRows.length;
+      const flatTotal = _atlasSeg.rows.length;
 
       // (e1) visibility toggle patches a flat row in place
       const visTarget = document.querySelector('.feature-row[data-fid] .row-vis-btn');
@@ -70,7 +70,7 @@ test.describe('Phase M — virtual atlas tree', () => {
       const container = document.querySelector('#atlasView');
       tc.querySelector('.atlas-vspacer-bottom').scrollIntoView(false);
       await new Promise(res => setTimeout(res, 200)); // rAF slice
-      const lastId = _atlasFlatRows[_atlasFlatRows.length - 1].id;
+      const lastId = _atlasSeg.rows[_atlasSeg.rows.length - 1].id;
       const lastRowPresent = !!document.querySelector(`[data-fid="${lastId}"], [data-map-id="${lastId}"], [data-folder-id="${lastId}"], [data-entry-id="${lastId}"]`);
       const boundedAfterScroll = tc.querySelectorAll('.tree-row').length < 200;
       container.scrollTop = 0;
