@@ -64,10 +64,11 @@ test.describe('WS3 — incremental row render', () => {
       typeof state !== 'undefined' && state.features && state.features.length >= 3);
 
     // The boot-time render({full:true}) (navigateToMap's 200ms finally-timer, stretched under
-    // parallel-suite load) races us in two ways: refreshAtlasTree() has a reentrancy guard
-    // (panels.js `isAtlasRefreshing`) that silently DROPS concurrent calls, and a rebuild wipes
-    // the tree synchronously (`container.innerHTML = ''`) before repopulating it across awaits.
-    // So a single blind refresh can no-op, and a found row can vanish before the next evaluate.
+    // parallel-suite load) can race us: a rebuild wipes the tree synchronously
+    // (`container.innerHTML = ''`) before repopulating it across awaits, so a found row can
+    // vanish between two evaluates. (refreshAtlasTree also used to DROP concurrent calls;
+    // it coalesces since 0.6.41 — see atlas-refresh-coalesce.spec.js — but the atomicity
+    // here still matters for the wipe race.)
     // Fix: do the whole attempt (expand → refresh → sentinel → toggle → verify) in ONE evaluate.
     // Once the row is found, everything after is synchronous — atomic within one JS task — and
     // the toggle only ever runs on the attempt that finds the row, so retries never double-toggle.

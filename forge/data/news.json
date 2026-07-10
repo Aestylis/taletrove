@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-41",
+    "date": "2026-07-10",
+    "title": "Alpha 6.41: World Panel Refresh Reliability",
+    "tags": [
+      "Fix"
+    ],
+    "summary": "World-panel refreshes requested while another refresh was still running were silently skipped, occasionally leaving the tree stale (e.g. a just-created pin not appearing) until the next unrelated update. Overlapping refreshes are now queued and merged.",
+    "content": "<h4>The world panel always catches up</h4><p>Internally, rebuilding the left-hand world tree guarded against overlapping runs by simply ignoring any refresh requested while one was already in progress. Under the right timing — typically right after switching maps or importing — that ignored request meant a change (like a newly created pin or a renamed folder) would not show up in the panel until something else happened to refresh it. Overlapping refresh requests are now coalesced: the extra request is queued, runs once the current rebuild finishes, and re-reads the latest state, so the panel always ends up reflecting your most recent change.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-40",
     "date": "2026-07-10",
     "title": "Alpha 6.40: Cleanup & Snappier Search",

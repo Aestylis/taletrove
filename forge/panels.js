@@ -182,7 +182,8 @@ function updateRowVisibility(id, type) {
 }
 window.updateRowVisibility = updateRowVisibility;
 
-let isAtlasRefreshing = false;
+let _atlasRefreshRunning = null;   // promise of the in-flight rebuild
+let _atlasRefreshTrailing = null;  // promise of the single coalesced rerun
 let _atlasScrollHandler = null;
 let activeTags = new Set();  // currently selected tag filters
 let tagMatchMode = 'any';    // 'any' | 'all'
@@ -210,9 +211,27 @@ function _closeSectionPopover() {
 }
 document.addEventListener('click', _closeSectionPopover);
 async function refreshAtlasTree() {
-  if (isAtlasRefreshing) return;
-  isAtlasRefreshing = true;
+  // Coalesce concurrent calls instead of dropping them: a call made while a rebuild is in
+  // flight gets one shared trailing rerun (which re-reads state), and the returned promise
+  // resolves only once the tree actually reflects the state at call time.
+  if (_atlasRefreshRunning) {
+    if (!_atlasRefreshTrailing) {
+      _atlasRefreshTrailing = _atlasRefreshRunning.then(() => {
+        _atlasRefreshTrailing = null;
+        return refreshAtlasTree();
+      });
+    }
+    return _atlasRefreshTrailing;
+  }
+  _atlasRefreshRunning = _refreshAtlasTreeNow();
+  try {
+    return await _atlasRefreshRunning;
+  } finally {
+    _atlasRefreshRunning = null;
+  }
+}
 
+async function _refreshAtlasTreeNow() {
   // Safety: clean up any scroll listeners that may have leaked if a drag was
   // interrupted by navigation (onEnd never fires when the tree is rebuilt mid-drag).
   _detachDragScroll();
@@ -856,13 +875,11 @@ async function refreshAtlasTree() {
   // Sync search button active state (onclick is owned by setupPrimaryPanelTabs)
   syncPanelSearchBtn();
 
-  isAtlasRefreshing = false;
   await refreshEncyclopediaView(); // populate the inline lore section
   await refreshSessionsView();    // populate the GM-only sessions section
   container.scrollTop = oldScrollTop; // after lore/sessions land, so full height exists
 } catch (e) {
   console.error("Atlas Refresh failed", e);
-  isAtlasRefreshing = false;
 }
 }
 
