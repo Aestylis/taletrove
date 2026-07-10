@@ -413,6 +413,814 @@ function buildCoaBlock(article, silo, form) {
   }
 }
 
+// The _build*Section helpers below each render one guarded section of the properties inspector
+// into `form`. Guards live at the call sites in buildArticlePropertiesInspector, so every helper
+// may assume its precondition (silo/geometry/type) already holds.
+
+function _buildEncTypeField(article, form) {
+  form.append(
+    el('label', { class: 'form-label', for: 'enc-type-input', text: 'Type' }),
+    el('input', {
+      id: 'enc-type-input',
+      type: 'text', value: article.type,
+      placeholder: 'e.g., Character, Item, Event...',
+      list: 'encyclopediaTypes',
+      onfocus: (e) => {
+        recordState();
+        e.target.select();
+      },
+      oninput: async (e) => {
+        const oldType = (article.type || '').toLowerCase();
+        const newType = e.target.value;
+        article.type = newType;
+
+        const wasSpecial = oldType === 'event' || oldType === 'character' || oldType === 'session';
+        const isSpecial = newType.toLowerCase() === 'event' || newType.toLowerCase() === 'character' || newType.toLowerCase() === 'session';
+
+        if (wasSpecial !== isSpecial || (isSpecial && oldType !== newType.toLowerCase())) {
+          const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
+        }
+        markEntityDirty('article', article.id);
+        debouncedRefreshEncyclopediaView();
+        await updateHeroTitle(article);
+        debouncedSave();
+      },
+      onchange: async (e) => {
+        article.type = e.target.value.trim();
+        markEntityDirty('article', article.id);
+        debouncedRefreshEncyclopediaView();
+        await updateHeroTitle(article);
+        debouncedSave();
+      }
+    })
+  );
+}
+
+function _buildMapPinRemovalSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  const mapPinLabel = el('div', { class: 'form-label', text: 'Map Pin' });
+  const removeFromMapBtn = el('button', {
+    class: 'ghost small danger',
+    text: 'Remove from map',
+    title: 'Remove the map pin without deleting this entry',
+    onclick: () => {
+      showConfirmationModal(
+        'Remove from map?',
+        `This will remove the map pin for "${escapeHtml(article.name)}" but keep the encyclopedia entry.`,
+        'Remove',
+        () => {
+          recordState();
+          delete article.mapId;
+          delete article.geojson;
+          delete article.geometry;
+          markEntityDirty('article', article.id);
+          window.exitPeekMode?.();
+          render({ full: true });
+          debouncedSave();
+          refreshEncyclopediaView?.();
+          refreshAtlasTree?.();
+          showToast(`Pin for "${article.name}" removed.`);
+        }
+      );
+    }
+  });
+  form.appendChild(el('div', { class: 'full-width' }, [mapPinLabel, removeFromMapBtn]));
+}
+
+function _buildTextContentField(article, form) {
+  form.append(
+    el('label', { class: 'form-label', for: 'textContentIn', text: 'Text Label' }),
+    el('input', {
+      id: 'textContentIn',
+      type: 'text',
+      value: article.text || '',
+      onchange: (e) => {
+        recordState();
+        article.text = e.target.value;
+        article.title = article.text;
+        markEntityDirty('article', article.id);
+        updateSingleFeatureUI(article);
+        debouncedSave();
+      }
+    })
+  );
+}
+
+function _buildPolygonStyleSection(article, taxonomyItem, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+
+  const opacitySlider = el('input', {
+    id: 'areaOpacityIn',
+    type: 'range',
+    min: 0,
+    max: 1,
+    step: 0.05,
+    value: article.fillOpacity ?? taxonomyItem.fillOpacity ?? DEFAULT_GEOMETRY_STYLES.polygon.fillOpacity
+  });
+
+  opacitySlider.oninput = (e) => {
+    const newOpacity = parseFloat(e.target.value);
+    article.fillOpacity = newOpacity;
+    const layer = layerById.get(article.id);
+    if (layer && layer.setStyle) {
+      layer.setStyle({ fillOpacity: newOpacity });
+    }
+  };
+
+  opacitySlider.onchange = (e) => {
+    recordState();
+    article.fillOpacity = parseFloat(e.target.value);
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  opacitySlider.onfocus = () => recordState();
+
+  const areaColorInput = el('input', {
+    id: 'areaColorIn',
+    type: 'color',
+    value: article.color || taxonomyItem.color || '#3388ff',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.color = e.target.value;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const lineWidthInput = el('input', {
+    id: 'lineWidthIn',
+    type: 'number', min: 1, max: 20,
+    value: article.weight || taxonomyItem.weight || 2,
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.weight = parseFloat(e.target.value) || 2;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const showLabelSwitch = createSwitch('showLabelChk', !!article.showLabel, (e) => {
+    recordState();
+    article.showLabel = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  });
+
+  form.append(
+    el('label', { class: 'form-label', for: 'areaColorIn', text: 'Fill Color' }),
+    areaColorInput,
+    el('div', { class: 'form-label', text: 'Fill Opacity' }),
+    opacitySlider,
+    el('label', { class: 'form-label', for: 'lineWidthIn', text: 'Border Width' }),
+    lineWidthInput,
+    el('div', { class: 'form-label', text: 'Border Style' }),
+    buildDashStyleSeg(article.dashArray, (val) => {
+      recordState();
+      article.dashArray = val || null;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }),
+    el('label', { class: 'form-label', for: 'showLabelChk', text: 'Show Label' }),
+    showLabelSwitch
+  );
+
+  buildCoaBlock(article, 'feature', form);
+}
+
+function _buildTerritoryCoaSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  buildCoaBlock(article, 'encyclopedia', form);
+
+  const linkedPolygon = state.features.find(f =>
+    (f.links || []).some(l => l.targetId === article.id && l.linkType === 'territory') &&
+    f.geometry === 'polygon' && (f.coatOfArms || f.coatOfArmsKey)
+  );
+  if (linkedPolygon) {
+    form.appendChild(el('hr', { class: 'form-divider' }));
+    const coaPreview = el('div', { class: 'coa-preview is-inherited' });
+
+    if (linkedPolygon.coatOfArmsKey) {
+      resolveImageUrl(linkedPolygon.coatOfArmsKey).then(url => {
+        if (url && coaPreview.isConnected) {
+          coaPreview.style.backgroundImage = `url('${url}')`;
+          coaPreview.classList.add('has-image');
+        }
+      }).catch(() => {});
+    } else if (linkedPolygon.coatOfArms && window.generateCoatOfArms) {
+      const coaSeed = linkedPolygon.coatOfArms.seed || linkedPolygon.id;
+      window.generateCoatOfArms(coaSeed, { shield: linkedPolygon.coatOfArms.shield || 'heater', size: 256 }).then(coaUrl => {
+        coaPreview.innerHTML = `<img src="${coaUrl}" alt="Coat of Arms Preview">`;
+        coaPreview.classList.add('has-svg');
+      }).catch(() => {});
+    }
+
+    const editOnTerritoryBtn = el('button', { class: 'ghost small', text: 'Edit on Territory' });
+    editOnTerritoryBtn.onclick = () => window.navigateAndPeek?.(linkedPolygon.id, 'feature');
+
+    form.append(
+      el('div', { class: 'form-label', text: 'Territory Coat of Arms' }),
+      coaPreview,
+      el('div', { class: 'coa-btn-row' }, [
+        editOnTerritoryBtn,
+        el('span', { class: 'coa-inherited-label muted', text: `From ${linkedPolygon.title || 'linked territory'}` })
+      ])
+    );
+  }
+}
+
+function _buildPolylineStyleSection(article, taxonomyItem, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+
+  const lineColorInput = el('input', {
+    id: 'lineColorIn',
+    type: 'color',
+    value: article.color || taxonomyItem.color || '#3388ff',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.color = e.target.value;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const lineWidthInput = el('input', {
+    id: 'lineWidthIn',
+    type: 'number', min: 1, max: 20,
+    value: article.weight || taxonomyItem.weight || 3,
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.weight = parseFloat(e.target.value);
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const showLabelSwitch = createSwitch('showLabelChk', !!article.showLabel, (e) => {
+    recordState();
+    article.showLabel = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  });
+
+  form.append(
+    el('label', { class: 'form-label', for: 'lineColorIn', text: 'Line Color' }),
+    lineColorInput,
+    el('label', { class: 'form-label', for: 'lineWidthIn', text: 'Line Width' }),
+    lineWidthInput,
+    el('div', { class: 'form-label', text: 'Smoothing' }),
+    buildSmoothingSeg(article.smooth, (val) => {
+      recordState();
+      article.smooth = val;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }),
+    el('div', { class: 'form-label', text: 'Line Style' }),
+    buildDashStyleSeg(article.dashArray, (val) => {
+      recordState();
+      article.dashArray = val || null;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }),
+    el('label', { class: 'form-label', for: 'showLabelChk', text: 'Show Label' }),
+    showLabelSwitch
+  );
+}
+
+function _buildTextStyleSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  const fontOptions = commonFonts.map(font => el('option', { value: font.stack, text: font.name, ...(article.fontFamily === font.stack ? { selected: true } : {}) }));
+
+  const fontSizeInput = el('input', {
+    id: 'fontSizeIn', type: 'number', min: 8, max: 128,
+    value: article.fontSize || 16,
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.fontSize = parseInt(e.target.value, 10) || 16;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const fontColorInput = el('input', {
+    id: 'fontColorIn', type: 'color',
+    value: article.fontColor || '#ffffff',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.fontColor = e.target.value;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const fontFamilySel = el('select', { id: 'fontFamilySel' }, fontOptions);
+  fontFamilySel.onfocus = () => recordState();
+  fontFamilySel.onchange = (e) => {
+    article.fontFamily = e.target.value;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  const boldChk = el('input', { id: 'boldChk', type: 'checkbox', ...(article.bold ? { checked: true } : {}) });
+  boldChk.onchange = (e) => {
+    recordState();
+    article.bold = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  const italicChk = el('input', { id: 'italicChk', type: 'checkbox', ...(article.italic ? { checked: true } : {}) });
+  italicChk.onchange = (e) => {
+    recordState();
+    article.italic = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  const underlineChk = el('input', { id: 'underlineChk', type: 'checkbox', ...(article.underline ? { checked: true } : {}) });
+  underlineChk.onchange = (e) => {
+    recordState();
+    article.underline = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  const textLabelStyleSeg = buildLabelStyleSeg(article.labelStyle, (val) => {
+    recordState();
+    article.labelStyle = val;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  });
+
+  const applyAngle = (deg) => {
+    deg = Math.max(-180, Math.min(180, deg));
+    article.angle = deg;
+    angleSlider.value = deg;
+    angleNumIn.value = deg;
+    updateSingleFeatureUI(article);
+  };
+
+  const angleSlider = el('input', {
+    id: 'textAngleIn', type: 'range', min: -180, max: 180, step: 1,
+    value: article.angle ?? 0
+  });
+  const angleNumIn = el('input', {
+    type: 'number', min: -180, max: 180, step: 1,
+    value: article.angle ?? 0,
+    style: 'width:4rem;text-align:center;'
+  });
+  const angleResetBtn = el('button', { class: 'ghost small', text: '↺', 'data-tooltip': 'Reset to 0°' });
+
+  angleSlider.oninput = (e) => applyAngle(parseInt(e.target.value, 10));
+  angleSlider.onchange = (e) => {
+    recordState();
+    article.angle = parseInt(e.target.value, 10);
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  };
+  angleSlider.onfocus = () => recordState();
+
+  angleNumIn.oninput = (e) => applyAngle(parseInt(e.target.value, 10) || 0);
+  angleNumIn.onchange = (e) => {
+    recordState();
+    applyAngle(parseInt(e.target.value, 10) || 0);
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  };
+  angleNumIn.onfocus = () => recordState();
+
+  angleResetBtn.addEventListener('click', () => {
+    recordState();
+    applyAngle(0);
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  });
+
+  form.append(
+    el('label', { class: 'form-label', for: 'fontSizeIn', text: 'Font Size' }),
+    fontSizeInput,
+    el('label', { class: 'form-label', for: 'fontColorIn', text: 'Font Color' }),
+    fontColorInput,
+    el('label', { class: 'form-label', for: 'fontFamilySel', text: 'Font Family' }),
+    fontFamilySel,
+    el('div', { class: 'form-label', text: 'Font Style' }),
+    el('div', { class: 'inline' }, [
+      el('label', { class: 'inline' }, [boldChk, el('span', { text: 'Bold' })]),
+      el('label', { class: 'inline' }, [italicChk, el('span', { text: 'Italic' })]),
+      el('label', { class: 'inline' }, [underlineChk, el('span', { text: 'Underline' })])
+    ]),
+    el('div', { class: 'form-label', text: 'Label Style' }),
+    textLabelStyleSeg,
+    el('div', { class: 'form-label full-width', style: 'display:flex;justify-content:space-between;align-items:center;gap:0.5rem;' }, [
+      el('span', { text: 'Rotation' }),
+      el('div', { style: 'display:flex;align-items:center;gap:0.25rem;' }, [angleNumIn, angleResetBtn])
+    ]),
+    angleSlider
+  );
+}
+
+function _buildFeatureLabelSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+
+  const labelColorInput = el('input', {
+    id: 'labelColorIn', type: 'color',
+    value: article.labelColor || '#ffffff',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.labelColor = e.target.value;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const labelBoldChk = el('input', {
+    id: 'labelBoldChk', type: 'checkbox',
+    ...(article.labelBold ? { checked: true } : {})
+  });
+  labelBoldChk.onchange = (e) => {
+    recordState();
+    article.labelBold = e.target.checked;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  };
+
+  const labelSizeInput = el('input', {
+    id: 'labelSizeIn', type: 'number', min: 8, max: 72,
+    value: article.labelSize || 12,
+    style: 'width: 60px;',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.labelSize = parseInt(e.target.value, 10) || 12;
+      markEntityDirty('article', article.id);
+      updateSingleFeatureUI(article);
+      debouncedSave();
+    }
+  });
+
+  const labelStyleSeg = buildLabelStyleSeg(article.labelStyle, (val) => {
+    recordState();
+    article.labelStyle = val;
+    markEntityDirty('article', article.id);
+    updateSingleFeatureUI(article);
+    debouncedSave();
+  });
+
+  form.append(
+    el('div', { class: 'form-label', text: 'Label Style' }),
+    el('div', { class: 'inline' }, [
+      labelColorInput,
+      el('label', { class: 'inline' }, [labelBoldChk, el('span', { text: 'Bold' })]),
+      el('span', { text: 'Size', class: 'muted', style: 'margin-left: 0.5rem;' }),
+      labelSizeInput,
+      labelStyleSeg
+    ])
+  );
+}
+
+async function _buildEventPropertiesSection(article, form) {
+  article.eventData = article.eventData || {};
+  const colorValue = article.eventData?.color || '#ff3ea5';
+  const colorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(colorValue)}` });
+  const colorName = el('span', { text: 'Event Color' });
+  const colorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.color = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [colorSwatch, colorName]);
+  const textColorValue = article.eventData?.textColor || '#e8e9eb';
+  const textColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(textColorValue)}` });
+  const textColorName = el('span', { text: 'Text Color' });
+  const textColorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.textColor = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [textColorSwatch, textColorName]);
+  form.appendChild(el('div', { class: 'full-width two' }, [colorBtn, textColorBtn]));
+
+  form.appendChild(el('hr', { class: 'form-divider' }));
+
+  const startPicker = buildDatePicker(article.eventData, (key, val) => {
+    recordState();
+    article.eventData[key] = val;
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  }, { label: 'Event Date' });
+
+  const endData = {
+    year: article.eventData.endYear,
+    era: article.eventData.endEra,
+    month: article.eventData.endMonth,
+    day: article.eventData.endDay
+  };
+  const endPicker = buildDatePicker(endData, (key, val) => {
+    recordState();
+    if (key === 'clear') {
+      article.eventData.endYear = article.eventData.endEra = article.eventData.endMonth = article.eventData.endDay = null;
+    } else {
+      const map = { year: 'endYear', era: 'endEra', month: 'endMonth', day: 'endDay' };
+      article.eventData[map[key]] = val;
+    }
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  }, { label: 'End Date (Optional)', showClear: true });
+
+  form.append(startPicker, endPicker);
+
+  const recurrenceControls = el('div', { class: 'recurrence-controls' });
+  const updateRecurrenceUI = () => {
+    recurrenceControls.innerHTML = '';
+    const rec = article.eventData.recurrence;
+    if (!rec) return;
+
+    if (rec.type === 'annual_relative') {
+      const weekSelect = el('select', {}, [
+        el('option', { value: '1', text: '1st' }),
+        el('option', { value: '2', text: '2nd' }),
+        el('option', { value: '3', text: '3rd' }),
+        el('option', { value: '4', text: '4th' }),
+        el('option', { value: 'last', text: 'Last' })
+      ]);
+      weekSelect.value = rec.week || '1';
+
+      const weekdaySelect = el('select');
+      if (settings.donjonCalendar?.weekdays) {
+        settings.donjonCalendar.weekdays.forEach(wd => {
+          weekdaySelect.append(el('option', { value: wd, text: wd }));
+        });
+      }
+      weekdaySelect.value = rec.weekday || (settings.donjonCalendar?.weekdays?.[0] || '');
+
+      weekSelect.onchange = weekdaySelect.onchange = () => {
+        recordState();
+        rec.week = weekSelect.value === 'last' ? -1 : parseInt(weekSelect.value, 10);
+        rec.weekday = weekdaySelect.value;
+        debouncedSave();
+      };
+
+      recurrenceControls.append(
+        el('div', { class: 'form-label', text: 'On the...' }),
+        el('div', { class: 'recurrence-grid' }, [weekSelect, weekdaySelect])
+      );
+    } else if (rec.type === 'lunar') {
+      const moonSelect = el('select');
+      if (settings.donjonCalendar?.moons) {
+        settings.donjonCalendar.moons.forEach(m => {
+          moonSelect.append(el('option', { value: m, text: m }));
+        });
+      }
+      moonSelect.value = rec.moon || (settings.donjonCalendar?.moons?.[0] || '');
+
+      const phaseSelect = el('select', {}, [
+        el('option', { value: '0', text: 'New Moon' }),
+        el('option', { value: '0.25', text: 'First Quarter' }),
+        el('option', { value: '0.5', text: 'Full Moon' }),
+        el('option', { value: '0.75', text: 'Last Quarter' })
+      ]);
+      phaseSelect.value = rec.phase !== undefined ? rec.phase.toString() : '0.5';
+
+      moonSelect.onchange = phaseSelect.onchange = () => {
+        recordState();
+        rec.moon = moonSelect.value;
+        rec.phase = parseFloat(phaseSelect.value);
+        debouncedSave();
+      };
+
+      recurrenceControls.append(
+        el('div', { class: 'form-label', text: 'Based on...' }),
+        el('div', { class: 'recurrence-grid' }, [moonSelect, phaseSelect])
+      );
+    }
+  };
+
+  const recTypeSelect = el('select', { class: 'recurrence-type-select' }, [
+    el('option', { value: '', text: 'No Recurrence' }),
+    el('option', { value: 'annual_date', text: 'Repeats Annually (Same Date)' }),
+    el('option', { value: 'annual_relative', text: 'Repeats Annually (Relative)' }),
+    el('option', { value: 'lunar', text: 'Repeats Every Lunar Cycle' })
+  ]);
+  recTypeSelect.value = article.eventData.recurrence?.type || '';
+  recTypeSelect.onchange = () => {
+    recordState();
+    const type = recTypeSelect.value;
+    if (!type) {
+      delete article.eventData.recurrence;
+    } else {
+      article.eventData.recurrence = { type };
+      if (type === 'annual_relative') {
+        article.eventData.recurrence.week = 1;
+        article.eventData.recurrence.weekday = settings.donjonCalendar?.weekdays?.[0] || '';
+      } else if (type === 'lunar') {
+        article.eventData.recurrence.moon = settings.donjonCalendar?.moons?.[0] || '';
+        article.eventData.recurrence.phase = 0.5;
+      }
+    }
+    updateRecurrenceUI();
+    debouncedSave();
+  };
+
+  updateRecurrenceUI();
+  form.append(el('div', { class: 'form-label form-label--mt', text: 'Recurrence' }), recTypeSelect, recurrenceControls);
+
+  // Participants
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  await buildParticipantsSection(article, form);
+}
+
+function _buildCharacterPropertiesSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  article.birthData = article.birthData || {};
+  const birthLabel = el('div', { class: 'form-label full-width', text: 'Birthday' });
+
+  const birthYearInput = el('input', { type: 'number', placeholder: 'Year', value: article.birthData.year || '' });
+  const birthEraSelect = el('select');
+  const birthMonthSelect = el('select');
+  const birthDaySelect = el('select');
+
+  if (settings.donjonCalendar?.eras) {
+    const sortedEras = [...settings.donjonCalendar.eras].sort((a, b) => a.startYear - b.startYear);
+    sortedEras.forEach(era => birthEraSelect.append(el('option', { value: era.name, text: era.name })));
+    if (article.birthData.era) birthEraSelect.value = article.birthData.era;
+  }
+  if (settings.donjonCalendar?.months) {
+    birthMonthSelect.append(el('option', { value: '', text: 'Month' }), ...settings.donjonCalendar.months.map(m => el('option', { value: m, text: m, title: m })));
+    if (article.birthData.month) birthMonthSelect.value = article.birthData.month;
+  }
+  populateDayDropdown(birthDaySelect, article.birthData.month, article.birthData.day);
+
+  const birthDateGroup = el('div', { class: 'event-date-group event-date-group--char' });
+  birthDateGroup.append(
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Year' }), birthYearInput]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Era' }), birthEraSelect]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Month' }), birthMonthSelect]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Day' }), birthDaySelect])
+  );
+
+  const updateBirthData = () => {
+    recordState();
+    article.birthData.year = parseInt(birthYearInput.value, 10) || null;
+    article.birthData.era = birthEraSelect.value || null;
+    article.birthData.month = birthMonthSelect.value || null;
+    article.birthData.day = parseInt(birthDaySelect.value, 10) || null;
+    debouncedSave();
+    const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
+  };
+  [birthYearInput, birthEraSelect, birthDaySelect].forEach(el => el.onchange = updateBirthData);
+  birthMonthSelect.onchange = () => { populateDayDropdown(birthDaySelect, birthMonthSelect.value, article.birthData.day); updateBirthData(); };
+  form.append(birthLabel, birthDateGroup);
+
+  article.deathData = article.deathData || {};
+  const deathLabel = el('div', { class: 'form-label form-label--mt full-width', text: 'Date of Death' });
+
+  const deathYearInput = el('input', { type: 'number', placeholder: 'Year', value: article.deathData.year || '' });
+  const deathEraSelect = el('select');
+  const deathMonthSelect = el('select');
+  const deathDaySelect = el('select');
+
+  if (settings.donjonCalendar?.eras) {
+    const sortedEras = [...settings.donjonCalendar.eras].sort((a, b) => a.startYear - b.startYear);
+    sortedEras.forEach(era => deathEraSelect.append(el('option', { value: era.name, text: era.name })));
+    if (article.deathData.era) deathEraSelect.value = article.deathData.era;
+  }
+  if (settings.donjonCalendar?.months) {
+    deathMonthSelect.append(el('option', { value: '', text: 'Month' }), ...settings.donjonCalendar.months.map(m => el('option', { value: m, text: m, title: m })));
+    if (article.deathData.month) deathMonthSelect.value = article.deathData.month;
+  }
+  populateDayDropdown(deathDaySelect, article.deathData.month, article.deathData.day);
+
+  const deathDateGroup = el('div', { class: 'event-date-group event-date-group--char' });
+  deathDateGroup.append(
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Year' }), deathYearInput]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Era' }), deathEraSelect]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Month' }), deathMonthSelect]),
+    el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Day' }), deathDaySelect])
+  );
+
+  const updateDeathData = () => {
+    recordState();
+    article.deathData.year = parseInt(deathYearInput.value, 10) || null;
+    article.deathData.era = deathEraSelect.value || null;
+    article.deathData.month = deathMonthSelect.value || null;
+    article.deathData.day = parseInt(deathDaySelect.value, 10) || null;
+    debouncedSave();
+    const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
+  };
+  [deathYearInput, deathEraSelect, deathDaySelect].forEach(el => el.onchange = updateDeathData);
+  deathMonthSelect.onchange = () => { populateDayDropdown(deathDaySelect, deathMonthSelect.value, article.deathData.day); updateDeathData(); };
+  form.append(deathLabel, deathDateGroup);
+
+  if (article.birthData.year) {
+    let age;
+    let ageLabelText = 'Current Age';
+    const birthYear = article.birthData.year;
+    const deathYear = article.deathData?.year;
+    const currentYear = settings.currentDate?.year;
+    if (deathYear) {
+      ageLabelText = 'Age at Death';
+      age = deathYear - birthYear;
+      if (article.birthData.month && article.deathData.month) {
+        const birthMonthIndex = settings.donjonCalendar.months.indexOf(article.birthData.month);
+        const deathMonthIndex = settings.donjonCalendar.months.indexOf(article.deathData.month);
+        if (deathMonthIndex < birthMonthIndex || (deathMonthIndex === birthMonthIndex && article.deathData.day < article.birthData.day)) {
+          age--;
+        }
+      }
+    } else if (currentYear) {
+      age = currentYear - birthYear;
+      if (article.birthData.month && settings.currentDate.month) {
+        const currentMonthIndex = settings.donjonCalendar.months.indexOf(settings.currentDate.month);
+        const birthMonthIndex = settings.donjonCalendar.months.indexOf(article.birthData.month);
+        if (currentMonthIndex < birthMonthIndex || (currentMonthIndex === birthMonthIndex && settings.currentDate.day < article.birthData.day)) {
+          age--;
+        }
+      }
+    }
+    if (age !== undefined && age >= 0) {
+      const ageDisplay = el('div', { class: 'infobox-row' }, [
+        el('span', { class: 'infobox-label', text: ageLabelText }),
+        el('span', { class: 'infobox-value', text: `${age}` })
+      ]);
+      form.appendChild(ageDisplay);
+    }
+  }
+
+  // Family tree button
+  const hasFamilyLinks = (article.links || []).some(l => l.linkType === 'family');
+  if (hasFamilyLinks) {
+    form.appendChild(el('hr', { class: 'form-divider' }));
+    const ftBtn = el('button', { class: 'ghost small full-width', text: 'View Family Tree' });
+    ftBtn.addEventListener('click', () => window.openFamilyTree?.(article.id));
+    form.appendChild(ftBtn);
+  }
+}
+
+function _buildSessionPropertiesSection(article, form) {
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  article.sessionData = article.sessionData || {};
+
+  // Session number
+  const sessionNumInput = el('input', {
+    type: 'number', min: '1', placeholder: 'e.g. 1',
+    value: article.sessionData.number != null ? article.sessionData.number : '',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.sessionData.number = parseInt(e.target.value, 10) || null;
+      markEntityDirty('article', article.id);
+      window.refreshSessionsView?.();
+      debouncedSave();
+    }
+  });
+  form.append(el('label', { class: 'form-label', text: 'Session #' }), sessionNumInput);
+
+  // Real-world date
+  const realDateInput = el('input', {
+    type: 'date',
+    value: article.sessionData.realDate || '',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.sessionData.realDate = e.target.value;
+      markEntityDirty('article', article.id);
+      window.refreshSessionsView?.();
+      debouncedSave();
+    }
+  });
+  form.append(el('label', { class: 'form-label form-label--mt', text: 'Date Played' }), realDateInput);
+
+  // Players / participants
+  const playersInput = el('input', {
+    type: 'text', placeholder: 'e.g. Alice, Bob, Carol',
+    value: article.sessionData.participants || '',
+    onfocus: () => recordState(),
+    onchange: (e) => {
+      article.sessionData.participants = e.target.value.trim();
+      markEntityDirty('article', article.id);
+      debouncedSave();
+    }
+  });
+  form.append(el('label', { class: 'form-label form-label--mt', text: 'Players' }), playersInput);
+
+  // In-world date (reuse eventData so sessions appear in the timeline)
+  form.appendChild(el('hr', { class: 'form-divider' }));
+  article.eventData = article.eventData || {};
+  const inWorldPicker = buildDatePicker(article.eventData, (key, val) => {
+    recordState();
+    article.eventData[key] = val;
+    markEntityDirty('article', article.id);
+    debouncedSave();
+  }, { label: 'In-World Date' });
+  form.appendChild(inWorldPicker);
+}
+
 async function buildArticlePropertiesInspector(article, container, silo) {
   const form = el('div', { class: 'form' });
   container.appendChild(form);
@@ -423,44 +1231,7 @@ async function buildArticlePropertiesInspector(article, container, silo) {
   const isPoint = (silo === 'feature' && geometryType === 'point') ||
                   (silo === 'encyclopedia' && !!article.mapId);
 
-  if (silo === 'encyclopedia') {
-    form.append(
-      el('label', { class: 'form-label', for: 'enc-type-input', text: 'Type' }),
-      el('input', {
-        id: 'enc-type-input',
-        type: 'text', value: article.type,
-        placeholder: 'e.g., Character, Item, Event...',
-        list: 'encyclopediaTypes',
-        onfocus: (e) => {
-          recordState();
-          e.target.select();
-        },
-        oninput: async (e) => {
-          const oldType = (article.type || '').toLowerCase();
-          const newType = e.target.value;
-          article.type = newType;
-
-          const wasSpecial = oldType === 'event' || oldType === 'character' || oldType === 'session';
-          const isSpecial = newType.toLowerCase() === 'event' || newType.toLowerCase() === 'character' || newType.toLowerCase() === 'session';
-
-          if (wasSpecial !== isSpecial || (isSpecial && oldType !== newType.toLowerCase())) {
-            const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
-          }
-          markEntityDirty('article', article.id);
-          debouncedRefreshEncyclopediaView();
-          await updateHeroTitle(article);
-          debouncedSave();
-        },
-        onchange: async (e) => {
-          article.type = e.target.value.trim();
-          markEntityDirty('article', article.id);
-          debouncedRefreshEncyclopediaView();
-          await updateHeroTitle(article);
-          debouncedSave();
-        }
-      })
-    );
-  }
+  if (silo === 'encyclopedia') _buildEncTypeField(article, form);
 
   form.append(
     el('div', { class: 'form-label', text: 'Tags' }),
@@ -473,55 +1244,9 @@ async function buildArticlePropertiesInspector(article, container, silo) {
     form.appendChild(buildHeroImageSection(article, silo === 'feature'));
   }
 
-  if (silo === 'encyclopedia' && article.mapId && role === 'gm') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    const mapPinLabel = el('div', { class: 'form-label', text: 'Map Pin' });
-    const removeFromMapBtn = el('button', {
-      class: 'ghost small danger',
-      text: 'Remove from map',
-      title: 'Remove the map pin without deleting this entry',
-      onclick: () => {
-        showConfirmationModal(
-          'Remove from map?',
-          `This will remove the map pin for "${escapeHtml(article.name)}" but keep the encyclopedia entry.`,
-          'Remove',
-          () => {
-            recordState();
-            delete article.mapId;
-            delete article.geojson;
-            delete article.geometry;
-            markEntityDirty('article', article.id);
-            window.exitPeekMode?.();
-            render({ full: true });
-            debouncedSave();
-            refreshEncyclopediaView?.();
-            refreshAtlasTree?.();
-            showToast(`Pin for "${article.name}" removed.`);
-          }
-        );
-      }
-    });
-    form.appendChild(el('div', { class: 'full-width' }, [mapPinLabel, removeFromMapBtn]));
-  }
+  if (silo === 'encyclopedia' && article.mapId && role === 'gm') _buildMapPinRemovalSection(article, form);
 
-  if (silo === 'feature' && geometryType === 'text') {
-    form.append(
-      el('label', { class: 'form-label', for: 'textContentIn', text: 'Text Label' }),
-      el('input', {
-        id: 'textContentIn',
-        type: 'text',
-        value: article.text || '',
-        onchange: (e) => {
-          recordState();
-          article.text = e.target.value;
-          article.title = article.text;
-          markEntityDirty('article', article.id);
-          updateSingleFeatureUI(article);
-          debouncedSave();
-        }
-      })
-    );
-  }
+  if (silo === 'feature' && geometryType === 'text') _buildTextContentField(article, form);
 
   // Always shown for encyclopedia (icon picker used in list view even off-map).
   // Map-specific controls (size, shape, pin color) only shown when on a map.
@@ -534,719 +1259,26 @@ async function buildArticlePropertiesInspector(article, container, silo) {
     await buildLinkedMapsSection(article, form);
   }
 
-  if (silo === 'feature' && geometryType === 'polygon') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
+  if (silo === 'feature' && geometryType === 'polygon') _buildPolygonStyleSection(article, taxonomyItem, form);
 
-    const opacitySlider = el('input', {
-      id: 'areaOpacityIn',
-      type: 'range',
-      min: 0,
-      max: 1,
-      step: 0.05,
-      value: article.fillOpacity ?? taxonomyItem.fillOpacity ?? DEFAULT_GEOMETRY_STYLES.polygon.fillOpacity
-    });
+  if (silo === 'encyclopedia') _buildTerritoryCoaSection(article, form);
 
-    opacitySlider.oninput = (e) => {
-      const newOpacity = parseFloat(e.target.value);
-      article.fillOpacity = newOpacity;
-      const layer = layerById.get(article.id);
-      if (layer && layer.setStyle) {
-        layer.setStyle({ fillOpacity: newOpacity });
-      }
-    };
+  if (silo === 'feature' && geometryType === 'polyline') _buildPolylineStyleSection(article, taxonomyItem, form);
 
-    opacitySlider.onchange = (e) => {
-      recordState();
-      article.fillOpacity = parseFloat(e.target.value);
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
+  if (silo === 'feature' && geometryType === 'text') _buildTextStyleSection(article, form);
 
-    opacitySlider.onfocus = () => recordState();
-
-    const areaColorInput = el('input', {
-      id: 'areaColorIn',
-      type: 'color',
-      value: article.color || taxonomyItem.color || '#3388ff',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.color = e.target.value;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const lineWidthInput = el('input', {
-      id: 'lineWidthIn',
-      type: 'number', min: 1, max: 20,
-      value: article.weight || taxonomyItem.weight || 2,
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.weight = parseFloat(e.target.value) || 2;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const showLabelSwitch = createSwitch('showLabelChk', !!article.showLabel, (e) => {
-      recordState();
-      article.showLabel = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    });
-
-    form.append(
-      el('label', { class: 'form-label', for: 'areaColorIn', text: 'Fill Color' }),
-      areaColorInput,
-      el('div', { class: 'form-label', text: 'Fill Opacity' }),
-      opacitySlider,
-      el('label', { class: 'form-label', for: 'lineWidthIn', text: 'Border Width' }),
-      lineWidthInput,
-      el('div', { class: 'form-label', text: 'Border Style' }),
-      buildDashStyleSeg(article.dashArray, (val) => {
-        recordState();
-        article.dashArray = val || null;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }),
-      el('label', { class: 'form-label', for: 'showLabelChk', text: 'Show Label' }),
-      showLabelSwitch
-    );
-
-    buildCoaBlock(article, 'feature', form);
-  }
-
-  if (silo === 'encyclopedia') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    buildCoaBlock(article, 'encyclopedia', form);
-
-    const linkedPolygon = state.features.find(f =>
-      (f.links || []).some(l => l.targetId === article.id && l.linkType === 'territory') &&
-      f.geometry === 'polygon' && (f.coatOfArms || f.coatOfArmsKey)
-    );
-    if (linkedPolygon) {
-      form.appendChild(el('hr', { class: 'form-divider' }));
-      const coaPreview = el('div', { class: 'coa-preview is-inherited' });
-
-      if (linkedPolygon.coatOfArmsKey) {
-        resolveImageUrl(linkedPolygon.coatOfArmsKey).then(url => {
-          if (url && coaPreview.isConnected) {
-            coaPreview.style.backgroundImage = `url('${url}')`;
-            coaPreview.classList.add('has-image');
-          }
-        }).catch(() => {});
-      } else if (linkedPolygon.coatOfArms && window.generateCoatOfArms) {
-        const coaSeed = linkedPolygon.coatOfArms.seed || linkedPolygon.id;
-        window.generateCoatOfArms(coaSeed, { shield: linkedPolygon.coatOfArms.shield || 'heater', size: 256 }).then(coaUrl => {
-          coaPreview.innerHTML = `<img src="${coaUrl}" alt="Coat of Arms Preview">`;
-          coaPreview.classList.add('has-svg');
-        }).catch(() => {});
-      }
-
-      const editOnTerritoryBtn = el('button', { class: 'ghost small', text: 'Edit on Territory' });
-      editOnTerritoryBtn.onclick = () => window.navigateAndPeek?.(linkedPolygon.id, 'feature');
-
-      form.append(
-        el('div', { class: 'form-label', text: 'Territory Coat of Arms' }),
-        coaPreview,
-        el('div', { class: 'coa-btn-row' }, [
-          editOnTerritoryBtn,
-          el('span', { class: 'coa-inherited-label muted', text: `From ${linkedPolygon.title || 'linked territory'}` })
-        ])
-      );
-    }
-  }
-
-  if (silo === 'feature' && geometryType === 'polyline') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-
-    const lineColorInput = el('input', {
-      id: 'lineColorIn',
-      type: 'color',
-      value: article.color || taxonomyItem.color || '#3388ff',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.color = e.target.value;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const lineWidthInput = el('input', {
-      id: 'lineWidthIn',
-      type: 'number', min: 1, max: 20,
-      value: article.weight || taxonomyItem.weight || 3,
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.weight = parseFloat(e.target.value);
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const showLabelSwitch = createSwitch('showLabelChk', !!article.showLabel, (e) => {
-      recordState();
-      article.showLabel = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    });
-
-    form.append(
-      el('label', { class: 'form-label', for: 'lineColorIn', text: 'Line Color' }),
-      lineColorInput,
-      el('label', { class: 'form-label', for: 'lineWidthIn', text: 'Line Width' }),
-      lineWidthInput,
-      el('div', { class: 'form-label', text: 'Smoothing' }),
-      buildSmoothingSeg(article.smooth, (val) => {
-        recordState();
-        article.smooth = val;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }),
-      el('div', { class: 'form-label', text: 'Line Style' }),
-      buildDashStyleSeg(article.dashArray, (val) => {
-        recordState();
-        article.dashArray = val || null;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }),
-      el('label', { class: 'form-label', for: 'showLabelChk', text: 'Show Label' }),
-      showLabelSwitch
-    );
-  }
-
-  if (silo === 'feature' && geometryType === 'text') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    const fontOptions = commonFonts.map(font => el('option', { value: font.stack, text: font.name, ...(article.fontFamily === font.stack ? { selected: true } : {}) }));
-
-    const fontSizeInput = el('input', {
-      id: 'fontSizeIn', type: 'number', min: 8, max: 128,
-      value: article.fontSize || 16,
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.fontSize = parseInt(e.target.value, 10) || 16;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const fontColorInput = el('input', {
-      id: 'fontColorIn', type: 'color',
-      value: article.fontColor || '#ffffff',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.fontColor = e.target.value;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const fontFamilySel = el('select', { id: 'fontFamilySel' }, fontOptions);
-    fontFamilySel.onfocus = () => recordState();
-    fontFamilySel.onchange = (e) => {
-      article.fontFamily = e.target.value;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
-
-    const boldChk = el('input', { id: 'boldChk', type: 'checkbox', ...(article.bold ? { checked: true } : {}) });
-    boldChk.onchange = (e) => {
-      recordState();
-      article.bold = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
-
-    const italicChk = el('input', { id: 'italicChk', type: 'checkbox', ...(article.italic ? { checked: true } : {}) });
-    italicChk.onchange = (e) => {
-      recordState();
-      article.italic = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
-
-    const underlineChk = el('input', { id: 'underlineChk', type: 'checkbox', ...(article.underline ? { checked: true } : {}) });
-    underlineChk.onchange = (e) => {
-      recordState();
-      article.underline = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
-
-    const textLabelStyleSeg = buildLabelStyleSeg(article.labelStyle, (val) => {
-      recordState();
-      article.labelStyle = val;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    });
-
-    const applyAngle = (deg) => {
-      deg = Math.max(-180, Math.min(180, deg));
-      article.angle = deg;
-      angleSlider.value = deg;
-      angleNumIn.value = deg;
-      updateSingleFeatureUI(article);
-    };
-
-    const angleSlider = el('input', {
-      id: 'textAngleIn', type: 'range', min: -180, max: 180, step: 1,
-      value: article.angle ?? 0
-    });
-    const angleNumIn = el('input', {
-      type: 'number', min: -180, max: 180, step: 1,
-      value: article.angle ?? 0,
-      style: 'width:4rem;text-align:center;'
-    });
-    const angleResetBtn = el('button', { class: 'ghost small', text: '↺', 'data-tooltip': 'Reset to 0°' });
-
-    angleSlider.oninput = (e) => applyAngle(parseInt(e.target.value, 10));
-    angleSlider.onchange = (e) => {
-      recordState();
-      article.angle = parseInt(e.target.value, 10);
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    };
-    angleSlider.onfocus = () => recordState();
-
-    angleNumIn.oninput = (e) => applyAngle(parseInt(e.target.value, 10) || 0);
-    angleNumIn.onchange = (e) => {
-      recordState();
-      applyAngle(parseInt(e.target.value, 10) || 0);
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    };
-    angleNumIn.onfocus = () => recordState();
-
-    angleResetBtn.addEventListener('click', () => {
-      recordState();
-      applyAngle(0);
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    });
-
-    form.append(
-      el('label', { class: 'form-label', for: 'fontSizeIn', text: 'Font Size' }),
-      fontSizeInput,
-      el('label', { class: 'form-label', for: 'fontColorIn', text: 'Font Color' }),
-      fontColorInput,
-      el('label', { class: 'form-label', for: 'fontFamilySel', text: 'Font Family' }),
-      fontFamilySel,
-      el('div', { class: 'form-label', text: 'Font Style' }),
-      el('div', { class: 'inline' }, [
-        el('label', { class: 'inline' }, [boldChk, el('span', { text: 'Bold' })]),
-        el('label', { class: 'inline' }, [italicChk, el('span', { text: 'Italic' })]),
-        el('label', { class: 'inline' }, [underlineChk, el('span', { text: 'Underline' })])
-      ]),
-      el('div', { class: 'form-label', text: 'Label Style' }),
-      textLabelStyleSeg,
-      el('div', { class: 'form-label full-width', style: 'display:flex;justify-content:space-between;align-items:center;gap:0.5rem;' }, [
-        el('span', { text: 'Rotation' }),
-        el('div', { style: 'display:flex;align-items:center;gap:0.25rem;' }, [angleNumIn, angleResetBtn])
-      ]),
-      angleSlider
-    );
-  }
-
-  if (silo === 'feature' && geometryType !== null && geometryType !== 'text') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-
-    const labelColorInput = el('input', {
-      id: 'labelColorIn', type: 'color',
-      value: article.labelColor || '#ffffff',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.labelColor = e.target.value;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const labelBoldChk = el('input', {
-      id: 'labelBoldChk', type: 'checkbox',
-      ...(article.labelBold ? { checked: true } : {})
-    });
-    labelBoldChk.onchange = (e) => {
-      recordState();
-      article.labelBold = e.target.checked;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    };
-
-    const labelSizeInput = el('input', {
-      id: 'labelSizeIn', type: 'number', min: 8, max: 72,
-      value: article.labelSize || 12,
-      style: 'width: 60px;',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.labelSize = parseInt(e.target.value, 10) || 12;
-        markEntityDirty('article', article.id);
-        updateSingleFeatureUI(article);
-        debouncedSave();
-      }
-    });
-
-    const labelStyleSeg = buildLabelStyleSeg(article.labelStyle, (val) => {
-      recordState();
-      article.labelStyle = val;
-      markEntityDirty('article', article.id);
-      updateSingleFeatureUI(article);
-      debouncedSave();
-    });
-
-    form.append(
-      el('div', { class: 'form-label', text: 'Label Style' }),
-      el('div', { class: 'inline' }, [
-        labelColorInput,
-        el('label', { class: 'inline' }, [labelBoldChk, el('span', { text: 'Bold' })]),
-        el('span', { text: 'Size', class: 'muted', style: 'margin-left: 0.5rem;' }),
-        labelSizeInput,
-        labelStyleSeg
-      ])
-    );
-  }
+  if (silo === 'feature' && geometryType !== null && geometryType !== 'text') _buildFeatureLabelSection(article, form);
 
   if (silo === 'encyclopedia' && (article.type || '').toLowerCase() === 'event') {
-    article.eventData = article.eventData || {};
-    const colorValue = article.eventData?.color || '#ff3ea5';
-    const colorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(colorValue)}` });
-    const colorName = el('span', { text: 'Event Color' });
-    const colorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.color = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [colorSwatch, colorName]);
-    const textColorValue = article.eventData?.textColor || '#e8e9eb';
-    const textColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(textColorValue)}` });
-    const textColorName = el('span', { text: 'Text Color' });
-    const textColorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.textColor = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [textColorSwatch, textColorName]);
-    form.appendChild(el('div', { class: 'full-width two' }, [colorBtn, textColorBtn]));
-
-    form.appendChild(el('hr', { class: 'form-divider' }));
-
-    const startPicker = buildDatePicker(article.eventData, (key, val) => {
-      recordState();
-      article.eventData[key] = val;
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    }, { label: 'Event Date' });
-
-    const endData = {
-      year: article.eventData.endYear,
-      era: article.eventData.endEra,
-      month: article.eventData.endMonth,
-      day: article.eventData.endDay
-    };
-    const endPicker = buildDatePicker(endData, (key, val) => {
-      recordState();
-      if (key === 'clear') {
-        article.eventData.endYear = article.eventData.endEra = article.eventData.endMonth = article.eventData.endDay = null;
-      } else {
-        const map = { year: 'endYear', era: 'endEra', month: 'endMonth', day: 'endDay' };
-        article.eventData[map[key]] = val;
-      }
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    }, { label: 'End Date (Optional)', showClear: true });
-
-    form.append(startPicker, endPicker);
-
-    const recurrenceControls = el('div', { class: 'recurrence-controls' });
-    const updateRecurrenceUI = () => {
-      recurrenceControls.innerHTML = '';
-      const rec = article.eventData.recurrence;
-      if (!rec) return;
-
-      if (rec.type === 'annual_relative') {
-        const weekSelect = el('select', {}, [
-          el('option', { value: '1', text: '1st' }),
-          el('option', { value: '2', text: '2nd' }),
-          el('option', { value: '3', text: '3rd' }),
-          el('option', { value: '4', text: '4th' }),
-          el('option', { value: 'last', text: 'Last' })
-        ]);
-        weekSelect.value = rec.week || '1';
-
-        const weekdaySelect = el('select');
-        if (settings.donjonCalendar?.weekdays) {
-          settings.donjonCalendar.weekdays.forEach(wd => {
-            weekdaySelect.append(el('option', { value: wd, text: wd }));
-          });
-        }
-        weekdaySelect.value = rec.weekday || (settings.donjonCalendar?.weekdays?.[0] || '');
-
-        weekSelect.onchange = weekdaySelect.onchange = () => {
-          recordState();
-          rec.week = weekSelect.value === 'last' ? -1 : parseInt(weekSelect.value, 10);
-          rec.weekday = weekdaySelect.value;
-          debouncedSave();
-        };
-
-        recurrenceControls.append(
-          el('div', { class: 'form-label', text: 'On the...' }),
-          el('div', { class: 'recurrence-grid' }, [weekSelect, weekdaySelect])
-        );
-      } else if (rec.type === 'lunar') {
-        const moonSelect = el('select');
-        if (settings.donjonCalendar?.moons) {
-          settings.donjonCalendar.moons.forEach(m => {
-            moonSelect.append(el('option', { value: m, text: m }));
-          });
-        }
-        moonSelect.value = rec.moon || (settings.donjonCalendar?.moons?.[0] || '');
-
-        const phaseSelect = el('select', {}, [
-          el('option', { value: '0', text: 'New Moon' }),
-          el('option', { value: '0.25', text: 'First Quarter' }),
-          el('option', { value: '0.5', text: 'Full Moon' }),
-          el('option', { value: '0.75', text: 'Last Quarter' })
-        ]);
-        phaseSelect.value = rec.phase !== undefined ? rec.phase.toString() : '0.5';
-
-        moonSelect.onchange = phaseSelect.onchange = () => {
-          recordState();
-          rec.moon = moonSelect.value;
-          rec.phase = parseFloat(phaseSelect.value);
-          debouncedSave();
-        };
-
-        recurrenceControls.append(
-          el('div', { class: 'form-label', text: 'Based on...' }),
-          el('div', { class: 'recurrence-grid' }, [moonSelect, phaseSelect])
-        );
-      }
-    };
-
-    const recTypeSelect = el('select', { class: 'recurrence-type-select' }, [
-      el('option', { value: '', text: 'No Recurrence' }),
-      el('option', { value: 'annual_date', text: 'Repeats Annually (Same Date)' }),
-      el('option', { value: 'annual_relative', text: 'Repeats Annually (Relative)' }),
-      el('option', { value: 'lunar', text: 'Repeats Every Lunar Cycle' })
-    ]);
-    recTypeSelect.value = article.eventData.recurrence?.type || '';
-    recTypeSelect.onchange = () => {
-      recordState();
-      const type = recTypeSelect.value;
-      if (!type) {
-        delete article.eventData.recurrence;
-      } else {
-        article.eventData.recurrence = { type };
-        if (type === 'annual_relative') {
-          article.eventData.recurrence.week = 1;
-          article.eventData.recurrence.weekday = settings.donjonCalendar?.weekdays?.[0] || '';
-        } else if (type === 'lunar') {
-          article.eventData.recurrence.moon = settings.donjonCalendar?.moons?.[0] || '';
-          article.eventData.recurrence.phase = 0.5;
-        }
-      }
-      updateRecurrenceUI();
-      debouncedSave();
-    };
-
-    updateRecurrenceUI();
-    form.append(el('div', { class: 'form-label form-label--mt', text: 'Recurrence' }), recTypeSelect, recurrenceControls);
-
-    // Participants
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    await buildParticipantsSection(article, form);
+    await _buildEventPropertiesSection(article, form);
   }
 
   if (silo === 'encyclopedia' && (article.type || '').toLowerCase() === 'character') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    article.birthData = article.birthData || {};
-    const birthLabel = el('div', { class: 'form-label full-width', text: 'Birthday' });
-
-    const birthYearInput = el('input', { type: 'number', placeholder: 'Year', value: article.birthData.year || '' });
-    const birthEraSelect = el('select');
-    const birthMonthSelect = el('select');
-    const birthDaySelect = el('select');
-
-    if (settings.donjonCalendar?.eras) {
-      const sortedEras = [...settings.donjonCalendar.eras].sort((a, b) => a.startYear - b.startYear);
-      sortedEras.forEach(era => birthEraSelect.append(el('option', { value: era.name, text: era.name })));
-      if (article.birthData.era) birthEraSelect.value = article.birthData.era;
-    }
-    if (settings.donjonCalendar?.months) {
-      birthMonthSelect.append(el('option', { value: '', text: 'Month' }), ...settings.donjonCalendar.months.map(m => el('option', { value: m, text: m, title: m })));
-      if (article.birthData.month) birthMonthSelect.value = article.birthData.month;
-    }
-    populateDayDropdown(birthDaySelect, article.birthData.month, article.birthData.day);
-
-    const birthDateGroup = el('div', { class: 'event-date-group event-date-group--char' });
-    birthDateGroup.append(
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Year' }), birthYearInput]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Era' }), birthEraSelect]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Month' }), birthMonthSelect]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Day' }), birthDaySelect])
-    );
-
-    const updateBirthData = () => {
-      recordState();
-      article.birthData.year = parseInt(birthYearInput.value, 10) || null;
-      article.birthData.era = birthEraSelect.value || null;
-      article.birthData.month = birthMonthSelect.value || null;
-      article.birthData.day = parseInt(birthDaySelect.value, 10) || null;
-      debouncedSave();
-      const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
-    };
-    [birthYearInput, birthEraSelect, birthDaySelect].forEach(el => el.onchange = updateBirthData);
-    birthMonthSelect.onchange = () => { populateDayDropdown(birthDaySelect, birthMonthSelect.value, article.birthData.day); updateBirthData(); };
-    form.append(birthLabel, birthDateGroup);
-
-    article.deathData = article.deathData || {};
-    const deathLabel = el('div', { class: 'form-label form-label--mt full-width', text: 'Date of Death' });
-
-    const deathYearInput = el('input', { type: 'number', placeholder: 'Year', value: article.deathData.year || '' });
-    const deathEraSelect = el('select');
-    const deathMonthSelect = el('select');
-    const deathDaySelect = el('select');
-
-    if (settings.donjonCalendar?.eras) {
-      const sortedEras = [...settings.donjonCalendar.eras].sort((a, b) => a.startYear - b.startYear);
-      sortedEras.forEach(era => deathEraSelect.append(el('option', { value: era.name, text: era.name })));
-      if (article.deathData.era) deathEraSelect.value = article.deathData.era;
-    }
-    if (settings.donjonCalendar?.months) {
-      deathMonthSelect.append(el('option', { value: '', text: 'Month' }), ...settings.donjonCalendar.months.map(m => el('option', { value: m, text: m, title: m })));
-      if (article.deathData.month) deathMonthSelect.value = article.deathData.month;
-    }
-    populateDayDropdown(deathDaySelect, article.deathData.month, article.deathData.day);
-
-    const deathDateGroup = el('div', { class: 'event-date-group event-date-group--char' });
-    deathDateGroup.append(
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Year' }), deathYearInput]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Era' }), deathEraSelect]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Month' }), deathMonthSelect]),
-      el('div', { class: 'event-date-group-item' }, [el('span', { text: 'Day' }), deathDaySelect])
-    );
-
-    const updateDeathData = () => {
-      recordState();
-      article.deathData.year = parseInt(deathYearInput.value, 10) || null;
-      article.deathData.era = deathEraSelect.value || null;
-      article.deathData.month = deathMonthSelect.value || null;
-      article.deathData.day = parseInt(deathDaySelect.value, 10) || null;
-      debouncedSave();
-      const _sheetId = propertiesSheetId; const _sheetType = propertiesSheetType; if (_sheetId) window.openPropertiesSheet?.(_sheetId, _sheetType);
-    };
-    [deathYearInput, deathEraSelect, deathDaySelect].forEach(el => el.onchange = updateDeathData);
-    deathMonthSelect.onchange = () => { populateDayDropdown(deathDaySelect, deathMonthSelect.value, article.deathData.day); updateDeathData(); };
-    form.append(deathLabel, deathDateGroup);
-
-    if (article.birthData.year) {
-      let age;
-      let ageLabelText = 'Current Age';
-      const birthYear = article.birthData.year;
-      const deathYear = article.deathData?.year;
-      const currentYear = settings.currentDate?.year;
-      if (deathYear) {
-        ageLabelText = 'Age at Death';
-        age = deathYear - birthYear;
-        if (article.birthData.month && article.deathData.month) {
-          const birthMonthIndex = settings.donjonCalendar.months.indexOf(article.birthData.month);
-          const deathMonthIndex = settings.donjonCalendar.months.indexOf(article.deathData.month);
-          if (deathMonthIndex < birthMonthIndex || (deathMonthIndex === birthMonthIndex && article.deathData.day < article.birthData.day)) {
-            age--;
-          }
-        }
-      } else if (currentYear) {
-        age = currentYear - birthYear;
-        if (article.birthData.month && settings.currentDate.month) {
-          const currentMonthIndex = settings.donjonCalendar.months.indexOf(settings.currentDate.month);
-          const birthMonthIndex = settings.donjonCalendar.months.indexOf(article.birthData.month);
-          if (currentMonthIndex < birthMonthIndex || (currentMonthIndex === birthMonthIndex && settings.currentDate.day < article.birthData.day)) {
-            age--;
-          }
-        }
-      }
-      if (age !== undefined && age >= 0) {
-        const ageDisplay = el('div', { class: 'infobox-row' }, [
-          el('span', { class: 'infobox-label', text: ageLabelText }),
-          el('span', { class: 'infobox-value', text: `${age}` })
-        ]);
-        form.appendChild(ageDisplay);
-      }
-    }
-
-    // Family tree button
-    const hasFamilyLinks = (article.links || []).some(l => l.linkType === 'family');
-    if (hasFamilyLinks) {
-      form.appendChild(el('hr', { class: 'form-divider' }));
-      const ftBtn = el('button', { class: 'ghost small full-width', text: 'View Family Tree' });
-      ftBtn.addEventListener('click', () => window.openFamilyTree?.(article.id));
-      form.appendChild(ftBtn);
-    }
+    _buildCharacterPropertiesSection(article, form);
   }
 
   if (silo === 'encyclopedia' && (article.type || '').toLowerCase() === 'session') {
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    article.sessionData = article.sessionData || {};
-
-    // Session number
-    const sessionNumInput = el('input', {
-      type: 'number', min: '1', placeholder: 'e.g. 1',
-      value: article.sessionData.number != null ? article.sessionData.number : '',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.sessionData.number = parseInt(e.target.value, 10) || null;
-        markEntityDirty('article', article.id);
-        window.refreshSessionsView?.();
-        debouncedSave();
-      }
-    });
-    form.append(el('label', { class: 'form-label', text: 'Session #' }), sessionNumInput);
-
-    // Real-world date
-    const realDateInput = el('input', {
-      type: 'date',
-      value: article.sessionData.realDate || '',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.sessionData.realDate = e.target.value;
-        markEntityDirty('article', article.id);
-        window.refreshSessionsView?.();
-        debouncedSave();
-      }
-    });
-    form.append(el('label', { class: 'form-label form-label--mt', text: 'Date Played' }), realDateInput);
-
-    // Players / participants
-    const playersInput = el('input', {
-      type: 'text', placeholder: 'e.g. Alice, Bob, Carol',
-      value: article.sessionData.participants || '',
-      onfocus: () => recordState(),
-      onchange: (e) => {
-        article.sessionData.participants = e.target.value.trim();
-        markEntityDirty('article', article.id);
-        debouncedSave();
-      }
-    });
-    form.append(el('label', { class: 'form-label form-label--mt', text: 'Players' }), playersInput);
-
-    // In-world date (reuse eventData so sessions appear in the timeline)
-    form.appendChild(el('hr', { class: 'form-divider' }));
-    article.eventData = article.eventData || {};
-    const inWorldPicker = buildDatePicker(article.eventData, (key, val) => {
-      recordState();
-      article.eventData[key] = val;
-      markEntityDirty('article', article.id);
-      debouncedSave();
-    }, { label: 'In-World Date' });
-    form.appendChild(inWorldPicker);
+    _buildSessionPropertiesSection(article, form);
   }
 
   form.appendChild(el('hr', { class: 'form-divider' }));

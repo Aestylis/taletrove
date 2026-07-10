@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-43",
+    "date": "2026-07-10",
+    "title": "Alpha 6.43: Under-the-Hood Properties Panel Cleanup",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring of the properties panel code (no visible changes): each section of the properties form — pin styles, event dates, character birthdays, session details — now lives in its own tested unit.",
+    "content": "<h4>Cleaner foundations for the properties panel</h4><p>This release contains no user-facing changes. The code that builds an article's Properties form — geometry styling, labels, event recurrence, character birthdays and ages, session details, and conversion buttons — previously lived in one very large function. Each section is now a focused, independently testable unit, continuing the internal cleanup started in Alpha 6.42 and making upcoming improvements safer to ship.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-42",
     "date": "2026-07-10",
     "title": "Alpha 6.42: Under-the-Hood World Panel Cleanup",
