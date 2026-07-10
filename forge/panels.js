@@ -93,7 +93,8 @@ function updateSelectionStyles() {
     }
   });
 
-  const activeMapRow = document.querySelector(`.map-node[data-map-id="${state.activeMapId}"] > .map-row`);
+  const activeMapRow = document.querySelector(`.map-node[data-map-id="${state.activeMapId}"] > .map-row`)
+    || document.querySelector(`.map-row[data-map-id="${state.activeMapId}"]`);
   if (activeMapRow) {
     activeMapRow.classList.add('active');
   }
@@ -162,8 +163,10 @@ function updateRowVisibility(id, type) {
     row = document.querySelector(`.encyclopedia-item[data-entry-id="${CSS.escape(id)}"]`);
     entity = state.encyclopedia.find(e => e.id === id);
   } else if (type === 'map') {
+    // Legacy shape: data-map-id on the .map-node wrapper; flat (virtual) shape: on the row itself.
     const node = document.querySelector(`.map-node[data-map-id="${CSS.escape(id)}"]`);
-    row = node ? node.querySelector(':scope > .map-row') : null;
+    row = node ? node.querySelector(':scope > .map-row')
+               : document.querySelector(`.map-row[data-map-id="${CSS.escape(id)}"]`);
     entity = state.maps.find(m => m.id === id);
   }
   if (!row || !entity) return false;
@@ -368,6 +371,427 @@ async function _resolveMapBannerUrl(mapData) {
     }
   }
   return bannerUrl;
+}
+
+/**
+ * Phase M — flat row model for the virtualized atlas tree.
+ * Produces the tree as an ordered array of row descriptors, mirroring the legacy nested
+ * renderers' order, filtering, and collapse behavior exactly (same rules as _buildAtlasLevel /
+ * _renderAtlasFolderNode / _renderAtlasMapNode). `ctx` is the same object the legacy renderers
+ * take: { query, itemsToShow, ancestorsToShow, categoryFilter, activeMapAncestors }.
+ *
+ * Row: { kind: 'map'|'folder'|'feature'|'lore-subheader'|'lore-entry',
+ *        id, depth, parentType: 'root'|'map'|'folder', parentId,
+ *        ghost }  // ghost: query active and row is ancestor-only, not itself a match
+ */
+function _computeAtlasFlatRows(ctx) {
+  const rows = [];
+
+  const pushFeatures = (features, depth, parentType, parentId) => {
+    const toRender = ctx.query ? features.filter(f => ctx.itemsToShow.has(f.id)) : features;
+    for (const f of toRender) {
+      rows.push({ kind: 'feature', id: f.id, depth, parentType, parentId, ghost: false });
+    }
+  };
+
+  const pushFolder = (folder, depth, parentType, parentId) => {
+    const isFolderCollapsed = collapsedFolderNodes.has(folder.id);
+    rows.push({
+      kind: 'folder', id: folder.id, depth, parentType, parentId,
+      ghost: !!(ctx.query && !ctx.itemsToShow.has(folder.id)),
+    });
+
+    if (!isFolderCollapsed || ctx.query) {
+      const subFolders = state.folders.filter(f => f.parentFolderId === folder.id);
+      subFolders.sort((a, b) => a.name.localeCompare(b.name));
+      for (const sub of subFolders) {
+        if (ctx.query && !ctx.itemsToShow.has(sub.id) && !ctx.ancestorsToShow.has(sub.id)) continue;
+        pushFolder(sub, depth + 1, 'folder', folder.id);
+      }
+
+      let featuresInFolder = state.features.filter(f => f.folderId === folder.id && f.mapId === folder.mapId);
+      if (role === 'player') featuresInFolder = featuresInFolder.filter(f => f.visibleToPlayers);
+      if (ctx.categoryFilter) featuresInFolder = featuresInFolder.filter(f => (f.category || '').toLowerCase() === ctx.categoryFilter);
+      pushFeatures(featuresInFolder, depth + 1, 'folder', folder.id);
+
+      const mapsInFolder = state.maps.filter(m => m.folderId === folder.id && m.parentId === folder.mapId);
+      for (const mapData of mapsInFolder) {
+        pushMap(mapData, depth + 1, 'folder', folder.id);
+      }
+    }
+  };
+
+  const pushMap = (mapData, depth, parentType, parentId) => {
+    const isCollapsed = collapsedNodes.has(mapData.id);
+    rows.push({
+      kind: 'map', id: mapData.id, depth, parentType, parentId,
+      ghost: !!(ctx.query && !ctx.itemsToShow.has(mapData.id)),
+    });
+    if (!isCollapsed || ctx.query) {
+      pushLevel(mapData.id, depth + 1, 'map');
+    }
+  };
+
+  const pushLevel = (parentId, depth, parentType) => {
+    // Exclude lore folders (mapId === null) — those render in #encyclopediaView.
+    let levelFolders = state.folders.filter(f => f.mapId === parentId && !f.parentFolderId && f.mapId !== null);
+    if (ctx.query) {
+      levelFolders = levelFolders.filter(f => ctx.itemsToShow.has(f.id) || ctx.ancestorsToShow.has(f.id));
+    }
+    levelFolders.sort((a, b) => a.name.localeCompare(b.name));
+    for (const folder of levelFolders) pushFolder(folder, depth, parentType, parentId);
+
+    let levelFeatures = state.features.filter(f => f.mapId === parentId && !f.folderId && (role === 'gm' || f.visibleToPlayers));
+    if (ctx.categoryFilter) levelFeatures = levelFeatures.filter(f => (f.category || '').toLowerCase() === ctx.categoryFilter);
+    pushFeatures(levelFeatures, depth, parentType, parentId);
+
+    // Lore pins under their map, in a collapsible subsection (Phase L parity)
+    if (parentId !== null) {
+      let lorePins = (state.encyclopedia || [])
+        .filter(e => e.mapId === parentId && (e.type || '').toLowerCase() !== 'session')
+        .filter(e => role === 'gm' || e.visibleToPlayers);
+      if (ctx.query) lorePins = lorePins.filter(e => ctx.itemsToShow.has(e.id));
+      if (ctx.categoryFilter) lorePins = lorePins.filter(e => (e.type || '').toLowerCase() === ctx.categoryFilter);
+
+      if (lorePins.length > 0) {
+        const isLoreCollapsed = collapsedMapLoreNodes.has(parentId);
+        rows.push({ kind: 'lore-subheader', id: parentId, depth, parentType: 'map', parentId, ghost: false });
+        if (!isLoreCollapsed || ctx.query) {
+          lorePins.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          for (const entry of lorePins) {
+            rows.push({ kind: 'lore-entry', id: entry.id, depth: depth + 1, parentType: 'map', parentId, ghost: false });
+          }
+        }
+      }
+    }
+
+    let levelMaps = state.maps.filter(m => m.parentId === parentId && !m.folderId);
+    if (role === 'player') levelMaps = levelMaps.filter(m => m.visibleToPlayers);
+    if (ctx.query) levelMaps = levelMaps.filter(m => ctx.itemsToShow.has(m.id) || ctx.ancestorsToShow.has(m.id));
+    if (sidebarFilterMode === 'local' && !ctx.query && parentId === null) levelMaps = levelMaps.filter(m => ctx.activeMapAncestors.has(m.id));
+    for (const mapData of levelMaps) pushMap(mapData, depth, parentType, parentId);
+  };
+
+  pushLevel(null, 0, 'root');
+  return rows;
+}
+
+/**
+ * Phase M — builds ONE flat atlas row element for a row descriptor from _computeAtlasFlatRows.
+ * No nested containers: hierarchy is conveyed by margin-left (18px/level, matching the legacy
+ * .tree-children padding+margin). Unlike the legacy tree, data-map-id sits directly on the
+ * .map-row. Returns null when the underlying entity vanished (stale model).
+ */
+async function _buildAtlasFlatRowEl(rowDesc) {
+  let rowEl = null;
+
+  if (rowDesc.kind === 'feature') {
+    const f = state.features.find(x => x.id === rowDesc.id);
+    if (!f) return null;
+    const iconHtml = await getSidebarIconHTML(f);
+    const itemIcon = el('div', { class: 'item-icon', innerHTML: iconHtml });
+    rowEl = el('div', { class: `tree-row feature-row`, 'data-fid': f.id, tabindex: '0', role: 'button' });
+    const featureDetails = [itemIcon, el('span', { class: 'tree-label', text: f.title || '(untitled)' })];
+    if (role === 'gm') {
+      const rowActions = el('div', { class: 'row-actions' });
+      const visBtn = el('button', { class: `row-vis-btn ${f.visibleToPlayers ? 'is-player' : 'is-gm'}`, title: f.visibleToPlayers ? 'Visible to Players — click for GM-only' : 'GM Only — click to show players', 'aria-label': f.visibleToPlayers ? 'Visible to players — click for GM-only' : 'GM only — click to show players', 'aria-pressed': f.visibleToPlayers ? 'true' : 'false' });
+      visBtn.innerHTML = getIconHTMLSync(f.visibleToPlayers ? 'eye' : 'eye-closed', 'currentColor');
+      visBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFeatureVisibility(f.id); });
+      const moreBtn = el('button', { class: 'row-more-btn', title: 'Edit properties', 'aria-label': `Edit properties for ${escapeHtml(f.name || 'this item')}` });
+      moreBtn.innerHTML = getIconHTMLSync('dots-three-outline', 'currentColor');
+      moreBtn.addEventListener('click', (e) => { e.stopPropagation(); window.openPropertiesSheet?.(f.id, 'feature'); });
+      rowActions.append(visBtn, moreBtn);
+      featureDetails.push(rowActions);
+      rowEl.addEventListener('contextmenu', (e) => showAtlasContextMenu(e, 'feature', f.id, f.title));
+    }
+    rowEl.append(...featureDetails);
+    rowEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.ctrlKey || e.metaKey) {
+        if (selectedId && multiSelectedIds.size === 0 && state.features.find(feat => feat.id === selectedId)) {
+          multiSelectedIds.add(selectedId);
+        }
+        if (multiSelectedIds.has(f.id)) multiSelectedIds.delete(f.id);
+        else multiSelectedIds.add(f.id);
+        selectedId = null;
+        render();
+      } else {
+        if (window.navigateAndPeek) window.navigateAndPeek(f.id, 'feature');
+      }
+    });
+
+  } else if (rowDesc.kind === 'folder') {
+    const folder = state.folders.find(x => x.id === rowDesc.id);
+    if (!folder) return null;
+    const isFolderCollapsed = collapsedFolderNodes.has(folder.id);
+    const folderIconWrap = el('div', { class: 'folder-icon-wrap item-icon' });
+    folderIconWrap.innerHTML =
+      `<div class="folder-icon-default">${getIconHTMLSync('folder', 'currentColor')}</div>` +
+      `<div class="folder-icon-caret">${getIconHTMLSync(isFolderCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
+    rowEl = el('div', { class: `tree-row folder-row${isFolderCollapsed ? ' collapsed' : ''}`, 'data-folder-id': folder.id, tabindex: '0', role: 'button', 'aria-expanded': String(!isFolderCollapsed), onclick: (e) => { e.stopPropagation(); _toggleAtlasFolderCollapsed(folder.id); } });
+    if (role === 'gm') rowEl.addEventListener('contextmenu', (e) => showAtlasContextMenu(e, 'folder', folder.id, folder.name));
+    rowEl.append(folderIconWrap, el('span', { class: 'tree-label', text: folder.name }));
+
+  } else if (rowDesc.kind === 'map') {
+    const mapData = state.maps.find(x => x.id === rowDesc.id);
+    if (!mapData) return null;
+    const isCollapsed = collapsedNodes.has(mapData.id);
+    const mapIconWrap = el('div', { class: 'folder-icon-wrap item-icon' });
+    mapIconWrap.innerHTML =
+      `<div class="folder-icon-default">${getIconHTMLSync('map-trifold', 'currentColor')}</div>` +
+      `<div class="folder-icon-caret">${getIconHTMLSync(isCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
+    mapIconWrap.addEventListener('click', (e) => { e.stopPropagation(); toggleNodeCollapsed(mapData.id); });
+    rowEl = el('div', { class: `tree-row map-row`, 'data-map-id': mapData.id, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id, { skipInfoPanel: true }) });
+    const bannerUrl = await _resolveMapBannerUrl(mapData);
+    if (bannerUrl) {
+      rowEl.classList.add('has-banner');
+      rowEl.style.background = `linear-gradient(rgba(34, 34, 38, 0.5), rgba(34, 34, 38, 0.5)), url('${bannerUrl}')`;
+      rowEl.style.backgroundSize = 'cover';
+      rowEl.style.backgroundPosition = 'center';
+    } else {
+      rowEl.style.background = `linear-gradient(135deg, var(--card), var(--bg))`;
+    }
+    const mapDetails = [mapIconWrap, el('span', { class: 'tree-label', text: mapData.name })];
+    if (mapData.parentId === null) mapDetails.push(el('span', { class: 'chip main', text: 'Main' }));
+    mapDetails.push(el('div', { style: 'flex-grow: 1;' }));
+    if (role === 'gm' && mapData.parentId !== null) {
+      const mapRowActions = el('div', { class: 'row-actions' });
+      const mapVisBtn = el('button', { class: `row-vis-btn ${mapData.visibleToPlayers ? 'is-player' : 'is-gm'}`, title: mapData.visibleToPlayers ? 'Visible to Players — click for GM-only' : 'GM Only — click to show players', 'aria-label': mapData.visibleToPlayers ? 'Visible to players — click for GM-only' : 'GM only — click to show players', 'aria-pressed': mapData.visibleToPlayers ? 'true' : 'false' });
+      mapVisBtn.innerHTML = getIconHTMLSync(mapData.visibleToPlayers ? 'eye' : 'eye-closed', 'currentColor');
+      mapVisBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMapVisibility(mapData.id); });
+      const mapMoreBtn = el('button', { class: 'row-more-btn', title: 'Edit properties', 'aria-label': `Edit properties for ${escapeHtml(mapData.name || 'this map')}` });
+      mapMoreBtn.innerHTML = getIconHTMLSync('dots-three-outline', 'currentColor');
+      mapMoreBtn.addEventListener('click', (e) => { e.stopPropagation(); window.openPropertiesSheet?.(mapData.id, 'map'); });
+      mapRowActions.append(mapVisBtn, mapMoreBtn);
+      mapDetails.push(mapRowActions);
+      rowEl.addEventListener('contextmenu', (e) => showAtlasContextMenu(e, 'map', mapData.id, mapData.name));
+    }
+    rowEl.append(...mapDetails);
+
+  } else if (rowDesc.kind === 'lore-subheader') {
+    const mapId = rowDesc.id;
+    const isLoreCollapsed = collapsedMapLoreNodes.has(mapId);
+    const caretWrap = el('div', { class: 'lore-subheader-caret' });
+    caretWrap.innerHTML = getIconHTMLSync(isLoreCollapsed ? 'caret-right' : 'caret-down', 'currentColor');
+    rowEl = el('div', { class: 'lore-in-map-subheader tree-row', 'data-lore-map-id': mapId });
+    rowEl.append(caretWrap, el('span', { text: 'Lore' }));
+    rowEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (collapsedMapLoreNodes.has(mapId)) collapsedMapLoreNodes.delete(mapId);
+      else collapsedMapLoreNodes.add(mapId);
+      saveCollapsedState();
+      refreshAtlasTree();
+    });
+
+  } else if (rowDesc.kind === 'lore-entry') {
+    const entry = (state.encyclopedia || []).find(x => x.id === rowDesc.id);
+    if (!entry) return null;
+    rowEl = await buildEncyclopediaEntryItem(entry);
+  }
+
+  if (!rowEl) return null;
+  if (rowDesc.ghost) rowEl.classList.add('ghost');
+  if (rowDesc.depth > 0) rowEl.style.marginLeft = `${rowDesc.depth * 18}px`;
+  return rowEl;
+}
+
+// --- Phase M: atlas tree windowing state ---
+let _atlasFlatRows = [];
+let _atlasRowH = 32;               // uniform row height (all kinds share .tree-row min-height); calibrated from real rows
+let _atlasWindow = { start: -1, end: -1 };
+let _atlasVirtualOn = false;
+let _atlasDragFreeze = false;      // during a drag: window may only EXTEND, never recycle rows
+let _atlasSliceToken = 0;
+let _atlasScrollRaf = null;
+let _atlasVirtualEls = null;       // { container, treeContainer, topSpacer, bottomSpacer }
+const ATLAS_OVERSCAN = 10;
+
+/** Entry point for the virtual renderer: computes the flat model and renders the first window. */
+async function _renderAtlasVirtualSegment(container, treeContainer, ctx) {
+  _atlasFlatRows = _computeAtlasFlatRows(ctx);
+  const topSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-top' });
+  const bottomSpacer = el('div', { class: 'atlas-vspacer atlas-vspacer-bottom' });
+  // Pre-size to the full estimated segment height so scrollTop restoration (which happens
+  // before the first slice — treeContainer is still detached here) isn't clamped.
+  bottomSpacer.style.height = `${_atlasFlatRows.length * _atlasRowH}px`;
+  treeContainer.append(topSpacer, bottomSpacer);
+  _atlasVirtualEls = { container, treeContainer, topSpacer, bottomSpacer };
+  _atlasWindow = { start: -1, end: -1 };
+
+  if (role === 'gm') {
+    // One Sortable over the whole flat list. Lore rows and spacers are not draggable
+    // (legacy parity: lore-in-map items never had a Sortable). Recycling freezes during
+    // drags (_atlasDragFreeze) so the list never mutates under SortableJS.
+    atlasSortable.push(new Sortable(treeContainer, {
+      group: 'atlas', animation: 150, delay: 150, delayOnTouchOnly: false,
+      ghostClass: 'sortable-ghost', multiDrag: true, selectedClass: 'selected',
+      fallbackOnBody: true, forceFallback: true,
+      scroll: document.getElementById('atlasPanel'), scrollSensitivity: 60, scrollSpeed: 8,
+      draggable: '.feature-row, .folder-row, .map-row',
+      onStart: () => { _attachDragScroll(); _atlasDragFreeze = true; },
+      onMove: _atlasDragOnMove,
+      onEnd: (evt) => { _detachDragScroll(); _atlasDragFreeze = false; _handleFlatAtlasDrop(evt); },
+    }));
+  }
+  // NOTE: no slice here — treeContainer is not yet attached (geometry would be garbage).
+  // _refreshAtlasTreeNow performs the first _sliceAtlasWindow(true) after assembly + scroll restore.
+}
+
+function _atlasDesiredRange() {
+  const v = _atlasVirtualEls;
+  const N = _atlasFlatRows.length;
+  const H = _atlasRowH;
+  const cRect = v.container.getBoundingClientRect();
+  const tRect = v.treeContainer.getBoundingClientRect();
+  const viewTop = cRect.top - tRect.top; // how far the container has scrolled into the tree segment
+  let start = Math.max(0, Math.floor(viewTop / H) - ATLAS_OVERSCAN);
+  const end = Math.min(N, Math.max(start, Math.ceil((viewTop + v.container.clientHeight) / H) + ATLAS_OVERSCAN));
+  start = Math.min(start, end); // viewport fully past the segment → empty tail window, sane spacers
+  return { start, end };
+}
+
+/** (Re)materializes the visible window between the spacers. */
+async function _sliceAtlasWindow(force = false) {
+  const v = _atlasVirtualEls;
+  if (!v || !v.treeContainer.isConnected) return;
+  const N = _atlasFlatRows.length;
+  let { start, end } = _atlasDesiredRange();
+
+  if (_atlasDragFreeze && _atlasWindow.start >= 0) {
+    // Mid-drag: never remove rows from under SortableJS — only extend the window.
+    start = Math.min(start, _atlasWindow.start);
+    end = Math.max(end, _atlasWindow.end);
+    if (start === _atlasWindow.start && end === _atlasWindow.end) return;
+    await _extendAtlasWindow(start, end);
+    return;
+  }
+
+  if (!force && start === _atlasWindow.start && end === _atlasWindow.end) return;
+  const token = ++_atlasSliceToken;
+  const els = await Promise.all(_atlasFlatRows.slice(start, end).map(r => _buildAtlasFlatRowEl(r)));
+  if (token !== _atlasSliceToken || !v.treeContainer.isConnected) return; // superseded by a newer slice
+
+  let n = v.topSpacer.nextSibling;
+  while (n && n !== v.bottomSpacer) { const next = n.nextSibling; n.remove(); n = next; }
+  const frag = document.createDocumentFragment();
+  els.forEach((rowEl, i) => {
+    if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); }
+  });
+  v.bottomSpacer.before(frag);
+  v.topSpacer.style.height = `${start * _atlasRowH}px`;
+  v.bottomSpacer.style.height = `${Math.max(0, (N - end) * _atlasRowH)}px`;
+  _atlasWindow = { start, end };
+
+  // Row-height calibration: average across the WHOLE materialized window (a two-row sample
+  // drifts by whole rows at 5000-article scale; the average keeps index math aligned).
+  const rowEls2 = [];
+  for (let c = v.topSpacer.nextElementSibling; c && c !== v.bottomSpacer; c = c.nextElementSibling) rowEls2.push(c);
+  if (rowEls2.length >= 3) {
+    const firstTop = rowEls2[0].getBoundingClientRect().top;
+    const lastBottom = rowEls2[rowEls2.length - 1].getBoundingClientRect().bottom;
+    const measured = (lastBottom - firstTop) / rowEls2.length;
+    if (measured > 8 && Math.abs(measured - _atlasRowH) > 0.5) {
+      _atlasRowH = measured;
+      _atlasWindow = { start: -1, end: -1 };
+      await _sliceAtlasWindow(true);
+      return;
+    }
+  }
+  updateSelectionStyles();
+}
+
+/** Drag-freeze extension: appends rows at the window edges without touching existing ones. */
+async function _extendAtlasWindow(start, end) {
+  const v = _atlasVirtualEls;
+  const prev = _atlasWindow;
+  if (start < prev.start) {
+    const els = await Promise.all(_atlasFlatRows.slice(start, prev.start).map(r => _buildAtlasFlatRowEl(r)));
+    const frag = document.createDocumentFragment();
+    els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(start + i); frag.appendChild(rowEl); } });
+    v.topSpacer.after(frag);
+  }
+  if (end > prev.end) {
+    const els = await Promise.all(_atlasFlatRows.slice(prev.end, end).map(r => _buildAtlasFlatRowEl(r)));
+    const frag = document.createDocumentFragment();
+    els.forEach((rowEl, i) => { if (rowEl) { rowEl.dataset.flatIndex = String(prev.end + i); frag.appendChild(rowEl); } });
+    v.bottomSpacer.before(frag);
+  }
+  v.topSpacer.style.height = `${start * _atlasRowH}px`;
+  v.bottomSpacer.style.height = `${Math.max(0, (_atlasFlatRows.length - end) * _atlasRowH)}px`;
+  _atlasWindow = { start, end };
+}
+
+function _onAtlasScroll() {
+  if (!_atlasVirtualOn || _atlasScrollRaf) return;
+  _atlasScrollRaf = requestAnimationFrame(() => {
+    _atlasScrollRaf = null;
+    _sliceAtlasWindow();
+  });
+}
+
+/**
+ * Phase M flat DnD: derive the drop parent from the insertion point in the flat row list.
+ * `rows` EXCLUDES the dragged row; `insertIndex` is the position it would occupy.
+ * Rules: top → active-map root · after an EXPANDED folder/map → its first child ·
+ * after a lore row → that map's root (lore rows aren't drop parents) · else sibling of the
+ * row above (same parent).
+ */
+function _resolveFlatDropTarget(rows, insertIndex) {
+  const above = rows[insertIndex - 1] || null;
+  if (!above) return { mapId: state.activeMapId, folderId: null };
+  if (above.kind === 'folder' && !collapsedFolderNodes.has(above.id)) {
+    const folder = state.folders.find(f => f.id === above.id);
+    return { mapId: folder ? folder.mapId : state.activeMapId, folderId: above.id };
+  }
+  if (above.kind === 'map' && !collapsedNodes.has(above.id)) {
+    return { mapId: above.id, folderId: null };
+  }
+  if (above.kind === 'lore-subheader' || above.kind === 'lore-entry') {
+    return { mapId: above.parentId, folderId: null };
+  }
+  // Sibling of the row above
+  if (above.parentType === 'folder') {
+    const parentFolder = state.folders.find(f => f.id === above.parentId);
+    return { mapId: parentFolder ? parentFolder.mapId : state.activeMapId, folderId: above.parentId };
+  }
+  return { mapId: above.parentType === 'map' ? above.parentId : state.activeMapId, folderId: null };
+}
+
+/** onEnd handler for the flat-mode Sortable: maps the DOM drop position back to the flat model. */
+function _handleFlatAtlasDrop(evt) {
+  const v = _atlasVirtualEls;
+  if (!v) return;
+  recordState();
+
+  const item = evt.item;
+  const draggedId = item.dataset.fid || item.dataset.folderId || item.dataset.mapId;
+  if (!draggedId) { render({ full: true }); return; }
+  const draggedFlatIdx = _atlasFlatRows.findIndex(r =>
+    r.id === draggedId && (r.kind === 'feature' || r.kind === 'folder' || r.kind === 'map'));
+
+  // DOM index of the dropped item among materialized rows (spacers excluded)
+  let domIdx = 0;
+  let n = v.topSpacer.nextElementSibling;
+  while (n && n !== v.bottomSpacer && n !== item) { domIdx++; n = n.nextElementSibling; }
+  if (!n || n === v.bottomSpacer) { render({ full: true }); return; }
+
+  // Insertion index in "rows excluding the dragged row" coordinates.
+  const rowsExcl = draggedFlatIdx >= 0 ? _atlasFlatRows.filter((r, i) => i !== draggedFlatIdx) : _atlasFlatRows;
+  const startExcl = (draggedFlatIdx !== -1 && draggedFlatIdx < _atlasWindow.start)
+    ? _atlasWindow.start - 1 : _atlasWindow.start;
+  let { mapId, folderId } = _resolveFlatDropTarget(rowsExcl, startExcl + domIdx);
+
+  // Cycle guard (legacy parity): a map dropped into its own descendant retargets to the active map.
+  if (item.dataset.mapId) {
+    let cur = mapId;
+    while (cur) {
+      if (cur === item.dataset.mapId) { mapId = state.activeMapId; folderId = null; break; }
+      cur = (state.maps.find(m => m.id === cur) || {}).parentId;
+    }
+  }
+
+  const idsToMove = (multiSelectedIds.has(draggedId)) ? Array.from(multiSelectedIds) : [draggedId];
+  _applyAtlasMove(idsToMove, mapId, folderId);
 }
 
 function _makeAtlasSortable(containerEl) {
@@ -873,11 +1297,16 @@ async function _refreshAtlasTreeNow() {
 
   const ctx = { query, itemsToShow, ancestorsToShow, categoryFilter, activeMapAncestors };
 
-  // Start building from the root (null parent)
-  await _buildAtlasLevel(ctx, null, treeContainer);
-
-  if (role === 'gm') {
-    _makeAtlasSortable(treeContainer);
+  _atlasVirtualOn = loadLS('atlasVirtualTree', true);
+  if (_atlasVirtualOn) {
+    // Phase M: windowed flat-row renderer — DOM capped by viewport, not world size.
+    await _renderAtlasVirtualSegment(container, treeContainer, ctx);
+  } else {
+    // Legacy nested renderer (kill switch: saveLS('atlasVirtualTree', false)).
+    await _buildAtlasLevel(ctx, null, treeContainer);
+    if (role === 'gm') {
+      _makeAtlasSortable(treeContainer);
+    }
   }
 
   const encView = el('div', { id: 'encyclopediaView' });
@@ -913,7 +1342,10 @@ async function _refreshAtlasTreeNow() {
   if (!filterBarExpanded) filterBar.classList.add('filter-bar-hidden');
   container.append(filterBar, ...sessionNodes);
   if (_atlasScrollHandler) container.removeEventListener('scroll', _atlasScrollHandler);
-  _atlasScrollHandler = () => filterBar.classList.toggle('is-elevated', container.scrollTop > 4);
+  _atlasScrollHandler = () => {
+    filterBar.classList.toggle('is-elevated', container.scrollTop > 4);
+    _onAtlasScroll();
+  };
   container.addEventListener('scroll', _atlasScrollHandler, { passive: true });
   updateSelectionStyles();
   updateCollapseExpandAllBtn();
@@ -924,6 +1356,7 @@ async function _refreshAtlasTreeNow() {
   await refreshEncyclopediaView(); // populate the inline lore section
   await refreshSessionsView();    // populate the GM-only sessions section
   container.scrollTop = oldScrollTop; // after lore/sessions land, so full height exists
+  if (_atlasVirtualOn) await _sliceAtlasWindow(true); // first slice: geometry is now live
 } catch (e) {
   console.error("Atlas Refresh failed", e);
 }

@@ -65,7 +65,7 @@ test.describe('C4 — atlas filter/ancestor sets', () => {
       await refreshAtlasTree();
       const baseline = {
         feat2Row: !!document.querySelector('.feature-row[data-fid="c4feat2"]'),
-        folderA: !!document.querySelector('.folder-node[data-folder-id="c4fA"]'),
+        folderA: !!document.querySelector('[data-folder-id="c4fA"]'),
       };
 
       // Apply the search query the way the app does: the rebuild reads #atlasFilterInput.
@@ -75,9 +75,9 @@ test.describe('C4 — atlas filter/ancestor sets', () => {
 
       const filtered = {
         feat1Row: !!document.querySelector('.feature-row[data-fid="c4feat1"]'),
-        folderA: !!document.querySelector('.folder-node[data-folder-id="c4fA"]'),
-        folderB: !!document.querySelector('.folder-node[data-folder-id="c4fB"]'),
-        nestedMap: !!document.querySelector('.map-node[data-map-id="c4m2"]'),
+        folderA: !!document.querySelector('[data-folder-id="c4fA"]'),
+        folderB: !!document.querySelector('[data-folder-id="c4fB"]'),
+        nestedMap: !!document.querySelector('[data-map-id="c4m2"]'),
         loreRow: !!document.querySelector('.encyclopedia-item[data-entry-id="c4lore1"]'),
         feat2Row: !!document.querySelector('.feature-row[data-fid="c4feat2"]'),
       };

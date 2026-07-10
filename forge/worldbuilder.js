@@ -2695,6 +2695,15 @@ function handleAtlasDrop(evt) {
     newParentMapId = state.activeMapId;
   }
 
+  _applyAtlasMove(idsToMove, newParentMapId, newParentFolderId);
+}
+
+/**
+ * Shared atlas-move mutation body — used by the legacy nested-DOM drop path (handleAtlasDrop)
+ * and the Phase M flat-row drop path (panels.js). Caller is responsible for recordState()
+ * and any cycle-guard adjustments to newParentMapId.
+ */
+function _applyAtlasMove(idsToMove, newParentMapId, newParentFolderId) {
   idsToMove.forEach(id => {
     const feature = state.features.find(f => f.id === id);
     const map = state.maps.find(m => m.id === id);

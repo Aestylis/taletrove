@@ -99,3 +99,16 @@ DATE        SET            full→thumb         bytes total      decode
   still renders. Console may log an image-resolution miss — that is expected and not asserted.
 - `performance.memory` is Chromium-only; `heap` shows `n/a` on other engines.
 - Thresholds are intentionally soft. The only hard assertion is that the seeded world loaded.
+
+## Phase M — atlas tree virtual scrolling (0.6.45-alpha, 2026-07-10)
+
+Windowed flat-row rendering for the atlas tree (`tests/atlas-virtual.spec.js` carries the hard
+assertion; it seeds 5000 articles fully expanded and times `await refreshAtlasTree()`):
+
+| | before (legacy nested) | after (windowed) |
+|---|---|---|
+| tree rebuild, 1500 pins expanded | ~650ms (B3 measurement, `render({full:true})`) | — |
+| tree rebuild, 5000 articles expanded | (unmeasured; ≫1s extrapolated) | **~6ms median** (runs 4.8–9.8ms) |
+| materialized DOM rows @5000 | ~5000 | **~35** (viewport + 2×10 overscan) |
+
+Kill switch: `saveLS('atlasVirtualTree', false)` restores the legacy nested renderer.

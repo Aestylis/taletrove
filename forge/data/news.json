@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-45",
+    "date": "2026-07-10",
+    "title": "Alpha 6.45: Instant World Panel for Large Worlds",
+    "tags": [
+      "Performance"
+    ],
+    "summary": "The world panel now renders only the rows you can see, so huge worlds stay instant: updating the tree at 5,000 articles dropped from hundreds of milliseconds to under 10ms. Searching, scrolling, and drag & drop all work exactly as before.",
+    "content": "<h4>The world panel no longer slows down with your world</h4><p>Previously, every update to the left-hand world tree rebuilt a row for every visible entity — at thousands of pins, folders, and maps, that meant noticeable lag on every search keystroke or edit. The panel now uses windowed rendering: only the rows in view (plus a small buffer) exist at any moment, so updates take milliseconds regardless of world size. Everything behaves as before — search with ancestor folders, collapse/expand, right-click menus, and drag & drop (including dragging past the edge of the visible list; the tree fills in as you scroll mid-drag).</p><p>If anything looks off, the previous renderer is one setting away — let us know at <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a> and we'll help.</p>"
+  },
+  {
     "id": "alpha-6-44",
     "date": "2026-07-10",
     "title": "Alpha 6.44: Under-the-Hood Block Editor Cleanup",
