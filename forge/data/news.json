@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-42",
+    "date": "2026-07-10",
+    "title": "Alpha 6.42: Under-the-Hood World Panel Cleanup",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring of the world-panel code (no visible changes): the tree-building logic was split into focused, independently testable pieces, paving the way for upcoming performance work.",
+    "content": "<h4>Cleaner foundations for the world panel</h4><p>This release contains no user-facing changes. The code that builds the left-hand world tree — search filtering, folder/map/pin rendering, the filter bar, and section headers — previously lived in one very large function. It has been split into focused pieces with dedicated regression tests, making future improvements (especially performance work on large worlds) safer and faster to ship.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-41",
     "date": "2026-07-10",
     "title": "Alpha 6.41: World Panel Refresh Reliability",
