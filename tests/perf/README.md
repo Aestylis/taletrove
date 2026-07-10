@@ -63,6 +63,13 @@ DATE        SET            full→thumb         bytes total      decode
 - **WS5 measured & skipped** — `search.spec.js`: `performGlobalSearch` is ~2–4 ms/query on the 5k
   fixture (median of 7), well under a frame even undebounced per keystroke. A search index is not
   justified; the spec stays as a regression guard.
+- **B3 (marker-icon rebuild) measured & skipped (2026-07-10)** — `scripts/measure-marker-sync.js`:
+  steady-state `syncAllLayers()` rebuilds every visible marker icon, but costs only **8.7 ms**
+  median @ 300 pins (world-1000) and **56.2 ms** @ 1500 pins (world-5000), with **zero DOM node
+  replacements** — Leaflet's `DivIcon.createIcon(oldIcon)` reuses the element and rewrites
+  innerHTML. Layer sync is ~7–9% of a `render({full:true})` (126.7 ms / 650 ms); the other ~90% is
+  `refreshAtlasTree` (C4/WS7 territory). An icon-signature dirty-diff would risk stale-pin bugs
+  (signature must cover icon/color/pinShape/sizes/labels/CoA-links/role) for a single-digit-% win.
 
 ## Findings (2026-06-04)
 
