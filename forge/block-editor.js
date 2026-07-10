@@ -119,6 +119,778 @@ document.addEventListener('mousedown', (e) => {
   if (_slashPalette && !_slashPalette.contains(e.target)) _closeSlashPalette();
 });
 
+// The _build*BlockEditor helpers below each render one block type's edit-mode editor into
+// `wrapper`. Dispatch guards live in renderBlock's switch; `ctx = { ownerId, ownerType,
+// ownerItem }` carries the owning article. Everything else they touch is module/global scope.
+
+async function _buildBlockControls(block, wrapper, ctx) {
+  const dragHandle = el('div', {
+    class: 'block-drag-handle',
+    title: 'Drag to Rearrange',
+    innerHTML: await getIconHTML('dots-three-outline', 'var(--text)')
+  });
+
+  const controlsChildren = [dragHandle];
+
+  // Visibility toggle + delete button only appear in Edit Mode.
+  if (isContentEditMode) {
+    const visibilityIcon = block.visibleToPlayers ? 'eye' : 'eye-closed';
+    const visibilityChip = el('button', {
+      class: `chip visibility-toggle ${block.visibleToPlayers ? 'player' : 'gm'}`,
+      title: block.visibleToPlayers ? 'Visible to Players' : 'GM Only',
+      style: 'display:inline-flex;align-items:center;gap:4px;',
+    }, [
+      el('div', { style: `display:inline-block;width:11px;height:11px;flex-shrink:0;background-color:currentColor;-webkit-mask-image:url('./ui-icons/${visibilityIcon}.svg');mask-image:url('./ui-icons/${visibilityIcon}.svg');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;` }),
+      el('span', { text: block.visibleToPlayers ? 'Player' : 'GM' })
+    ]);
+    visibilityChip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      recordState();
+      block.visibleToPlayers = !block.visibleToPlayers;
+      markEntityDirty(ctx.ownerType, ctx.ownerId);
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+      debouncedSave();
+    });
+
+    const deleteBtn = el('button', {
+      class: 'delete-block-btn',
+      title: 'Delete Block',
+      onclick: (e) => {
+        e.stopPropagation();
+        deleteBlock(ctx.ownerId, block.blockId, ctx.ownerType);
+      }
+    }, [
+      el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/x-circle.svg"); mask-image: url("ui-icons/x-circle.svg");' })
+    ]);
+
+    controlsChildren.push(visibilityChip, deleteBtn);
+  }
+
+  const controlsWrapper = el('div', { class: 'block-controls' }, controlsChildren);
+  wrapper.appendChild(controlsWrapper);
+}
+
+async function _wireBlockViewMode(block, wrapper) {
+  wrapper.innerHTML = await renderBlockViewMode(block);
+
+  // Click-to-play for YouTube thumbnails (view mode only — edit mode is handled by block selection)
+  const ytThumb = wrapper.querySelector('.video-thumbnail-preview[data-yt-id]');
+  if (ytThumb && ytThumb.dataset.ytEditable === '0') {
+    ytThumb.style.cursor = 'pointer';
+    ytThumb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const safeId = ytThumb.dataset.ytId;
+      const embedDiv = document.createElement('div');
+      embedDiv.className = 'video-embed-wrapper';
+      embedDiv.innerHTML = `<iframe src="https://www.youtube.com/embed/${safeId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      ytThumb.replaceWith(embedDiv);
+    });
+  }
+
+  // Wire up interactive elements rendered by the Marked extensions.
+  // Using data-* attributes avoids injecting executable code into HTML strings.
+  wrapper.querySelectorAll('.dice-roll-link[data-notation]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.rollDice(btn.dataset.notation);
+    });
+  });
+  // Initialize embedded Leaflet maps (async — loading state shows until resolved)
+  wrapper.querySelectorAll('.map-embed-container[data-embed-block-id]').forEach(c => {
+    _initMapEmbedLeaflet(c);
+  });
+
+  // Wiki-link navigation: resolve by name at click time so links never
+  // go stale after renames or deletions (no ID is stored in the HTML).
+  wrapper.querySelectorAll('.wiki-link[data-wiki-name]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const name = link.dataset.wikiName;
+      const lowerName = name.toLowerCase();
+      const entry = state.encyclopedia.find(en => en.name.toLowerCase() === lowerName);
+      if (entry) { window.navigateToEncyclopediaEntry(entry.id); return; }
+      const feature = state.features.find(f => (f.title || f.name || '').toLowerCase() === lowerName);
+      if (feature) { window.navigateToFeature(feature.id); return; }
+      window.showAlertModal('Not Found', `No entry or feature named "${escapeHtml(name)}" was found.`);
+    });
+  });
+}
+
+async function _buildTextFieldEditor(block, wrapper, ctx) {
+  const labelInput = el('input', {
+    id: `${block.blockId}-label`, name: `${block.blockId}-label`, type: 'text',
+    class: 'inline-editor label-input', placeholder: 'Optional: Section Label...',
+    value: block.data.label || '', onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { label: e.target.value })
+  });
+  labelInput.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showGeneratorMenu(e, labelInput);
+  });
+  const labelWrapper = el('div', { class: 'generatable-input' }, [
+    labelInput,
+    el('div', { class: 'generator-icon', innerHTML: await getIconHTML('dice-six') })
+  ]);
+
+  const snippetBar = el('div', { class: 'markdown-snippet-bar' });
+  const snippets = [
+    { label: 'Table', icon: 'ui-icons/table.svg', template: '\n| Stat | Value |\n| :--- | :--- |\n| STR | 10 |\n| DEX | 10 |\n' },
+    { label: 'Note', icon: 'ui-icons/note.svg', template: '\n> [!NOTE] Title\n> Body text goes here.\n' },
+    { label: 'Flavor Text', icon: 'ui-icons/quotes.svg', template: '\n> [!QUOTE]\n> Enter your beautiful flavor text here...\n> \n> {{attribution\n> — Name\n> }}\n' },
+    { label: 'Warning', icon: 'ui-icons/warning-circle.svg', template: '\n> [!WARNING] Title\n> Important warning text.\n' },
+    { label: 'Loot Table', icon: 'ui-icons/dice-six.svg', template: '\n| Roll {{1d100}} | Item |\n| :--- | :--- |\n| 1-50 | Common Sword |\n| 51-90 | Rare Amulet |\n| 91-100 | Legendary Relic |\n' },
+    { label: 'Collapsible', icon: 'ui-icons/chat-centered-text.svg', template: '\n> [!INFO]- Collapsible Title\n> This content is hidden by default.\n' },
+    { label: 'Highlight', icon: 'ui-icons/paint-brush-household.svg', template: '==highlighted text==' },
+    { label: 'Monster', icon: 'ui-icons/skull.svg', template: '\n> [!MONSTER] Monster Name\n> | AC | HP | Spd |\n> | :--- | :--- | :--- |\n> | 15 | 45 | 30ft |\n' },
+    { label: 'Colored Block', icon: 'ui-icons/paint-brush-household.svg', template: '\n{{callout-monster, --monster-color:teal, --monster-bg:white\n### Teal Dragon\nThis monster block uses custom colors via CSS variables!\n}}\n' },
+    { label: 'Custom Block', icon: 'ui-icons/code-block.svg', template: '\n{{purple, #book, text-align:center, background:#aa88aa55\nMy favorite book is Wheel of Time.\n}}\n' }
+  ];
+
+  for (const s of snippets) {
+    const btn = el('button', {
+      type: 'button',
+      class: 'snippet-btn ghost',
+      title: `Insert ${s.label} template`,
+      onclick: () => {
+        recordState();
+        const currentVal = contentInput.value;
+        const start = contentInput.selectionStart;
+        const end = contentInput.selectionEnd;
+        const newVal = currentVal.substring(0, start) + s.template + currentVal.substring(end);
+        contentInput.value = newVal;
+        updateBlockData(ctx.ownerId, block.blockId, { content: newVal });
+        contentInput.focus();
+        contentInput.setSelectionRange(start + s.template.length, start + s.template.length);
+      }
+    }, [
+      el('div', { class: 'icon-container', style: `-webkit-mask-image: url("${s.icon}"); mask-image: url("${s.icon}");` })
+    ]);
+    snippetBar.appendChild(btn);
+  }
+
+  const contentInput = el('textarea', {
+    id: `${block.blockId}-content`, name: `${block.blockId}-content`,
+    class: 'inline-editor', placeholder: 'Enter your text content (Markdown supported)...',
+    text: block.data.content || '', onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { content: e.target.value })
+  });
+  contentInput.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showGeneratorMenu(e, contentInput);
+  });
+  contentInput.addEventListener('keydown', (e) => {
+    // Palette open — route all keys to palette navigation
+    if (_slashPalette) {
+      const q = _slashQuery.toLowerCase();
+      const filtered = SLASH_COMMANDS.filter(c =>
+        c.label.toLowerCase().startsWith(q) ||
+        c.type.toLowerCase().startsWith(q) ||
+        c.desc.toLowerCase().includes(q)
+      );
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          _slashSelectedIdx = (_slashSelectedIdx + 1) % Math.max(filtered.length, 1);
+          _renderSlashPalette(); return;
+        case 'ArrowUp':
+          e.preventDefault();
+          _slashSelectedIdx = (_slashSelectedIdx - 1 + Math.max(filtered.length, 1)) % Math.max(filtered.length, 1);
+          _renderSlashPalette(); return;
+        case 'Enter':
+          e.preventDefault();
+          if (filtered[_slashSelectedIdx]) _insertSlashBlock(filtered[_slashSelectedIdx].type);
+          return;
+        case 'Escape':
+          e.stopPropagation();
+          _closeSlashPalette(); return;
+        case 'Backspace':
+          e.preventDefault();
+          if (_slashQuery.length === 0) _closeSlashPalette();
+          else { _slashQuery = _slashQuery.slice(0, -1); _renderSlashPalette(); }
+          return;
+        default:
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            _slashQuery += e.key;
+            _renderSlashPalette();
+          }
+          return;
+      }
+    }
+    // --- Block traversal: ArrowUp at first line → select previous block ---
+    if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      const pos = contentInput.selectionStart;
+      const val = contentInput.value;
+      if (val.lastIndexOf('\n', pos - 1) < 0) { // cursor is on first line
+        const blockIdx = ctx.ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
+        if (blockIdx > 0) {
+          e.preventDefault();
+          _blockTraversalFocusEnd = true;
+          selectBlock(ctx.ownerId, ctx.ownerItem.blocks[blockIdx - 1].blockId, ctx.ownerType);
+          return;
+        }
+      }
+    }
+
+    // --- Block traversal: ArrowDown at last line → select next block ---
+    if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      const pos = contentInput.selectionEnd;
+      const val = contentInput.value;
+      if (val.indexOf('\n', pos) < 0) { // cursor is on last line
+        const blockIdx = ctx.ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
+        if (blockIdx < ctx.ownerItem.blocks.length - 1) {
+          e.preventDefault();
+          selectBlock(ctx.ownerId, ctx.ownerItem.blocks[blockIdx + 1].blockId, ctx.ownerType);
+          return;
+        }
+      }
+    }
+
+    // --- Backspace at position 0: merge into previous TextField ---
+    if (e.key === 'Backspace' && contentInput.selectionStart === 0 && contentInput.selectionEnd === 0) {
+      const blockIdx = ctx.ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
+      if (blockIdx > 0 && ctx.ownerItem.blocks[blockIdx - 1].type === 'TextField') {
+        e.preventDefault();
+        const prevBlock = ctx.ownerItem.blocks[blockIdx - 1];
+        recordState();
+        const prevLen = (prevBlock.data.content || '').length;
+        prevBlock.data.content = (prevBlock.data.content || '') + contentInput.value;
+        ctx.ownerItem.blocks.splice(blockIdx, 1);
+        markEntityDirty(ctx.ownerType, ctx.ownerId);
+        _blockMergePoint = prevLen;
+        selectedBlockId = prevBlock.blockId;
+        showInfoPanel(ctx.ownerId, ctx.ownerType);
+        debouncedSave();
+        return;
+      }
+    }
+
+    // --- Ctrl/Cmd+Enter: split block at cursor ---
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault();
+      const pos = contentInput.selectionStart;
+      const val = contentInput.value;
+      const head = val.substring(0, pos);
+      const tail = val.substring(pos).replace(/^\n/, '');
+      recordState();
+      block.data.content = head;
+      const newBlock = {
+        blockId: 'blk-' + uid(),
+        type: 'TextField',
+        visibleToPlayers: block.visibleToPlayers,
+        data: { content: tail, label: '' }
+      };
+      const blockIdx = ctx.ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
+      ctx.ownerItem.blocks.splice(blockIdx + 1, 0, newBlock);
+      markEntityDirty(ctx.ownerType, ctx.ownerId);
+      selectedBlockId = newBlock.blockId;
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+      debouncedSave();
+      return;
+    }
+
+    // Open slash palette: '/' at line start or in empty textarea
+    if (e.key === '/') {
+      const pos = contentInput.selectionStart;
+      const val = contentInput.value;
+      if (pos === 0 || val[pos - 1] === '\n' || val.trim() === '') {
+        e.preventDefault();
+        _openSlashPalette(contentInput, ctx.ownerId, ctx.ownerType);
+        return;
+      }
+    }
+    // Enter on empty textarea → new text block
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      if (contentInput.value.trim() === '') {
+        e.preventDefault();
+        addBlock(ctx.ownerId, ctx.ownerType, 'TextField');
+      }
+    }
+  });
+  const contentWrapper = el('div', { class: 'generatable-input' }, [
+    contentInput,
+    el('div', { class: 'generator-icon', innerHTML: await getIconHTML('dice-six') })
+  ]);
+
+  contentInput.addEventListener('input', () => _autoExpand(contentInput));
+
+  wrapper.append(labelWrapper, snippetBar, contentWrapper);
+  setTimeout(() => {
+    _autoExpand(contentInput);
+    contentInput.focus();
+    if (_blockTraversalFocusEnd) {
+      _blockTraversalFocusEnd = false;
+      const len = contentInput.value.length;
+      contentInput.setSelectionRange(len, len);
+    } else if (_blockMergePoint >= 0) {
+      contentInput.setSelectionRange(_blockMergePoint, _blockMergePoint);
+      _blockMergePoint = -1;
+    }
+  }, 0);
+}
+
+function _buildImageBlockEditor(block, wrapper, ctx) {
+  const previewContainer = el('div', { class: 'block-image-preview' });
+  renderBlockViewMode(block).then(html => { if (previewContainer.parentNode) previewContainer.innerHTML = html; }).catch(() => {});
+  const uploadBtn = el('button', {
+    class: 'ghost', style: 'flex: 1;', text: 'Upload',
+    title: 'Upload an image from your device',
+    onclick: () => {
+      window.targetBlockForUpload = block.blockId;
+      $('#imageBlockUploadFile').click();
+    }
+  });
+  const searchBtn = el('button', {
+    class: 'ghost', style: 'flex: 1;', text: 'Search',
+    title: 'Search free image libraries (Wikimedia Commons)',
+    onclick: () => {
+      if (typeof window.openImageSearchModal !== 'function') {
+        if (typeof showAlertModal === 'function') showAlertModal('Image Search Unavailable', 'The image search module did not load.');
+        return;
+      }
+      window.openImageSearchModal({
+        title: 'Search Images',
+        onPick: async (blob, meta) => {
+          const processed = await processImageUpload(blob);
+          const imageKey = 'img-' + uid();
+          await idbSet(imageKey, processed);
+          state.assetNames = state.assetNames || {};
+          state.assetNames[imageKey] = meta.title || 'Untitled';
+          state.assetMeta = state.assetMeta || {};
+          state.assetMeta[imageKey] = meta;
+          markEntityDirty('meta');
+          updateBlockData(ctx.ownerId, block.blockId, { src: imageKey, caption: block.data.caption || (meta.author ? `${meta.title} — ${meta.author} (${meta.licenseLabel})` : '') });
+          if (typeof refreshAssetsView === 'function') refreshAssetsView(true);
+          if (typeof showToast === 'function') showToast(`Inserted “${meta.title}”.`);
+        },
+      });
+    }
+  });
+  const imageBtnRow = el('div', { style: 'display: flex; gap: 0.4rem;' }, [uploadBtn, searchBtn]);
+  const srcInput = el('input', {
+    id: `${block.blockId}-src`, name: `${block.blockId}-src`,
+    type: 'text', class: 'inline-editor', placeholder: 'Image key or URL...',
+    value: block.data.src || '', onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { src: e.target.value })
+  });
+  const captionInput = el('input', {
+    id: `${block.blockId}-caption`, name: `${block.blockId}-caption`,
+    type: 'text', class: 'inline-editor', placeholder: 'Optional caption...',
+    value: block.data.caption || '', onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { caption: e.target.value })
+  });
+  const currentFloat = block.data.float || 'none';
+  const floatGroup = el('div', { class: 'float-position-group' });
+  [
+    { value: 'left',  label: '← Float Left' },
+    { value: 'none',  label: 'Inline' },
+    { value: 'right', label: 'Float Right →' }
+  ].forEach(opt => {
+    const btn = el('button', {
+      type: 'button',
+      class: opt.value === currentFloat ? 'is-active' : '',
+      text: opt.label,
+      onclick: () => {
+        recordState();
+        const updates = { float: opt.value };
+        if (opt.value !== 'none' && (block.data.size || 100) >= 80) {
+          updates.size = 40;
+        }
+        updateBlockData(ctx.ownerId, block.blockId, updates);
+      }
+    });
+    floatGroup.appendChild(btn);
+  });
+  const sizeLabel = el('label', { class: 'inline-editor', style: 'display: flex; align-items: center; gap: .5rem;' });
+  const sizeDisplaySpan = el('span', { text: `${block.data.size || 100}%` });
+  const sizeInput = el('input', {
+    type: 'range', min: 20, max: 100, step: 5,
+    value: block.data.size || 100, onfocus: () => recordState(),
+    oninput: (e) => { sizeDisplaySpan.textContent = `${e.target.value}%`; },
+    onchange: (e) => { updateBlockData(ctx.ownerId, block.blockId, { size: parseInt(e.target.value, 10) }); }
+  });
+  const sliderLabelText = currentFloat !== 'none' ? 'Width: ' : 'Size: ';
+  sizeLabel.append(sliderLabelText, sizeInput, sizeDisplaySpan);
+  wrapper.append(previewContainer, imageBtnRow, srcInput, captionInput, floatGroup, sizeLabel);
+}
+
+// YouTube and Spotify editors are identical apart from the placeholder text.
+function _buildUrlBlockEditor(block, wrapper, ctx, placeholder) {
+  const urlInput = el('input', {
+    id: `${block.blockId}-url`, name: `${block.blockId}-url`,
+    type: 'url', class: 'inline-editor', placeholder,
+    value: block.data.url || '', onfocus: () => recordState(),
+    onchange: (e) => { updateBlockData(ctx.ownerId, block.blockId, { url: e.target.value }); }
+  });
+  wrapper.appendChild(urlInput);
+}
+
+function _buildTagsBlockEditor(block, wrapper, ctx) {
+  const tagsInput = el('input', {
+    id: `${block.blockId}-tags`, name: `${block.blockId}-tags`,
+    type: 'text', class: 'inline-editor', placeholder: 'Comma, separated, tags...',
+    value: (block.data.tags || []).join(', '), onfocus: () => recordState(),
+    onchange: (e) => {
+      const tags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+      updateBlockData(ctx.ownerId, block.blockId, { tags: tags });
+    }
+  });
+  wrapper.appendChild(tagsInput);
+}
+
+function _buildFeatureLinkEditor(block, wrapper, ctx) {
+  const allFeatureOptions = state.features
+    .filter(feat => feat.id !== ctx.ownerId)
+    .map(feat => ({ value: feat.id, text: feat.title || '(untitled)' }));
+  const linkEditor = createMultiSelect(
+    allFeatureOptions,
+    block.data.targetIds || [],
+    (newValues) => {
+      recordState();
+      updateBlockData(ctx.ownerId, block.blockId, { targetIds: newValues });
+    },
+    'Link to a feature...'
+  );
+  wrapper.appendChild(linkEditor);
+}
+
+function _buildPropertiesBlockEditor(block, wrapper, ctx) {
+  block.data.rows = block.data.rows || [];
+  const propsEditor = el('div', { class: 'properties-editor' });
+
+  // Title + columns controls
+  const titleInput = el('input', {
+    type: 'text', class: 'inline-editor properties-title-input',
+    placeholder: 'Section title (optional)…',
+    value: block.data.title || '',
+    onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { title: e.target.value })
+  });
+
+  const colToggle = el('div', { class: 'properties-col-toggle' }, [
+    el('span', { class: 'form-label', text: 'Columns' }),
+    ...[1, 2].map(n => {
+      const btn = el('button', {
+        class: 'properties-col-btn' + (( block.data.columns || 2 ) === n ? ' active' : ''),
+        text: String(n),
+        onclick: () => {
+          recordState();
+          updateBlockData(ctx.ownerId, block.blockId, { columns: n });
+        }
+      });
+      return btn;
+    })
+  ]);
+
+  propsEditor.append(
+    el('div', { class: 'properties-editor-header' }, [titleInput, colToggle])
+  );
+
+  // Row list
+  const rowList = el('div', { class: 'properties-row-list' });
+
+  const rebuildRows = () => {
+    rowList.innerHTML = '';
+    block.data.rows.forEach((row, idx) => {
+      const rowEl = el('div', { class: 'properties-editor-row' + (row.isSection ? ' is-section' : '') });
+
+      const labelInput = el('input', {
+        type: 'text', class: 'inline-editor props-label-input',
+        placeholder: row.isSection ? 'Section header…' : 'Label…',
+        value: row.label || '',
+        onfocus: () => recordState(),
+        onchange: (e) => { row.label = e.target.value; debouncedSave(); }
+      });
+
+      const valueInput = row.isSection
+        ? el('span') // no value for section headers
+        : el('input', {
+            type: 'text', class: 'inline-editor props-value-input',
+            placeholder: 'Value…',
+            value: row.value || '',
+            onfocus: () => recordState(),
+            onchange: (e) => { row.value = e.target.value; debouncedSave(); }
+          });
+
+      const sectionBtn = el('button', {
+        class: 'properties-section-toggle' + (row.isSection ? ' active' : ''),
+        title: row.isSection ? 'Make data row' : 'Make section header',
+        innerHTML: getIconHTMLSync('columns', 'currentColor'),
+        onclick: () => {
+          recordState();
+          row.isSection = !row.isSection;
+          if (row.isSection) row.value = '';
+          debouncedSave();
+          showInfoPanel(ctx.ownerId, ctx.ownerType);
+        }
+      });
+
+      const removeBtn = el('button', {
+        class: 'remove-event-btn', title: 'Remove row',
+        onclick: () => {
+          recordState();
+          block.data.rows.splice(idx, 1);
+          debouncedSave();
+          showInfoPanel(ctx.ownerId, ctx.ownerType);
+        }
+      }, [el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })]);
+
+      rowEl.append(labelInput, valueInput, sectionBtn, removeBtn);
+      rowList.appendChild(rowEl);
+    });
+  };
+
+  rebuildRows();
+  propsEditor.appendChild(rowList);
+
+  const addRowBtn = el('button', {
+    class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
+    text: '+ Add Row',
+    onclick: () => {
+      recordState();
+      block.data.rows.push({ label: '', value: '', isSection: false });
+      debouncedSave();
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+    }
+  });
+  const addSectionBtn = el('button', {
+    class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
+    text: '+ Add Section',
+    onclick: () => {
+      recordState();
+      block.data.rows.push({ label: '', value: '', isSection: true });
+      debouncedSave();
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+    }
+  });
+  propsEditor.appendChild(el('div', { style: 'display:flex; gap:.5rem;' }, [addRowBtn, addSectionBtn]));
+  wrapper.appendChild(propsEditor);
+}
+
+function _buildTimelineBlockEditor(block, wrapper, ctx) {
+  const editorWrapper = el('div', { class: 'timeline-editor' });
+
+  (block.data.events || []).forEach((event, index) => {
+    event.dateData = event.dateData || parseLegacyTimelineDate(event.date);
+    event.endDateData = event.endDateData || parseLegacyTimelineDate(event.endDate);
+    event.source = event.source || 'local';
+
+    let titleWidget;
+    if (event.source === 'linked') {
+      const options = [
+        { value: '', text: 'Pick Encyclopedia Event...' },
+        ...state.encyclopedia.filter(e => e.type?.toLowerCase() === 'event').map(e => ({ value: e.id, text: e.name }))
+      ];
+      titleWidget = createSearchableSelect(options, event.linkedId, (val) => {
+        recordState();
+        event.linkedId = val;
+        window.showInfoPanel(ctx.ownerId, ctx.ownerType);
+        debouncedSave();
+      }, 'Pick Encyclopedia Event...');
+    } else {
+      titleWidget = el('input', {
+        type: 'text', placeholder: 'Event Title', value: event.title || '',
+        oninput: (e) => window.updateTimelineEvent(block.blockId, index, { title: e.target.value })
+      });
+    }
+
+    const sourceToggle = el('select', { class: 'timeline-source-toggle', title: 'Event Source' }, [
+      el('option', { value: 'local', text: 'Local', selected: event.source === 'local' }),
+      el('option', { value: 'linked', text: 'Linked', selected: event.source === 'linked' })
+    ]);
+    sourceToggle.onchange = (e) => {
+      recordState();
+      event.source = e.target.value;
+      window.showInfoPanel(ctx.ownerId, ctx.ownerType);
+      debouncedSave();
+    };
+
+    const headerRow = el('div', { class: 'timeline-editor-event-header' }, [titleWidget, sourceToggle]);
+
+    const descTextarea = el('textarea', {
+      placeholder: 'Description...', text: event.description || '',
+      disabled: event.source === 'linked',
+      oninput: (e) => window.updateTimelineEvent(block.blockId, index, { description: e.target.value })
+    });
+
+    const dateCol = el('div', { class: 'timeline-editor-event-date-col' });
+    if (event.source === 'linked' && event.linkedId) {
+      const src = state.encyclopedia.find(x => x.id === event.linkedId);
+      const d = src?.eventData || {};
+      const dateStr = `${d.day || ''} ${d.month || ''} ${d.year || ''} ${d.era || ''}`.trim() || 'No date set';
+      dateCol.appendChild(el('div', { class: 'form-label', text: 'Event Date' }));
+      dateCol.appendChild(el('div', { class: 'linked-date-display', text: dateStr }));
+    } else {
+      const startPicker = buildDatePicker(event.dateData, (key, val) => {
+        const newData = { ...event.dateData, [key]: val };
+        window.updateTimelineEvent(block.blockId, index, { dateData: newData });
+      }, { label: 'Event Date' });
+      dateCol.appendChild(startPicker);
+    }
+
+    const bodyRow = el('div', { class: 'timeline-editor-event-body' }, [descTextarea, dateCol]);
+
+    const colorControls = el('div', { class: 'timeline-event-color-controls' }, [
+      el('div', { class: 'timeline-event-color-picker-wrap' }, [
+        el('span', { text: 'BG' }),
+        el('input', {
+          type: 'color', class: 'timeline-event-color-picker',
+          value: event.color || '#ff7a1a',
+          onfocus: () => recordState(),
+          oninput: debounce((e) => window.updateTimelineEvent(block.blockId, index, { color: e.target.value }), 200)
+        })
+      ]),
+      el('div', { class: 'timeline-event-color-picker-wrap' }, [
+        el('span', { text: 'Text' }),
+        el('input', {
+          type: 'color', class: 'timeline-event-color-picker',
+          value: event.textColor || (siteTheme === 'dark' ? '#e8e9eb' : '#3d352e'),
+          onfocus: () => recordState(),
+          oninput: debounce((e) => window.updateTimelineEvent(block.blockId, index, { textColor: e.target.value }), 200)
+        })
+      ])
+    ]);
+
+    const removeBtn = el('button', {
+      class: 'remove-event-btn', title: 'Remove Event',
+      onclick: () => window.removeTimelineEvent(block.blockId, index)
+    }, [el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })]);
+
+    const footerRow = el('div', { class: 'timeline-editor-event-footer' }, [colorControls, removeBtn]);
+
+    const eventCard = el('div', { class: 'timeline-editor-event' }, [headerRow, bodyRow, footerRow]);
+    editorWrapper.appendChild(eventCard);
+  });
+
+  const addBtn = el('button', {
+    class: 'ghost full-width', style: 'margin-top: .5rem;', text: '+ Add Event',
+    onclick: () => window.addTimelineEvent(block.blockId)
+  });
+  editorWrapper.appendChild(addBtn);
+  wrapper.appendChild(editorWrapper);
+}
+
+function _buildRelationshipsBlockEditor(block, wrapper, ctx) {
+  const relEditor = el('div', { class: 'relationship-editor' });
+  const allOptions = [...state.features, ...state.encyclopedia]
+    .filter(item => item.id !== ctx.ownerId)
+    .map(item => ({ value: item.id, text: item.title || item.name || '(untitled)' }));
+
+  (block.data.links || []).forEach((link, idx) => {
+    const row = el('div', { class: 'relationship-editor-row' });
+
+    const targetSelect = createSearchableSelect(allOptions, link.targetId, (newVal) => {
+      recordState();
+      link.targetId = newVal;
+      debouncedSave();
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+    }, 'Select Target...');
+
+    const typeInput = el('input', {
+      type: 'text', placeholder: 'Type (e.g. Ally)', value: link.type || '',
+      onchange: (e) => { recordState(); link.type = e.target.value; debouncedSave(); }
+    });
+
+    const removeBtn = el('button', {
+      class: 'remove-event-btn', title: 'Remove Relationship',
+      onclick: () => {
+        recordState();
+        block.data.links.splice(idx, 1);
+        showToast('Relationship removed.', () => undo());
+        debouncedSave();
+        showInfoPanel(ctx.ownerId, ctx.ownerType);
+      }
+    }, [
+      el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })
+    ]);
+
+    row.append(targetSelect, typeInput, removeBtn);
+    relEditor.appendChild(row);
+  });
+
+  const addRelBtn = el('button', {
+    class: 'ghost full-width', text: '+ Add Relationship',
+    onclick: () => {
+      recordState();
+      block.data.links = block.data.links || [];
+      block.data.links.push({ targetId: null, type: '', isBidirectional: false });
+      debouncedSave();
+      showInfoPanel(ctx.ownerId, ctx.ownerType);
+    }
+  });
+  relEditor.appendChild(addRelBtn);
+  wrapper.appendChild(relEditor);
+}
+
+function _buildMeterBlockEditor(block, wrapper, ctx) {
+  const meterLabelInput = el('input', {
+    type: 'text', class: 'inline-editor label-input',
+    placeholder: 'Label (e.g. Hit Points)...',
+    value: block.data.label || '',
+    onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { label: e.target.value })
+  });
+  const meterRow = el('div', { class: 'meter-inputs-row' });
+  const currentInput = el('input', {
+    type: 'number', class: 'inline-editor meter-num-input',
+    placeholder: 'Current', min: '0',
+    value: String(block.data.current ?? 0),
+    onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { current: Number(e.target.value) || 0 })
+  });
+  const maxInput = el('input', {
+    type: 'number', class: 'inline-editor meter-num-input',
+    placeholder: 'Max', min: '1',
+    value: String(block.data.max ?? 10),
+    onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { max: Math.max(1, Number(e.target.value) || 1) })
+  });
+  meterRow.append(currentInput, el('span', { class: 'meter-sep', text: '/' }), maxInput);
+  wrapper.append(meterLabelInput, meterRow);
+}
+
+function _buildMapEmbedBlockEditor(block, wrapper, ctx) {
+  const mapOptions = state.maps.map(m => ({ value: m.id, text: m.name }));
+  const currentMapId = block.data.mapId || state.activeMapId;
+  const mapSelect = createSearchableSelect(
+    mapOptions, currentMapId,
+    (val) => updateBlockData(ctx.ownerId, block.blockId, { mapId: val }),
+    'Select map…'
+  );
+
+  const heightVal = block.data.height || 280;
+  const heightLabel = el('span', { text: `${heightVal}px`, class: 'muted', style: 'min-width: 3rem' });
+  const heightInput = el('input', {
+    type: 'range', min: '160', max: '600', step: '20',
+    value: String(heightVal), class: 'inline-editor',
+    oninput:  (e) => { heightLabel.textContent = `${e.target.value}px`; },
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { height: Number(e.target.value) })
+  });
+
+  const captionInput = el('input', {
+    type: 'text', class: 'inline-editor',
+    placeholder: 'Caption (optional)…',
+    value: block.data.caption || '',
+    onfocus: () => recordState(),
+    onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { caption: e.target.value })
+  });
+
+  wrapper.append(
+    el('div', { class: 'block-embed-field' }, [
+      el('label', { class: 'form-label', text: 'Map' }),
+      mapSelect
+    ]),
+    el('div', { class: 'block-embed-field' }, [
+      el('label', { class: 'form-label', text: 'Height' }),
+      el('div', { class: 'block-embed-range-row' }, [heightInput, heightLabel])
+    ]),
+    el('div', { class: 'block-embed-field' }, [
+      el('label', { class: 'form-label', text: 'Caption' }),
+      captionInput
+    ])
+  );
+}
+
 async function renderBlock(block) {
   const isSelected = (block.blockId === selectedBlockId);
   // Determine the owner item (feature or encyclopedia)
@@ -128,6 +900,7 @@ async function renderBlock(block) {
 
   const ownerId = ownerItem?.id;
   const ownerType = infoPanelFeatureId ? 'feature' : 'encyclopedia';
+  const ctx = { ownerId, ownerType, ownerItem };
 
   // Float: only applies to Image blocks in view mode
   const blockFloat = (block.type === 'Image' && !isContentEditMode)
@@ -159,779 +932,52 @@ async function renderBlock(block) {
 
   // Drag handle — always visible for GM (subtle in view mode, clearer in edit mode).
   // Rendered unconditionally so blocks always have a reorder affordance.
-  if (role === 'gm') {
-    const dragHandle = el('div', {
-      class: 'block-drag-handle',
-      title: 'Drag to Rearrange',
-      innerHTML: await getIconHTML('dots-three-outline', 'var(--text)')
-    });
-
-    const controlsChildren = [dragHandle];
-
-    // Visibility toggle + delete button only appear in Edit Mode.
-    if (isContentEditMode) {
-      const visibilityIcon = block.visibleToPlayers ? 'eye' : 'eye-closed';
-      const visibilityChip = el('button', {
-        class: `chip visibility-toggle ${block.visibleToPlayers ? 'player' : 'gm'}`,
-        title: block.visibleToPlayers ? 'Visible to Players' : 'GM Only',
-        style: 'display:inline-flex;align-items:center;gap:4px;',
-      }, [
-        el('div', { style: `display:inline-block;width:11px;height:11px;flex-shrink:0;background-color:currentColor;-webkit-mask-image:url('./ui-icons/${visibilityIcon}.svg');mask-image:url('./ui-icons/${visibilityIcon}.svg');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;` }),
-        el('span', { text: block.visibleToPlayers ? 'Player' : 'GM' })
-      ]);
-      visibilityChip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        recordState();
-        block.visibleToPlayers = !block.visibleToPlayers;
-        markEntityDirty(ownerType, ownerId);
-        showInfoPanel(ownerId, ownerType);
-        debouncedSave();
-      });
-
-      const deleteBtn = el('button', {
-        class: 'delete-block-btn',
-        title: 'Delete Block',
-        onclick: (e) => {
-          e.stopPropagation();
-          deleteBlock(ownerId, block.blockId, ownerType);
-        }
-      }, [
-        el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/x-circle.svg"); mask-image: url("ui-icons/x-circle.svg");' })
-      ]);
-
-      controlsChildren.push(visibilityChip, deleteBtn);
-    }
-
-    const controlsWrapper = el('div', { class: 'block-controls' }, controlsChildren);
-    wrapper.appendChild(controlsWrapper);
-  }
+  if (role === 'gm') await _buildBlockControls(block, wrapper, ctx);
 
   // The inline editor view is only shown if the block is selected AND we are in Edit Mode.
   if (isSelected && isContentEditMode) {
     switch (block.type) {
       case 'TextField':
-        const labelInput = el('input', {
-          id: `${block.blockId}-label`, name: `${block.blockId}-label`, type: 'text',
-          class: 'inline-editor label-input', placeholder: 'Optional: Section Label...',
-          value: block.data.label || '', onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { label: e.target.value })
-        });
-        labelInput.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          showGeneratorMenu(e, labelInput);
-        });
-        const labelWrapper = el('div', { class: 'generatable-input' }, [
-          labelInput,
-          el('div', { class: 'generator-icon', innerHTML: await getIconHTML('dice-six') })
-        ]);
-
-        const snippetBar = el('div', { class: 'markdown-snippet-bar' });
-        const snippets = [
-          { label: 'Table', icon: 'ui-icons/table.svg', template: '\n| Stat | Value |\n| :--- | :--- |\n| STR | 10 |\n| DEX | 10 |\n' },
-          { label: 'Note', icon: 'ui-icons/note.svg', template: '\n> [!NOTE] Title\n> Body text goes here.\n' },
-          { label: 'Flavor Text', icon: 'ui-icons/quotes.svg', template: '\n> [!QUOTE]\n> Enter your beautiful flavor text here...\n> \n> {{attribution\n> — Name\n> }}\n' },
-          { label: 'Warning', icon: 'ui-icons/warning-circle.svg', template: '\n> [!WARNING] Title\n> Important warning text.\n' },
-          { label: 'Loot Table', icon: 'ui-icons/dice-six.svg', template: '\n| Roll {{1d100}} | Item |\n| :--- | :--- |\n| 1-50 | Common Sword |\n| 51-90 | Rare Amulet |\n| 91-100 | Legendary Relic |\n' },
-          { label: 'Collapsible', icon: 'ui-icons/chat-centered-text.svg', template: '\n> [!INFO]- Collapsible Title\n> This content is hidden by default.\n' },
-          { label: 'Highlight', icon: 'ui-icons/paint-brush-household.svg', template: '==highlighted text==' },
-          { label: 'Monster', icon: 'ui-icons/skull.svg', template: '\n> [!MONSTER] Monster Name\n> | AC | HP | Spd |\n> | :--- | :--- | :--- |\n> | 15 | 45 | 30ft |\n' },
-          { label: 'Colored Block', icon: 'ui-icons/paint-brush-household.svg', template: '\n{{callout-monster, --monster-color:teal, --monster-bg:white\n### Teal Dragon\nThis monster block uses custom colors via CSS variables!\n}}\n' },
-          { label: 'Custom Block', icon: 'ui-icons/code-block.svg', template: '\n{{purple, #book, text-align:center, background:#aa88aa55\nMy favorite book is Wheel of Time.\n}}\n' }
-        ];
-
-        for (const s of snippets) {
-          const btn = el('button', {
-            type: 'button',
-            class: 'snippet-btn ghost',
-            title: `Insert ${s.label} template`,
-            onclick: () => {
-              recordState();
-              const currentVal = contentInput.value;
-              const start = contentInput.selectionStart;
-              const end = contentInput.selectionEnd;
-              const newVal = currentVal.substring(0, start) + s.template + currentVal.substring(end);
-              contentInput.value = newVal;
-              updateBlockData(ownerId, block.blockId, { content: newVal });
-              contentInput.focus();
-              contentInput.setSelectionRange(start + s.template.length, start + s.template.length);
-            }
-          }, [
-            el('div', { class: 'icon-container', style: `-webkit-mask-image: url("${s.icon}"); mask-image: url("${s.icon}");` })
-          ]);
-          snippetBar.appendChild(btn);
-        }
-
-        const contentInput = el('textarea', {
-          id: `${block.blockId}-content`, name: `${block.blockId}-content`,
-          class: 'inline-editor', placeholder: 'Enter your text content (Markdown supported)...',
-          text: block.data.content || '', onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { content: e.target.value })
-        });
-        contentInput.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          showGeneratorMenu(e, contentInput);
-        });
-        contentInput.addEventListener('keydown', (e) => {
-          // Palette open — route all keys to palette navigation
-          if (_slashPalette) {
-            const q = _slashQuery.toLowerCase();
-            const filtered = SLASH_COMMANDS.filter(c =>
-              c.label.toLowerCase().startsWith(q) ||
-              c.type.toLowerCase().startsWith(q) ||
-              c.desc.toLowerCase().includes(q)
-            );
-            switch (e.key) {
-              case 'ArrowDown':
-                e.preventDefault();
-                _slashSelectedIdx = (_slashSelectedIdx + 1) % Math.max(filtered.length, 1);
-                _renderSlashPalette(); return;
-              case 'ArrowUp':
-                e.preventDefault();
-                _slashSelectedIdx = (_slashSelectedIdx - 1 + Math.max(filtered.length, 1)) % Math.max(filtered.length, 1);
-                _renderSlashPalette(); return;
-              case 'Enter':
-                e.preventDefault();
-                if (filtered[_slashSelectedIdx]) _insertSlashBlock(filtered[_slashSelectedIdx].type);
-                return;
-              case 'Escape':
-                e.stopPropagation();
-                _closeSlashPalette(); return;
-              case 'Backspace':
-                e.preventDefault();
-                if (_slashQuery.length === 0) _closeSlashPalette();
-                else { _slashQuery = _slashQuery.slice(0, -1); _renderSlashPalette(); }
-                return;
-              default:
-                if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                  e.preventDefault();
-                  _slashQuery += e.key;
-                  _renderSlashPalette();
-                }
-                return;
-            }
-          }
-          // --- Block traversal: ArrowUp at first line → select previous block ---
-          if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            const pos = contentInput.selectionStart;
-            const val = contentInput.value;
-            if (val.lastIndexOf('\n', pos - 1) < 0) { // cursor is on first line
-              const blockIdx = ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
-              if (blockIdx > 0) {
-                e.preventDefault();
-                _blockTraversalFocusEnd = true;
-                selectBlock(ownerId, ownerItem.blocks[blockIdx - 1].blockId, ownerType);
-                return;
-              }
-            }
-          }
-
-          // --- Block traversal: ArrowDown at last line → select next block ---
-          if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            const pos = contentInput.selectionEnd;
-            const val = contentInput.value;
-            if (val.indexOf('\n', pos) < 0) { // cursor is on last line
-              const blockIdx = ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
-              if (blockIdx < ownerItem.blocks.length - 1) {
-                e.preventDefault();
-                selectBlock(ownerId, ownerItem.blocks[blockIdx + 1].blockId, ownerType);
-                return;
-              }
-            }
-          }
-
-          // --- Backspace at position 0: merge into previous TextField ---
-          if (e.key === 'Backspace' && contentInput.selectionStart === 0 && contentInput.selectionEnd === 0) {
-            const blockIdx = ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
-            if (blockIdx > 0 && ownerItem.blocks[blockIdx - 1].type === 'TextField') {
-              e.preventDefault();
-              const prevBlock = ownerItem.blocks[blockIdx - 1];
-              recordState();
-              const prevLen = (prevBlock.data.content || '').length;
-              prevBlock.data.content = (prevBlock.data.content || '') + contentInput.value;
-              ownerItem.blocks.splice(blockIdx, 1);
-              markEntityDirty(ownerType, ownerId);
-              _blockMergePoint = prevLen;
-              selectedBlockId = prevBlock.blockId;
-              showInfoPanel(ownerId, ownerType);
-              debouncedSave();
-              return;
-            }
-          }
-
-          // --- Ctrl/Cmd+Enter: split block at cursor ---
-          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
-            e.preventDefault();
-            const pos = contentInput.selectionStart;
-            const val = contentInput.value;
-            const head = val.substring(0, pos);
-            const tail = val.substring(pos).replace(/^\n/, '');
-            recordState();
-            block.data.content = head;
-            const newBlock = {
-              blockId: 'blk-' + uid(),
-              type: 'TextField',
-              visibleToPlayers: block.visibleToPlayers,
-              data: { content: tail, label: '' }
-            };
-            const blockIdx = ownerItem.blocks.findIndex(b => b.blockId === block.blockId);
-            ownerItem.blocks.splice(blockIdx + 1, 0, newBlock);
-            markEntityDirty(ownerType, ownerId);
-            selectedBlockId = newBlock.blockId;
-            showInfoPanel(ownerId, ownerType);
-            debouncedSave();
-            return;
-          }
-
-          // Open slash palette: '/' at line start or in empty textarea
-          if (e.key === '/') {
-            const pos = contentInput.selectionStart;
-            const val = contentInput.value;
-            if (pos === 0 || val[pos - 1] === '\n' || val.trim() === '') {
-              e.preventDefault();
-              _openSlashPalette(contentInput, ownerId, ownerType);
-              return;
-            }
-          }
-          // Enter on empty textarea → new text block
-          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            if (contentInput.value.trim() === '') {
-              e.preventDefault();
-              addBlock(ownerId, ownerType, 'TextField');
-            }
-          }
-        });
-        const contentWrapper = el('div', { class: 'generatable-input' }, [
-          contentInput,
-          el('div', { class: 'generator-icon', innerHTML: await getIconHTML('dice-six') })
-        ]);
-
-        contentInput.addEventListener('input', () => _autoExpand(contentInput));
-
-        wrapper.append(labelWrapper, snippetBar, contentWrapper);
-        setTimeout(() => {
-          _autoExpand(contentInput);
-          contentInput.focus();
-          if (_blockTraversalFocusEnd) {
-            _blockTraversalFocusEnd = false;
-            const len = contentInput.value.length;
-            contentInput.setSelectionRange(len, len);
-          } else if (_blockMergePoint >= 0) {
-            contentInput.setSelectionRange(_blockMergePoint, _blockMergePoint);
-            _blockMergePoint = -1;
-          }
-        }, 0);
+        await _buildTextFieldEditor(block, wrapper, ctx);
         break;
       case 'Image':
-        const previewContainer = el('div', { class: 'block-image-preview' });
-        renderBlockViewMode(block).then(html => { if (previewContainer.parentNode) previewContainer.innerHTML = html; }).catch(() => {});
-        const uploadBtn = el('button', {
-          class: 'ghost', style: 'flex: 1;', text: 'Upload',
-          title: 'Upload an image from your device',
-          onclick: () => {
-            window.targetBlockForUpload = block.blockId;
-            $('#imageBlockUploadFile').click();
-          }
-        });
-        const searchBtn = el('button', {
-          class: 'ghost', style: 'flex: 1;', text: 'Search',
-          title: 'Search free image libraries (Wikimedia Commons)',
-          onclick: () => {
-            if (typeof window.openImageSearchModal !== 'function') {
-              if (typeof showAlertModal === 'function') showAlertModal('Image Search Unavailable', 'The image search module did not load.');
-              return;
-            }
-            window.openImageSearchModal({
-              title: 'Search Images',
-              onPick: async (blob, meta) => {
-                const processed = await processImageUpload(blob);
-                const imageKey = 'img-' + uid();
-                await idbSet(imageKey, processed);
-                state.assetNames = state.assetNames || {};
-                state.assetNames[imageKey] = meta.title || 'Untitled';
-                state.assetMeta = state.assetMeta || {};
-                state.assetMeta[imageKey] = meta;
-                markEntityDirty('meta');
-                updateBlockData(ownerId, block.blockId, { src: imageKey, caption: block.data.caption || (meta.author ? `${meta.title} — ${meta.author} (${meta.licenseLabel})` : '') });
-                if (typeof refreshAssetsView === 'function') refreshAssetsView(true);
-                if (typeof showToast === 'function') showToast(`Inserted “${meta.title}”.`);
-              },
-            });
-          }
-        });
-        const imageBtnRow = el('div', { style: 'display: flex; gap: 0.4rem;' }, [uploadBtn, searchBtn]);
-        const srcInput = el('input', {
-          id: `${block.blockId}-src`, name: `${block.blockId}-src`,
-          type: 'text', class: 'inline-editor', placeholder: 'Image key or URL...',
-          value: block.data.src || '', onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { src: e.target.value })
-        });
-        const captionInput = el('input', {
-          id: `${block.blockId}-caption`, name: `${block.blockId}-caption`,
-          type: 'text', class: 'inline-editor', placeholder: 'Optional caption...',
-          value: block.data.caption || '', onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { caption: e.target.value })
-        });
-        const currentFloat = block.data.float || 'none';
-        const floatGroup = el('div', { class: 'float-position-group' });
-        [
-          { value: 'left',  label: '← Float Left' },
-          { value: 'none',  label: 'Inline' },
-          { value: 'right', label: 'Float Right →' }
-        ].forEach(opt => {
-          const btn = el('button', {
-            type: 'button',
-            class: opt.value === currentFloat ? 'is-active' : '',
-            text: opt.label,
-            onclick: () => {
-              recordState();
-              const updates = { float: opt.value };
-              if (opt.value !== 'none' && (block.data.size || 100) >= 80) {
-                updates.size = 40;
-              }
-              updateBlockData(ownerId, block.blockId, updates);
-            }
-          });
-          floatGroup.appendChild(btn);
-        });
-        const sizeLabel = el('label', { class: 'inline-editor', style: 'display: flex; align-items: center; gap: .5rem;' });
-        const sizeDisplaySpan = el('span', { text: `${block.data.size || 100}%` });
-        const sizeInput = el('input', {
-          type: 'range', min: 20, max: 100, step: 5,
-          value: block.data.size || 100, onfocus: () => recordState(),
-          oninput: (e) => { sizeDisplaySpan.textContent = `${e.target.value}%`; },
-          onchange: (e) => { updateBlockData(ownerId, block.blockId, { size: parseInt(e.target.value, 10) }); }
-        });
-        const sliderLabelText = currentFloat !== 'none' ? 'Width: ' : 'Size: ';
-        sizeLabel.append(sliderLabelText, sizeInput, sizeDisplaySpan);
-        wrapper.append(previewContainer, imageBtnRow, srcInput, captionInput, floatGroup, sizeLabel);
+        _buildImageBlockEditor(block, wrapper, ctx);
         break;
       case 'YouTube':
-        const youtubeInput = el('input', {
-          id: `${block.blockId}-url`, name: `${block.blockId}-url`,
-          type: 'url', class: 'inline-editor', placeholder: 'YouTube URL...',
-          value: block.data.url || '', onfocus: () => recordState(),
-          onchange: (e) => { updateBlockData(ownerId, block.blockId, { url: e.target.value }); }
-        });
-        wrapper.appendChild(youtubeInput);
+        _buildUrlBlockEditor(block, wrapper, ctx, 'YouTube URL...');
         break;
       case 'Spotify':
-        const spotifyInput = el('input', {
-          id: `${block.blockId}-url`, name: `${block.blockId}-url`,
-          type: 'url', class: 'inline-editor', placeholder: 'Spotify URL...',
-          value: block.data.url || '', onfocus: () => recordState(),
-          onchange: (e) => { updateBlockData(ownerId, block.blockId, { url: e.target.value }); }
-        });
-        wrapper.appendChild(spotifyInput);
+        _buildUrlBlockEditor(block, wrapper, ctx, 'Spotify URL...');
         break;
       case 'Tags':
-        const tagsInput = el('input', {
-          id: `${block.blockId}-tags`, name: `${block.blockId}-tags`,
-          type: 'text', class: 'inline-editor', placeholder: 'Comma, separated, tags...',
-          value: (block.data.tags || []).join(', '), onfocus: () => recordState(),
-          onchange: (e) => {
-            const tags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
-            updateBlockData(ownerId, block.blockId, { tags: tags });
-          }
-        });
-        wrapper.appendChild(tagsInput);
+        _buildTagsBlockEditor(block, wrapper, ctx);
         break;
       case 'FeatureLink':
-        const allFeatureOptions = state.features
-          .filter(feat => feat.id !== ownerId)
-          .map(feat => ({ value: feat.id, text: feat.title || '(untitled)' }));
-        const linkEditor = createMultiSelect(
-          allFeatureOptions,
-          block.data.targetIds || [],
-          (newValues) => {
-            recordState();
-            updateBlockData(ownerId, block.blockId, { targetIds: newValues });
-          },
-          'Link to a feature...'
-        );
-        wrapper.appendChild(linkEditor);
+        _buildFeatureLinkEditor(block, wrapper, ctx);
         break;
       case 'Properties': {
-        block.data.rows = block.data.rows || [];
-        const propsEditor = el('div', { class: 'properties-editor' });
-
-        // Title + columns controls
-        const titleInput = el('input', {
-          type: 'text', class: 'inline-editor properties-title-input',
-          placeholder: 'Section title (optional)…',
-          value: block.data.title || '',
-          onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { title: e.target.value })
-        });
-
-        const colToggle = el('div', { class: 'properties-col-toggle' }, [
-          el('span', { class: 'form-label', text: 'Columns' }),
-          ...[1, 2].map(n => {
-            const btn = el('button', {
-              class: 'properties-col-btn' + (( block.data.columns || 2 ) === n ? ' active' : ''),
-              text: String(n),
-              onclick: () => {
-                recordState();
-                updateBlockData(ownerId, block.blockId, { columns: n });
-              }
-            });
-            return btn;
-          })
-        ]);
-
-        propsEditor.append(
-          el('div', { class: 'properties-editor-header' }, [titleInput, colToggle])
-        );
-
-        // Row list
-        const rowList = el('div', { class: 'properties-row-list' });
-
-        const rebuildRows = () => {
-          rowList.innerHTML = '';
-          block.data.rows.forEach((row, idx) => {
-            const rowEl = el('div', { class: 'properties-editor-row' + (row.isSection ? ' is-section' : '') });
-
-            const labelInput = el('input', {
-              type: 'text', class: 'inline-editor props-label-input',
-              placeholder: row.isSection ? 'Section header…' : 'Label…',
-              value: row.label || '',
-              onfocus: () => recordState(),
-              onchange: (e) => { row.label = e.target.value; debouncedSave(); }
-            });
-
-            const valueInput = row.isSection
-              ? el('span') // no value for section headers
-              : el('input', {
-                  type: 'text', class: 'inline-editor props-value-input',
-                  placeholder: 'Value…',
-                  value: row.value || '',
-                  onfocus: () => recordState(),
-                  onchange: (e) => { row.value = e.target.value; debouncedSave(); }
-                });
-
-            const sectionBtn = el('button', {
-              class: 'properties-section-toggle' + (row.isSection ? ' active' : ''),
-              title: row.isSection ? 'Make data row' : 'Make section header',
-              innerHTML: getIconHTMLSync('columns', 'currentColor'),
-              onclick: () => {
-                recordState();
-                row.isSection = !row.isSection;
-                if (row.isSection) row.value = '';
-                debouncedSave();
-                showInfoPanel(ownerId, ownerType);
-              }
-            });
-
-            const removeBtn = el('button', {
-              class: 'remove-event-btn', title: 'Remove row',
-              onclick: () => {
-                recordState();
-                block.data.rows.splice(idx, 1);
-                debouncedSave();
-                showInfoPanel(ownerId, ownerType);
-              }
-            }, [el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })]);
-
-            rowEl.append(labelInput, valueInput, sectionBtn, removeBtn);
-            rowList.appendChild(rowEl);
-          });
-        };
-
-        rebuildRows();
-        propsEditor.appendChild(rowList);
-
-        const addRowBtn = el('button', {
-          class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
-          text: '+ Add Row',
-          onclick: () => {
-            recordState();
-            block.data.rows.push({ label: '', value: '', isSection: false });
-            debouncedSave();
-            showInfoPanel(ownerId, ownerType);
-          }
-        });
-        const addSectionBtn = el('button', {
-          class: 'ghost', style: 'margin-top: .5rem; flex: 1;',
-          text: '+ Add Section',
-          onclick: () => {
-            recordState();
-            block.data.rows.push({ label: '', value: '', isSection: true });
-            debouncedSave();
-            showInfoPanel(ownerId, ownerType);
-          }
-        });
-        propsEditor.appendChild(el('div', { style: 'display:flex; gap:.5rem;' }, [addRowBtn, addSectionBtn]));
-        wrapper.appendChild(propsEditor);
+        _buildPropertiesBlockEditor(block, wrapper, ctx);
         break;
       }
       case 'Timeline': {
-        const editorWrapper = el('div', { class: 'timeline-editor' });
-
-        (block.data.events || []).forEach((event, index) => {
-          event.dateData = event.dateData || parseLegacyTimelineDate(event.date);
-          event.endDateData = event.endDateData || parseLegacyTimelineDate(event.endDate);
-          event.source = event.source || 'local';
-
-          let titleWidget;
-          if (event.source === 'linked') {
-            const options = [
-              { value: '', text: 'Pick Encyclopedia Event...' },
-              ...state.encyclopedia.filter(e => e.type?.toLowerCase() === 'event').map(e => ({ value: e.id, text: e.name }))
-            ];
-            titleWidget = createSearchableSelect(options, event.linkedId, (val) => {
-              recordState();
-              event.linkedId = val;
-              window.showInfoPanel(ownerId, ownerType);
-              debouncedSave();
-            }, 'Pick Encyclopedia Event...');
-          } else {
-            titleWidget = el('input', {
-              type: 'text', placeholder: 'Event Title', value: event.title || '',
-              oninput: (e) => window.updateTimelineEvent(block.blockId, index, { title: e.target.value })
-            });
-          }
-
-          const sourceToggle = el('select', { class: 'timeline-source-toggle', title: 'Event Source' }, [
-            el('option', { value: 'local', text: 'Local', selected: event.source === 'local' }),
-            el('option', { value: 'linked', text: 'Linked', selected: event.source === 'linked' })
-          ]);
-          sourceToggle.onchange = (e) => {
-            recordState();
-            event.source = e.target.value;
-            window.showInfoPanel(ownerId, ownerType);
-            debouncedSave();
-          };
-
-          const headerRow = el('div', { class: 'timeline-editor-event-header' }, [titleWidget, sourceToggle]);
-
-          const descTextarea = el('textarea', {
-            placeholder: 'Description...', text: event.description || '',
-            disabled: event.source === 'linked',
-            oninput: (e) => window.updateTimelineEvent(block.blockId, index, { description: e.target.value })
-          });
-
-          const dateCol = el('div', { class: 'timeline-editor-event-date-col' });
-          if (event.source === 'linked' && event.linkedId) {
-            const src = state.encyclopedia.find(x => x.id === event.linkedId);
-            const d = src?.eventData || {};
-            const dateStr = `${d.day || ''} ${d.month || ''} ${d.year || ''} ${d.era || ''}`.trim() || 'No date set';
-            dateCol.appendChild(el('div', { class: 'form-label', text: 'Event Date' }));
-            dateCol.appendChild(el('div', { class: 'linked-date-display', text: dateStr }));
-          } else {
-            const startPicker = buildDatePicker(event.dateData, (key, val) => {
-              const newData = { ...event.dateData, [key]: val };
-              window.updateTimelineEvent(block.blockId, index, { dateData: newData });
-            }, { label: 'Event Date' });
-            dateCol.appendChild(startPicker);
-          }
-
-          const bodyRow = el('div', { class: 'timeline-editor-event-body' }, [descTextarea, dateCol]);
-
-          const colorControls = el('div', { class: 'timeline-event-color-controls' }, [
-            el('div', { class: 'timeline-event-color-picker-wrap' }, [
-              el('span', { text: 'BG' }),
-              el('input', {
-                type: 'color', class: 'timeline-event-color-picker',
-                value: event.color || '#ff7a1a',
-                onfocus: () => recordState(),
-                oninput: debounce((e) => window.updateTimelineEvent(block.blockId, index, { color: e.target.value }), 200)
-              })
-            ]),
-            el('div', { class: 'timeline-event-color-picker-wrap' }, [
-              el('span', { text: 'Text' }),
-              el('input', {
-                type: 'color', class: 'timeline-event-color-picker',
-                value: event.textColor || (siteTheme === 'dark' ? '#e8e9eb' : '#3d352e'),
-                onfocus: () => recordState(),
-                oninput: debounce((e) => window.updateTimelineEvent(block.blockId, index, { textColor: e.target.value }), 200)
-              })
-            ])
-          ]);
-
-          const removeBtn = el('button', {
-            class: 'remove-event-btn', title: 'Remove Event',
-            onclick: () => window.removeTimelineEvent(block.blockId, index)
-          }, [el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })]);
-
-          const footerRow = el('div', { class: 'timeline-editor-event-footer' }, [colorControls, removeBtn]);
-
-          const eventCard = el('div', { class: 'timeline-editor-event' }, [headerRow, bodyRow, footerRow]);
-          editorWrapper.appendChild(eventCard);
-        });
-
-        const addBtn = el('button', {
-          class: 'ghost full-width', style: 'margin-top: .5rem;', text: '+ Add Event',
-          onclick: () => window.addTimelineEvent(block.blockId)
-        });
-        editorWrapper.appendChild(addBtn);
-        wrapper.appendChild(editorWrapper);
+        _buildTimelineBlockEditor(block, wrapper, ctx);
         break;
       }
       case 'Relationships':
-        const relEditor = el('div', { class: 'relationship-editor' });
-        const allOptions = [...state.features, ...state.encyclopedia]
-          .filter(item => item.id !== ownerId)
-          .map(item => ({ value: item.id, text: item.title || item.name || '(untitled)' }));
-
-        (block.data.links || []).forEach((link, idx) => {
-          const row = el('div', { class: 'relationship-editor-row' });
-          
-          const targetSelect = createSearchableSelect(allOptions, link.targetId, (newVal) => {
-            recordState();
-            link.targetId = newVal;
-            debouncedSave();
-            showInfoPanel(ownerId, ownerType);
-          }, 'Select Target...');
-
-          const typeInput = el('input', {
-            type: 'text', placeholder: 'Type (e.g. Ally)', value: link.type || '',
-            onchange: (e) => { recordState(); link.type = e.target.value; debouncedSave(); }
-          });
-
-          const removeBtn = el('button', {
-            class: 'remove-event-btn', title: 'Remove Relationship',
-            onclick: () => {
-              recordState();
-              block.data.links.splice(idx, 1);
-              showToast('Relationship removed.', () => undo());
-              debouncedSave();
-              showInfoPanel(ownerId, ownerType);
-            }
-          }, [
-            el('div', { class: 'icon-container', style: '-webkit-mask-image: url("ui-icons/minus.svg"); mask-image: url("ui-icons/minus.svg");' })
-          ]);
-
-          row.append(targetSelect, typeInput, removeBtn);
-          relEditor.appendChild(row);
-        });
-
-        const addRelBtn = el('button', {
-          class: 'ghost full-width', text: '+ Add Relationship',
-          onclick: () => {
-            recordState();
-            block.data.links = block.data.links || [];
-            block.data.links.push({ targetId: null, type: '', isBidirectional: false });
-            debouncedSave();
-            showInfoPanel(ownerId, ownerType);
-          }
-        });
-        relEditor.appendChild(addRelBtn);
-        wrapper.appendChild(relEditor);
+        _buildRelationshipsBlockEditor(block, wrapper, ctx);
         break;
       case 'Meter': {
-        const meterLabelInput = el('input', {
-          type: 'text', class: 'inline-editor label-input',
-          placeholder: 'Label (e.g. Hit Points)...',
-          value: block.data.label || '',
-          onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { label: e.target.value })
-        });
-        const meterRow = el('div', { class: 'meter-inputs-row' });
-        const currentInput = el('input', {
-          type: 'number', class: 'inline-editor meter-num-input',
-          placeholder: 'Current', min: '0',
-          value: String(block.data.current ?? 0),
-          onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { current: Number(e.target.value) || 0 })
-        });
-        const maxInput = el('input', {
-          type: 'number', class: 'inline-editor meter-num-input',
-          placeholder: 'Max', min: '1',
-          value: String(block.data.max ?? 10),
-          onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { max: Math.max(1, Number(e.target.value) || 1) })
-        });
-        meterRow.append(currentInput, el('span', { class: 'meter-sep', text: '/' }), maxInput);
-        wrapper.append(meterLabelInput, meterRow);
+        _buildMeterBlockEditor(block, wrapper, ctx);
         break;
       }
       case 'MapEmbed': {
-        const mapOptions = state.maps.map(m => ({ value: m.id, text: m.name }));
-        const currentMapId = block.data.mapId || state.activeMapId;
-        const mapSelect = createSearchableSelect(
-          mapOptions, currentMapId,
-          (val) => updateBlockData(ownerId, block.blockId, { mapId: val }),
-          'Select map…'
-        );
-
-        const heightVal = block.data.height || 280;
-        const heightLabel = el('span', { text: `${heightVal}px`, class: 'muted', style: 'min-width: 3rem' });
-        const heightInput = el('input', {
-          type: 'range', min: '160', max: '600', step: '20',
-          value: String(heightVal), class: 'inline-editor',
-          oninput:  (e) => { heightLabel.textContent = `${e.target.value}px`; },
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { height: Number(e.target.value) })
-        });
-
-        const captionInput = el('input', {
-          type: 'text', class: 'inline-editor',
-          placeholder: 'Caption (optional)…',
-          value: block.data.caption || '',
-          onfocus: () => recordState(),
-          onchange: (e) => updateBlockData(ownerId, block.blockId, { caption: e.target.value })
-        });
-
-        wrapper.append(
-          el('div', { class: 'block-embed-field' }, [
-            el('label', { class: 'form-label', text: 'Map' }),
-            mapSelect
-          ]),
-          el('div', { class: 'block-embed-field' }, [
-            el('label', { class: 'form-label', text: 'Height' }),
-            el('div', { class: 'block-embed-range-row' }, [heightInput, heightLabel])
-          ]),
-          el('div', { class: 'block-embed-field' }, [
-            el('label', { class: 'form-label', text: 'Caption' }),
-            captionInput
-          ])
-        );
+        _buildMapEmbedBlockEditor(block, wrapper, ctx);
         break;
       }
     }
   } else {
     // This is the default "View Mode"
-    wrapper.innerHTML = await renderBlockViewMode(block);
-
-    // Click-to-play for YouTube thumbnails (view mode only — edit mode is handled by block selection)
-    const ytThumb = wrapper.querySelector('.video-thumbnail-preview[data-yt-id]');
-    if (ytThumb && ytThumb.dataset.ytEditable === '0') {
-      ytThumb.style.cursor = 'pointer';
-      ytThumb.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const safeId = ytThumb.dataset.ytId;
-        const embedDiv = document.createElement('div');
-        embedDiv.className = 'video-embed-wrapper';
-        embedDiv.innerHTML = `<iframe src="https://www.youtube.com/embed/${safeId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-        ytThumb.replaceWith(embedDiv);
-      });
-    }
-
-    // Wire up interactive elements rendered by the Marked extensions.
-    // Using data-* attributes avoids injecting executable code into HTML strings.
-    wrapper.querySelectorAll('.dice-roll-link[data-notation]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.rollDice(btn.dataset.notation);
-      });
-    });
-    // Initialize embedded Leaflet maps (async — loading state shows until resolved)
-    wrapper.querySelectorAll('.map-embed-container[data-embed-block-id]').forEach(c => {
-      _initMapEmbedLeaflet(c);
-    });
-
-    // Wiki-link navigation: resolve by name at click time so links never
-    // go stale after renames or deletions (no ID is stored in the HTML).
-    wrapper.querySelectorAll('.wiki-link[data-wiki-name]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const name = link.dataset.wikiName;
-        const lowerName = name.toLowerCase();
-        const entry = state.encyclopedia.find(en => en.name.toLowerCase() === lowerName);
-        if (entry) { window.navigateToEncyclopediaEntry(entry.id); return; }
-        const feature = state.features.find(f => (f.title || f.name || '').toLowerCase() === lowerName);
-        if (feature) { window.navigateToFeature(feature.id); return; }
-        window.showAlertModal('Not Found', `No entry or feature named "${escapeHtml(name)}" was found.`);
-      });
-    });
+    await _wireBlockViewMode(block, wrapper);
   }
   return wrapper;
 }

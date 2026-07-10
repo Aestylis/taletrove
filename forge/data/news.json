@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-44",
+    "date": "2026-07-10",
+    "title": "Alpha 6.44: Under-the-Hood Block Editor Cleanup",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring of the article block editor (no visible changes): each block type's editor — text, images, timelines, relationships, meters, map embeds — now lives in its own tested unit. This completes the internal cleanup arc started in Alpha 6.42.",
+    "content": "<h4>Cleaner foundations for the block editor</h4><p>This release contains no user-facing changes. The code that renders article content blocks — the inline text editor with its snippet bar and slash commands, image blocks with float controls, timelines, relationship lists, meters, and map embeds — previously lived in one very large function. Each block type's editor is now a focused, independently testable unit. Together with Alphas 6.42 and 6.43, this closes out a round of internal restructuring that makes future features and performance work markedly safer to ship.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-43",
     "date": "2026-07-10",
     "title": "Alpha 6.43: Under-the-Hood Properties Panel Cleanup",
