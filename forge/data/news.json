@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-61",
+    "date": "2026-07-10",
+    "title": "Alpha 6.61: Mobile — Peek Becomes a Bottom Sheet",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "On phones, tapping a pin or entry now slides a bottom sheet up over the map — following Material Design's pattern for map apps — instead of a desktop side panel that didn't fit the screen.",
+    "content": "<h4>Quick look, phone style</h4><p>Peek view on phone-sized screens now slides up from the bottom as a half-height sheet over the map, so you can read an entry while the map stays visible above — the standard mobile pattern for map apps. Previously the peek panel was a fixed desktop-width side sheet that rendered off-screen on phones. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-60",
     "date": "2026-07-10",
     "title": "Alpha 6.60: Mobile — Full-Screen Article View",

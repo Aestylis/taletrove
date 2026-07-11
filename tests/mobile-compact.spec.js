@@ -72,3 +72,22 @@ test.describe('MOB-A T2 — article mode takes over the screen', () => {
     await page.evaluate(() => exitArticleMode());
   });
 });
+
+test.describe('MOB-A T3 — peek is a bottom sheet over the map', () => {
+  test('peek anchors to the bottom half; map stays visible above', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => enterPeekMode('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+    const box = await page.locator('#infoPanel').boundingBox();
+    expect(box.width, 'sheet spans full width').toBeGreaterThanOrEqual(392);
+    expect(box.y, 'sheet occupies the lower half').toBeGreaterThanOrEqual(852 * 0.35);
+    expect(box.y + box.height, 'sheet reaches the bottom edge').toBeGreaterThanOrEqual(845);
+    const mapVisible = await page.evaluate(() => {
+      const m = document.querySelector('#mainContainer');
+      return m && getComputedStyle(m).display !== 'none';
+    });
+    expect(mapVisible, 'map remains the base pane behind the sheet').toBe(true);
+    await page.evaluate(() => exitPeekMode());
+  });
+});

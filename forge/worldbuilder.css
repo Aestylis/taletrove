@@ -15512,4 +15512,28 @@ a.image-search-license-chip:hover {
     width: 100dvw;
     height: calc(100dvh - 52px);
   }
+
+  /* T3 -- peek becomes a standard bottom sheet (M3: co-exists with a pannable
+     map, no scrim). Axis flip: desktop slides in from the right via `right`,
+     compact slides up via translateY. */
+  body.peek-mode #infoPanel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100dvw;
+    height: 55dvh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    transition: transform .3s ease-in-out;
+    transform: translateY(100%);
+  }
+  body.peek-mode #infoPanel.is-visible {
+    transform: translateY(0);
+  }
+  /* Desktop widens peek to 520px when the atlas panel is hidden -- neutralize */
+  body.peek-mode #atlasPanel.is-hidden ~ #infoPanel {
+    width: 100dvw;
+  }
 }
