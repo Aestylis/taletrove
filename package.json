@@ -7,10 +7,12 @@
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
     "test:perf": "playwright test tests/perf --reporter=list",
-    "perf:fixtures": "node scripts/build-perf-fixtures.js"
+    "perf:fixtures": "node scripts/build-perf-fixtures.js",
+    "build:prod": "node scripts/build-prod.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",
+    "esbuild": "^0.28.1",
     "gif-encoder-2": "^1.0.5",
     "jszip": "^3.10.1",
     "serve": "^14.2.4"

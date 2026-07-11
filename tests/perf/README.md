@@ -80,6 +80,12 @@ DATE        SET            full→thumb         bytes total      decode
   keyboard-focusable paths. IDB-in-worker: `save()` with **all** 2000 entities dirty is 196 ms —
   an import-only pathological case; a normal edit dirties 1–10 entities (~0.1 ms each), so the
   main-thread save cost is ~1–2 ms in practice. Neither half is justified.
+- **WS8 shipped (2026-07-10)** — `scripts/build-prod.js` (`npm run build:prod`): minify-only esbuild
+  pass into `dist/` — **JS 1.11MB → 0.63MB (−44%), CSS 0.36MB → 0.24MB (−32%)**. No bundling
+  (classic scripts share global scope + SW STATIC_ASSETS assumes 1:1 files) and no filename hashing
+  (`?v=` + `CACHE_NAME` already bust caches). esbuild script-mode transform preserves top-level
+  identifiers (the cross-file globals), renaming only function-locals — verified by experiment.
+  Full 58-spec suite + this perf harness pass against `dist/` (DCL 115ms @ 5000 articles).
 
 ## Findings (2026-06-04)
 

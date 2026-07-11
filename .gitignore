@@ -64,3 +64,6 @@ test-results/
 
 # Generated perf fixtures (synthetic + large — regenerate with `npm run perf:fixtures`)
 tests/perf/fixtures/
+
+# Production build artifact (regenerate with `npm run build:prod`)
+dist/
