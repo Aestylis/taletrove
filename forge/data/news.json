@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-50",
+    "date": "2026-07-10",
+    "title": "Alpha 6.50: Internal Cleanup — User Chip & Recent Projects",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): the user identity chip, recent-projects list, and Settings-hub opener moved into their own focused module, continuing the core cleanup.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. The code behind the user chip (avatar and role menu), the recent-projects list, and the brand-logo click that opens the Settings hub now lives in its own module, further shrinking the app's largest source file. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-49",
     "date": "2026-07-10",
     "title": "Alpha 6.49: Internal Cleanup — Toolbar Modes",
