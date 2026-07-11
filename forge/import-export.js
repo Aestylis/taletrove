@@ -707,7 +707,6 @@ function initFileDropListeners() {
       showToast('Invalid file type. Please drop an image.');
       return;
     }
-    window.handleFileDrop = handleFileDrop;
     const reader = new FileReader();
     reader.onerror = () => showToast('Could not read the dropped file. It may be in use or inaccessible.');
     reader.onload = (e_read) => {
@@ -769,6 +768,10 @@ function initFileDropListeners() {
     };
     reader.readAsDataURL(file);
   };
+
+  // Exported for inspector.js hero-image drop targets. Previously this export sat INSIDE
+  // the handler body, so hero drops silently no-oped until the first map/hero drop ran.
+  window.handleFileDrop = handleFileDrop;
 
   dropZones.forEach(zone => {
     if (!zone) return;
