@@ -15492,3 +15492,16 @@ a.image-search-license-chip:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* ===== MOB-A: compact shell (<600px, M3 compact class) =====
+   All mobile-compact overrides live in THIS block only. Desktop rules above
+   are never edited -- source order + specificity make these win at <600px. */
+@media (max-width: 599.98px) {
+  /* T1 -- atlas panel becomes a full-width modal drawer over the map */
+  #atlasPanel {
+    left: 0;
+    width: 100dvw;
+    height: calc(100dvh - 52px);
+    border-right: none;
+  }
+}
