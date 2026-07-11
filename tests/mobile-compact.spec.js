@@ -422,4 +422,20 @@ test.describe('MOB-D — meta + bar sync follow-ups', () => {
       document.querySelector('#mobileNavBar .mobile-nav-item.is-active')?.dataset.mnav);
     expect(active, 'bar follows direct tab tap').toBe('assets');
   });
+
+  test('pull tab hidden; zoom controls (incl. eye toggle) fully above the bar', async ({ page }) => {
+    await gotoCompact(page);
+    const r = await page.evaluate(() => {
+      const tab = document.querySelector('.aside-toggle-btn');
+      const zoom = document.querySelector('.map-zoom-controls');
+      const bar = document.querySelector('#mobileNavBar').getBoundingClientRect();
+      return {
+        tabHidden: !tab || getComputedStyle(tab).display === 'none',
+        zoomBottom: zoom ? zoom.getBoundingClientRect().bottom : null,
+        barTop: bar.top,
+      };
+    });
+    expect(r.tabHidden, 'aside pull tab hidden at compact').toBe(true);
+    expect(r.zoomBottom, 'zoom controls end above the nav bar').toBeLessThanOrEqual(r.barTop + 1);
+  });
 });

@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-70",
+    "date": "2026-07-11",
+    "title": "Alpha 6.70: Mobile — Fixes from Device Testing",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "The panel pull tab no longer floats mid-screen or covers the expand button on phones (the bottom bar replaces it), and the zoom slider's visibility toggle sits above the navigation bar.",
+    "content": "<h4>Device-testing fixes</h4><p>Two fixes from real phone testing: the desktop panel pull tab is hidden on phones (the bottom navigation bar's Map/World buttons replace it — it previously floated mid-screen and could cover the peek expand button), and the zoom control's show/hide eye toggle now sits fully above the bottom bar. Desktop is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-69",
     "date": "2026-07-11",
     "title": "Alpha 6.69: Mobile — Fix: Peek Sheet Over the Panel",

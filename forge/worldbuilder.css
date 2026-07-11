@@ -15691,6 +15691,10 @@ a.image-search-license-chip:hover {
   /* lift bottom map chrome above the bar */
   .toolbar.bottom { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
   .leaflet-bottom .leaflet-control { margin-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+  /* custom zoom control (slider + eye toggle) is not a .leaflet-control -- lift it too */
+  .map-zoom-controls { bottom: calc(3.5rem + 64px + env(safe-area-inset-bottom, 0px)); }
+  /* the panel pull tab is redundant at compact -- the nav bar owns open/close */
+  .aside-toggle-btn { display: none; }
 
   /* MOB-B T3 -- "More" modal bottom sheet (scrim + slide-up tool list) */
   #mobileMoreSheet {
