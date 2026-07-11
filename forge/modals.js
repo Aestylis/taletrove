@@ -3180,3 +3180,179 @@ window.hideToast = hideToast;
 window.openBugReporter = openBugReporter;
 window.openCoatOfArmsModal = openCoatOfArmsModal;
 window.populateNewsModal = populateNewsModal;
+
+/**
+ * App-chrome modal wiring (WS7 #10, extracted from worldbuilder.js initEventListeners).
+ * Owns: bug-report + help side-sheet buttons, the fullscreen toolbar button, the
+ * add-image modal + its file input, and the project-modal theme/cat toggles.
+ * Called from initEventListeners() at DOMContentLoaded.
+ */
+function initModalListeners() {
+  const bugReportModal = $('#bugReportModal');
+  $('#bugReportBtn')?.addEventListener('click', () => {
+    if (bugReportModal?.classList.contains('is-open')) {
+      if (window.closeSideSheet) window.closeSideSheet(bugReportModal);
+    } else {
+      if (window.openBugReporter) window.openBugReporter();
+    }
+  });
+
+  const helpModal = $('#helpModal');
+  $('#helpBtn').addEventListener('click', () => {
+    if (helpModal.classList.contains('is-open')) {
+      if (window.closeSideSheet) window.closeSideSheet(helpModal);
+      else helpModal.classList.add('hidden');
+    } else {
+      if (window.openSideSheet) window.openSideSheet(helpModal);
+      else helpModal.classList.remove('hidden');
+    }
+  });
+
+  $('#helpTourBtn')?.addEventListener('click', () => {
+    if (window.closeSideSheet) window.closeSideSheet(helpModal);
+    else helpModal.classList.add('hidden');
+    startTutorial();
+  });
+  const fullscreenBtn = $('#fullscreenBtn');
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const isFs = !!document.fullscreenElement;
+      fullscreenBtn.classList.toggle('is-fullscreen', isFs);
+      fullscreenBtn.setAttribute('aria-pressed', String(isFs));
+    });
+  }
+
+  const addImageModal = $('#addImageModal');
+  if (addImageModal) {
+    const closeModal = () => addImageModal.classList.add('hidden');
+    addImageModal.querySelector('.modal-close').onclick = closeModal;
+    addImageModal.addEventListener('click', (e) => { if (e.target === addImageModal) closeModal(); });
+
+    $('#uploadImageBtn').addEventListener('click', () => {
+      $('#imageUploadFile').click();
+      closeModal();
+    });
+    const imageUrlModal = $('#imageUrlModal');
+    if (imageUrlModal) {
+      const closeUrlModal = () => imageUrlModal.classList.add('hidden');
+      const imageUrlInput = imageUrlModal.querySelector('#imageUrlInput');
+
+      imageUrlModal.querySelector('.modal-close').onclick = closeUrlModal;
+      $('#cancelImageUrlBtn').addEventListener('click', closeUrlModal);
+
+      imageUrlModal.addEventListener('click', (e) => {
+        if (e.target === imageUrlModal) closeUrlModal();
+      });
+
+      const submitUrl = () => {
+        const url = imageUrlInput.value;
+        if (url && url.trim()) {
+          const f = state.features.find(x => x.id === selectedId);
+          if (f) {
+            recordState();
+            f.images = f.images || [];
+            f.images.push(url.trim());
+            render();
+            debouncedSave();
+          }
+        }
+        closeUrlModal();
+      };
+
+      $('#submitImageUrlBtn').addEventListener('click', submitUrl);
+      imageUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitUrl();
+        }
+      });
+    }
+    $('#addImageFromUrlBtn').addEventListener('click', () => {
+      addImageModal.classList.add('hidden');
+      const urlModal = $('#imageUrlModal');
+      urlModal.classList.remove('hidden');
+      urlModal.querySelector('#imageUrlInput').focus();
+      urlModal.querySelector('#imageUrlInput').value = '';
+    });
+  }
+  const imageUploadInput = $('#imageUploadFile');
+  if (imageUploadInput) {
+    imageUploadInput.addEventListener('change', async (e) => {
+      let file = e.target.files[0];
+      if (!file || !selectedId) return;
+
+      const f = state.features.find(x => x.id === selectedId);
+      if (!f) return;
+
+      try {
+        const originalName = file.name;
+        file = await processImageUpload(file);
+        const imageKey = 'img-' + uid();
+
+        await idbSet(imageKey, file);
+        state.assetNames = state.assetNames || {};
+        state.assetNames[imageKey] = originalName;
+        markEntityDirty('meta');
+        recordState();
+        f.images = f.images || [];
+        f.images.push(imageKey);
+      } catch (err) {
+        console.error("Failed to upload image:", err);
+        showAlertModal('Upload Failed', 'Image upload failed. The file may be corrupted or in an unsupported format.');
+      }
+      e.target.value = null;
+    });
+  }
+
+  const projectModal = document.getElementById('projectActionsModal');
+  if (projectModal) {
+
+    const themeToggle = projectModal.querySelector('#themeToggleInMenu');
+    const catToggle = projectModal.querySelector('#catToggleInMenu');
+    const closeModal = () => {
+      projectModal.classList.add('hidden');
+    };    if (themeToggle) themeToggle.checked = siteTheme === 'dark';
+    if (catToggle) catToggle.checked = showCats;
+
+    projectModal.addEventListener('click', (e) => {
+      if (e.target === projectModal) {
+        closeModal();
+        return;
+      }
+
+      if (e.target.closest('.switch')) return;
+
+      const actionItem = e.target.closest('[data-action]');
+      if (actionItem) {
+        const action = actionItem.dataset.action;
+        if (action === 'new') { handleNewProject(); closeModal(); }
+        else if (action === 'save' || action === 'export') { handleSaveProject(); closeModal(); }
+        else if (action === 'load') { $('#importFile').click(); closeModal(); }
+        else if (action === 'export-player') { handleExportPlayer(); closeModal(); }
+        else if (action === 'generalSettings') window.openSettingsHub('general');
+        else if (action === 'calendarSettings') window.openSettingsHub('calendar');
+        else if (action === 'diceSettings') window.openSettingsHub('dice');
+        else if (action === 'themeSettings') window.openSettingsHub('theme');
+        else if (action === 'aboutSettings') window.openSettingsHub('about');
+        else if (action === 'drive-signin')  { window.googleDrive?.signIn(); }
+        else if (action === 'drive-signout') { window.googleDrive?.signOut(); }
+        else if (action === 'drive-save')    { handleDriveSave(); }
+        else if (action === 'drive-open')      { window.openDriveFilePicker(); }
+        else if (action === 'obsidian-import') { window.openObsidianImportModal(); }
+      }
+    });
+
+    window.addEventListener('keydown', (e) => { 
+      if (e.key === 'Escape' && !projectModal.classList.contains('hidden')) {
+        closeModal(); 
+      }
+    });
+  }
+}

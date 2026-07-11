@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-54",
+    "date": "2026-07-10",
+    "title": "Alpha 6.54: Internal Cleanup — App Chrome Modals",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): wiring for the bug-report and help side-sheets, the fullscreen button, the add-image modal, and the project-menu toggles moved into the modals module, continuing the core cleanup.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. The wiring for several app-chrome surfaces — the bug-report and help side-sheets, the fullscreen toolbar button, the add-image modal, and the project menu's theme and companion toggles — now lives in the modals module. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-53",
     "date": "2026-07-10",
     "title": "Alpha 6.53: Internal Cleanup — Grid Controls",
