@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-71",
+    "date": "2026-07-11",
+    "title": "Alpha 6.71: Mobile — Map Navigation Feels Right",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "Opening a map on a phone now lands you on the map — panels close instead of following you — and tapping Map in the bottom bar again jumps back to your top-level world map.",
+    "content": "<h4>Maps first</h4><p>Three navigation fixes from phone testing: opening a map now closes the reading panel and properties sheet instead of showing the new map's page over it; the properties sheet always closes when you navigate away; and tapping the bottom bar's Map button while already on the map jumps you back to your top-level world map — handy when you're deep in nested city maps. Desktop is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-70",
     "date": "2026-07-11",
     "title": "Alpha 6.70: Mobile — Fixes from Device Testing",

@@ -466,7 +466,14 @@ function initMobileNavBar() {
     if (!item) return;
     const dest = item.dataset.mnav;
     if (dest === 'map') {
+      const drawerAlreadyHidden = document.getElementById('atlasPanel')?.classList.contains('is-hidden');
       toggleAsidePanel(true);
+      // M3: re-selecting the active destination returns to its root — here,
+      // the top-level world map (also exits any open reading views).
+      if (drawerAlreadyHidden) {
+        const mainMap = state.maps.find(m => m.parentId === null);
+        if (mainMap) navigateToMap(mainMap.id, { skipInfoPanel: true });
+      }
     } else if (dest === 'world') {
       toggleAsidePanel(false);
       $('#atlasTabBtn')?.click();

@@ -438,4 +438,60 @@ test.describe('MOB-D — meta + bar sync follow-ups', () => {
     expect(r.tabHidden, 'aside pull tab hidden at compact').toBe(true);
     expect(r.zoomBottom, 'zoom controls end above the nav bar').toBeLessThanOrEqual(r.barTop + 1);
   });
+
+  test('navigating to a map closes the properties sheet too', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    const r = await page.evaluate(async () => {
+      state.maps.push({ id: 'm2', name: 'Second Map', width: 1000, height: 800 });
+      markEntityDirty('meta');
+      await enterArticleMode('mc-1', 'encyclopedia');
+      await new Promise(res => setTimeout(res, 400));
+      await openPropertiesSheet('mc-1', 'encyclopedia');
+      await new Promise(res => setTimeout(res, 400));
+      await navigateToMap('m2', { skipInfoPanel: true });
+      await new Promise(res => setTimeout(res, 800));
+      return {
+        article: document.body.classList.contains('article-mode'),
+        props: document.querySelector('#propertiesSheet').classList.contains('is-open'),
+      };
+    });
+    expect(r.article, 'article mode exited').toBe(false);
+    expect(r.props, 'properties sheet closed').toBe(false);
+  });
+
+  test('re-tapping Map returns to the top-level world map', async ({ page }) => {
+    await gotoCompact(page);
+    const r = await page.evaluate(async () => {
+      state.maps.push({ id: 'm2', name: 'Second Map', width: 1000, height: 800, parentId: state.maps[0].id });
+      markEntityDirty('meta');
+      await navigateToMap('m2', { skipInfoPanel: true });
+      await new Promise(res => setTimeout(res, 600));
+      return { active: state.activeMapId, mainId: state.maps.find(m => m.parentId === null)?.id };
+    });
+    expect(r.active, 'on the sub-map').toBe('m2');
+    const mapBtn = await page.locator('#mobileNavBar [data-mnav="map"]').boundingBox();
+    await page.touchscreen.tap(mapBtn.x + mapBtn.width / 2, mapBtn.y + mapBtn.height / 2);
+    await page.waitForFunction((mainId) => state.activeMapId === mainId, r.mainId, { timeout: 8000 });
+    const active = await page.evaluate(() => state.activeMapId);
+    expect(active, 'back on the main map').toBe(r.mainId);
+  });
+
+  test('opening a map at compact never auto-opens the map\'s own panel', async ({ page }) => {
+    await gotoCompact(page);
+    const r = await page.evaluate(async () => {
+      state.maps.push({ id: 'm3', name: 'Third Map', width: 1000, height: 800, parentId: state.maps[0].id });
+      markEntityDirty('meta');
+      await navigateToMap('m3'); // DEFAULT options — the map-chip path
+      await new Promise(res => setTimeout(res, 800));
+      return {
+        active: state.activeMapId,
+        panelVisible: document.querySelector('#infoPanel').classList.contains('is-visible'),
+        peek: document.body.classList.contains('peek-mode'),
+      };
+    });
+    expect(r.active, 'navigated to the map').toBe('m3');
+    expect(r.panelVisible, 'map info panel stays closed at compact').toBe(false);
+    expect(r.peek, 'no peek either').toBe(false);
+  });
 });

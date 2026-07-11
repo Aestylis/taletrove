@@ -1811,10 +1811,15 @@ async function navigateToMap(mapId, options = {}) {
   // Close any open reading views — navigation is always map-centric
   window.exitPeekMode?.();
   window.exitArticleMode?.();
+  window.closePropertiesSheet?.(); // sheet must not outlive the page it belongs to
+
+  // On phones, opening a map should land on the MAP — never auto-open the map's
+  // own info panel over it (desktop keeps the side-by-side page).
+  const compactViewport = window.matchMedia?.('(max-width: 599.98px)').matches;
 
   // Guard clause: If already on this map, do nothing to prevent reload
   if (selectedId === mapId && !options.force) {
-    if (!options.skipInfoPanel) showInfoPanel(mapId, 'map');
+    if (!options.skipInfoPanel && !compactViewport) showInfoPanel(mapId, 'map');
     return;
   }
 
@@ -1896,7 +1901,7 @@ async function navigateToMap(mapId, options = {}) {
     debouncedSetMode('pointer');
 
     highlightItemInAtlas(mapId);
-    if (!options.skipInfoPanel) {
+    if (!options.skipInfoPanel && !compactViewport) {
       showInfoPanel(mapId, 'map');
     }
 
