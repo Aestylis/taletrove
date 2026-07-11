@@ -119,3 +119,17 @@ test.describe('MOB-A T4 — properties + chrome sheets are bottom sheets', () =>
     expect(box.y + box.height, 'not hanging below the viewport').toBeLessThanOrEqual(853);
   });
 });
+
+test.describe('MOB-A T5 — header fits the phone', () => {
+  test('no horizontal overflow; role toggle fully visible', async ({ page }) => {
+    await gotoCompact(page);
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, 'no horizontal page overflow').toBeLessThanOrEqual(0);
+    const toggle = await page.locator('.role-toggle-wrapper').boundingBox();
+    expect(toggle.x + toggle.width, 'role toggle inside viewport').toBeLessThanOrEqual(393);
+    const search = await page.locator('#globalSearchInput').boundingBox();
+    const brand = await page.locator('#brandLogo').boundingBox();
+    expect(search.x, 'search does not overlap the brand').toBeGreaterThanOrEqual(brand.x + brand.width - 2);
+  });
+});

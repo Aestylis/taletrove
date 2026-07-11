@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-63",
+    "date": "2026-07-11",
+    "title": "Alpha 6.63: Mobile — Header Fits the Screen",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "The top bar no longer overflows on phones: a compact search field that expands while typing, and the GM/Player switch stays fully visible.",
+    "content": "<h4>A header that fits</h4><p>On phone-sized screens the top bar now shows the logo, a compact search field (it expands while you type), and the GM/Player switch — with everything fully on screen. Previously the search bar overlapped the title and the role switch was clipped off the edge. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-62",
     "date": "2026-07-11",
     "title": "Alpha 6.62: Mobile — Properties & Panels as Bottom Sheets",

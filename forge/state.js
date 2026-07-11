@@ -1,5 +1,5 @@
 
-const APP_VERSION = '0.6.62-alpha';
+const APP_VERSION = '0.6.63-alpha';
 let TAXONOMY = {};
 let NEWS_DATA = [];
 let ICON_MANIFEST = [];

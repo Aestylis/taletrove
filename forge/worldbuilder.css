@@ -15578,4 +15578,22 @@ a.image-search-license-chip:hover {
   #helpModal.is-side-sheet.is-open .modal-content {
     transform: translateY(0);
   }
+
+  /* T5 -- header reflow: logo + compact search + role switch, nothing else */
+  header.app-header {
+    gap: 0.4rem;
+    padding: 0.6rem 0.6rem;
+  }
+  #breadcrumbContainer { display: none; }        /* world name lives in the hub */
+  .cp-shortcut-hint { display: none; }           /* Ctrl+K hint is keyboard-only */
+  .global-search-wrapper { min-width: 0; }
+  #globalSearchInput {
+    width: 130px;
+    padding-right: 12px;
+  }
+  #globalSearchInput:focus {
+    width: 55dvw;                                /* expand while typing */
+  }
+  .header-controls { gap: 0.4rem; }
+  .role-toggle-wrapper .role-label { display: none; } /* keep the switch, drop GM/PLAYER text */
 }
