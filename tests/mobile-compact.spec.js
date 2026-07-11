@@ -133,3 +133,29 @@ test.describe('MOB-A T5 — header fits the phone', () => {
     expect(search.x, 'search does not overlap the brand').toBeGreaterThanOrEqual(brand.x + brand.width - 2);
   });
 });
+
+test.describe('MOB-A T6 — hub + large editors fit compact', () => {
+  test('hub stacks; content pane visible', async ({ page }) => {
+    await gotoCompact(page);
+    await page.locator('#brandLogo').dispatchEvent('click');
+    await page.waitForTimeout(600);
+    const hub = await page.locator('.hub-content').boundingBox();
+    expect(hub.width, 'hub fits viewport').toBeLessThanOrEqual(394);
+    const pane = await page.locator('.hub-pane-area').boundingBox();
+    expect(pane, 'content pane rendered').not.toBeNull();
+    expect(pane.width, 'content pane spans usable width').toBeGreaterThan(300);
+    expect(pane.x, 'content pane on screen').toBeGreaterThanOrEqual(0);
+    expect(pane.x, 'content pane not pushed offscreen').toBeLessThan(393);
+    await page.keyboard.press('Escape');
+  });
+
+  test('calendar modal is full-screen at compact', async ({ page }) => {
+    await gotoCompact(page);
+    await page.locator('#calendarBtn').dispatchEvent('click');
+    await page.waitForSelector('#calendarModal:not(.hidden)', { timeout: 5000 });
+    await page.waitForTimeout(400);
+    const box = await page.locator('#calendarModal .modal-content').boundingBox();
+    expect(box.width, 'full width').toBeGreaterThanOrEqual(392);
+    expect(box.height, 'full height').toBeGreaterThanOrEqual(750);
+  });
+});

@@ -15596,4 +15596,45 @@ a.image-search-license-chip:hover {
   }
   .header-controls { gap: 0.4rem; }
   .role-toggle-wrapper .role-label { display: none; } /* keep the switch, drop GM/PLAYER text */
+
+  /* T6a -- hub: full-screen, stacked; sidebar becomes a horizontal strip on top.
+     Desktop rules use !important, so these must too. */
+  .hub-content {
+    width: 100dvw !important;
+    max-width: 100dvw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    flex-direction: column !important;
+  }
+  .hub-sidebar {
+    width: 100% !important;
+    flex-direction: row !important;
+    align-items: center;
+    overflow-x: auto;
+    flex-shrink: 0;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .hub-sidebar .settings-nav-group {
+    flex-direction: row;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .hub-sidebar .settings-nav-group-label { display: none; }
+  .hub-sidebar .settings-nav-item { white-space: nowrap; }
+  .hub-sidebar .settings-nav-spacer { display: none; }
+
+  /* T6b -- multi-step editors become full-screen dialogs (M3 compact "Action") */
+  #calendarModal .modal-content,
+  #timelineModal .modal-content,
+  #cropperModal .modal-content,
+  #iconPickerModal .modal-content {
+    width: 100dvw;
+    max-width: 100dvw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
 }

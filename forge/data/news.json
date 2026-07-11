@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-64",
+    "date": "2026-07-11",
+    "title": "Alpha 6.64: Mobile — Settings Hub & Editors Fit the Screen",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "On phones, the settings hub now stacks vertically with all content reachable, and large tools like the calendar open full-screen.",
+    "content": "<h4>Settings usable on phones</h4><p>The settings hub (from the logo menu) now fills the screen and stacks vertically on phones — navigation on top, your world card and settings panes below, all reachable. Large tools (calendar, timeline, image cropper, icon picker) open full-screen. Previously the hub's content pane rendered off-screen entirely on narrow displays. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-63",
     "date": "2026-07-11",
     "title": "Alpha 6.63: Mobile — Header Fits the Screen",
