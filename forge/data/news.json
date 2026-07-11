@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-47",
+    "date": "2026-07-10",
+    "title": "Alpha 6.47: Instant Lore Section for Large Worlds",
+    "tags": [
+      "Performance"
+    ],
+    "summary": "The Lore section now uses the same windowed rendering as the world panel: only the rows in view are built, so worlds with thousands of lore entries scroll and filter instantly. Search, folders, collapse, and drag & drop all behave exactly as before.",
+    "content": "<h4>Lore lists no longer slow down with your world</h4><p>Following Alpha 6.45's world-panel speedup, the Lore section now renders only the rows you can see (plus a small buffer). At 5,000 entries, rebuilding the list takes under 10ms instead of growing with world size. Everything works as before — text search with ancestor folders, category and tag filters, the On Map chip, collapse/expand, right-click menus, and drag & drop into folders (including dragging an entry onto the map to place it).</p><p>If anything looks off, the previous renderer is one setting away — let us know at <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a> and we'll help.</p>"
+  },
+  {
     "id": "alpha-6-46",
     "date": "2026-07-10",
     "title": "Alpha 6.46: Windowed Rendering Engine Groundwork",

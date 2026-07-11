@@ -447,10 +447,21 @@ function handleEncyclopediaDrop(evt) {
   const newParentFolderId = toFolderNode ? toFolderNode.dataset.folderId : null;
 
   const idsToMove = multiSelectedIds.has(draggedId) ? Array.from(multiSelectedIds) : [draggedId];
+  _applyEncyclopediaMove(idsToMove, newParentFolderId, !!entryId);
+}
+
+/**
+ * Shared lore-move mutation body — used by the legacy nested-DOM drop path
+ * (handleEncyclopediaDrop) and the Phase M flat-row drop path (panels.js).
+ * Handles entry and folder moves, incl. the folder-into-own-descendant guard.
+ * `draggedIsEntry`: when the dragged item is an entry, every id in a multi-selection is
+ * treated as an entry (legacy parity — folders in the set are skipped, not moved).
+ */
+function _applyEncyclopediaMove(idsToMove, newParentFolderId, draggedIsEntry) {
   let changed = false;
 
   idsToMove.forEach(id => {
-    if (entryId || state.encyclopedia.find(e => e.id === id)) {
+    if (draggedIsEntry || state.encyclopedia.find(e => e.id === id)) {
       // Moving an entry
       const entry = state.encyclopedia.find(e => e.id === id);
       if (!entry) return;

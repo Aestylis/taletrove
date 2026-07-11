@@ -595,6 +595,107 @@ async function _buildAtlasFlatRowEl(rowDesc) {
   return rowEl;
 }
 
+/**
+ * Phase M part 2 — flat row model for the virtualized Lore list. Mirrors
+ * refreshEncyclopediaView's legacy nested renderer exactly: filter rules (text query with
+ * folder-ancestry bubbling and folder-name match, category chip, tag filter, 'on-map' chip,
+ * local sidebar mode), sorted traversal, and collapse via collapsedEncyclopediaFolderNodes.
+ * `query` must already be normalizeForSearch'd (same as the legacy path).
+ * Row: { kind: 'folder'|'entry', id, depth, parentFolderId }
+ */
+function _computeLoreFlatRows(query) {
+  const allEntries = (state.encyclopedia || [])
+    .filter(e => (e.type || '').toLowerCase() !== 'session')
+    .filter(e => sidebarFilterMode === 'local' ? e.mapId === state.activeMapId : true);
+  const allFolders = state.folders.filter(f => f.mapId == null);
+  let entriesToShow = new Set();
+  let foldersToShow = new Set();
+
+  const encCategoryFilter = (featureFilter !== 'all' && featureFilter !== 'on-map') ? featureFilter : null;
+  const hasTagFilter = activeTags.size > 0;
+  const hasFilter = query || encCategoryFilter || hasTagFilter;
+  if (hasFilter) {
+    allEntries.forEach(e => {
+      const nameMatch = query ? normalizeForSearch(e.name).includes(query) : true;
+      const typeMatch = query ? normalizeForSearch(e.type).includes(query) : true;
+      const tagsMatch = query ? normalizeForSearch((e.tags || []).join(' ')).includes(query) : true;
+      const textMatch = nameMatch || typeMatch || tagsMatch;
+      const categoryMatch = encCategoryFilter ? (e.type || '').toLowerCase() === encCategoryFilter : true;
+      const entryTags = e.tags || [];
+      const tagMatch = !hasTagFilter || (tagMatchMode === 'any'
+        ? [...activeTags].some(t => entryTags.includes(t))
+        : [...activeTags].every(t => entryTags.includes(t)));
+      if (textMatch && categoryMatch && tagMatch) {
+        entriesToShow.add(e.id);
+        // Bubble up the full folder ancestry so parent folders stay visible
+        let fid = e.folderId;
+        while (fid) {
+          foldersToShow.add(fid);
+          const pf = allFolders.find(f => f.id === fid);
+          fid = pf ? pf.parentFolderId : null;
+        }
+      }
+    });
+    // Folder name match only applies to text search, not letter filter
+    if (query) {
+      allFolders.forEach(f => {
+        if (normalizeForSearch(f.name).includes(query)) foldersToShow.add(f.id);
+      });
+    }
+  }
+
+  let entriesToRender = hasFilter ? allEntries.filter(e => entriesToShow.has(e.id)) : allEntries;
+  if (encCategoryFilter) entriesToRender = entriesToRender.filter(e => (e.type || '').toLowerCase() === encCategoryFilter);
+  // "On Map" chip filter — show only entries that have a placed pin
+  if (featureFilter === 'on-map') entriesToRender = entriesToRender.filter(e => !!e.mapId);
+  // tag filter (applied outside hasFilter path too, when no text/letter/category filter is active)
+  if (hasTagFilter && !hasFilter) {
+    entriesToRender = entriesToRender.filter(e => {
+      const entryTags = e.tags || [];
+      return tagMatchMode === 'any'
+        ? [...activeTags].some(t => entryTags.includes(t))
+        : [...activeTags].every(t => entryTags.includes(t));
+    });
+  }
+
+  const rows = [];
+  const pushFolder = (folder, depth) => {
+    const subFolders = allFolders
+      .filter(f => f.parentFolderId === folder.id)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    // When a text query matches a folder name, show all entries in that folder.
+    const entriesInFolder = (query && folder.name.toLowerCase().includes(query)
+      ? allEntries
+      : entriesToRender
+    ).filter(e => e.folderId === folder.id);
+
+    // During any filter, skip folders with nothing to show
+    if (hasFilter && !foldersToShow.has(folder.id) && entriesInFolder.length === 0 && subFolders.length === 0) return;
+
+    const isCollapsed = collapsedEncyclopediaFolderNodes.has(folder.id);
+    rows.push({ kind: 'folder', id: folder.id, depth, parentFolderId: folder.parentFolderId || null });
+
+    if (!isCollapsed || hasFilter) {
+      for (const sub of subFolders) pushFolder(sub, depth + 1);
+      entriesInFolder.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      for (const entry of entriesInFolder) {
+        rows.push({ kind: 'entry', id: entry.id, depth: depth + 1, parentFolderId: folder.id });
+      }
+    }
+  };
+
+  const rootFolders = allFolders.filter(f => !f.parentFolderId).sort((a, b) => a.name.localeCompare(b.name));
+  for (const folder of rootFolders) pushFolder(folder, 0);
+
+  const entriesWithoutFolder = entriesToRender.filter(e => !e.folderId);
+  entriesWithoutFolder.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  for (const entry of entriesWithoutFolder) {
+    rows.push({ kind: 'entry', id: entry.id, depth: 0, parentFolderId: null });
+  }
+
+  return rows;
+}
+
 // --- Phase M: windowed virtual segments (atlas tree = instance #1, lore list = instance #2) ---
 let _atlasVirtualOn = false;
 let _vsegScrollRaf = null;
@@ -734,6 +835,118 @@ const _atlasSeg = _makeVirtualSegment({
     }));
   },
 });
+
+/**
+ * Phase M part 2 — builds ONE flat Lore row. Folder rows keep the HTML5 dragover/drop
+ * handlers (entries dragged via `application/x-taleprove-entry`); unlike the legacy tree,
+ * data-folder-id sits directly on the .folder-row.
+ */
+async function _buildLoreFlatRowEl(rowDesc) {
+  let rowEl = null;
+
+  if (rowDesc.kind === 'folder') {
+    const folder = state.folders.find(f => f.mapId == null && f.id === rowDesc.id);
+    if (!folder) return null;
+    const isCollapsed = collapsedEncyclopediaFolderNodes.has(folder.id);
+    const folderIconWrap = el('div', { class: 'folder-icon-wrap item-icon' });
+    folderIconWrap.innerHTML =
+      `<div class="folder-icon-default">${getIconHTMLSync('folder', 'currentColor')}</div>` +
+      `<div class="folder-icon-caret">${getIconHTMLSync(isCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
+    rowEl = el('div', {
+      class: `tree-row folder-row${isCollapsed ? ' collapsed' : ''}`,
+      'data-folder-id': folder.id,
+      tabindex: '0',
+      role: 'button',
+      'aria-expanded': String(!isCollapsed),
+      oncontextmenu: role === 'gm' ? (e) => showAtlasContextMenu(e, 'encyclopedia-folder', folder.id, folder.name) : null
+    });
+    rowEl.addEventListener('click', (e) => { e.stopPropagation(); toggleEncyclopediaFolderCollapsed(folder.id); });
+    if (role === 'gm') {
+      rowEl.addEventListener('dragover', (e) => {
+        if (!e.dataTransfer.types.includes('application/x-taleprove-entry')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        rowEl.classList.add('drag-over');
+      });
+      rowEl.addEventListener('dragleave', () => rowEl.classList.remove('drag-over'));
+      rowEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        rowEl.classList.remove('drag-over');
+        const entryId = e.dataTransfer.getData('application/x-taleprove-entry');
+        if (!entryId) return;
+        handleEncyclopediaFolderDrop(entryId, folder.id);
+      });
+    }
+    rowEl.append(folderIconWrap, el('span', { class: 'tree-label', text: folder.name }));
+
+  } else if (rowDesc.kind === 'entry') {
+    const entry = (state.encyclopedia || []).find(e => e.id === rowDesc.id);
+    if (!entry) return null;
+    rowEl = await buildEncyclopediaEntryItem(entry);
+  }
+
+  if (!rowEl) return null;
+  if (rowDesc.depth > 0) rowEl.style.marginLeft = `${rowDesc.depth * 18}px`;
+  return rowEl;
+}
+
+const _loreSeg = _makeVirtualSegment({
+  buildRowEl: (rowDesc) => _buildLoreFlatRowEl(rowDesc),
+  makeSortable(mountEl, seg) {
+    encyclopediaSortable.push(new Sortable(mountEl, {
+      group: 'encyclopedia', animation: 150, delay: 150, delayOnTouchOnly: false,
+      ghostClass: 'sortable-ghost', multiDrag: true, selectedClass: 'selected',
+      fallbackOnBody: true, forceFallback: true,
+      draggable: '.folder-row, .encyclopedia-item',
+      onStart: () => { _attachDragScroll(); seg.dragFreeze = true; },
+      onEnd: (evt) => { _detachDragScroll(); seg.dragFreeze = false; _handleFlatLoreDrop(evt); },
+    }));
+  },
+});
+
+/**
+ * Flat Lore drop resolution: returns the new parent folderId (null = root).
+ * top → root · after an EXPANDED folder → into it · after a collapsed folder or an entry →
+ * sibling (their parent folder).
+ */
+function _resolveLoreFlatDropTarget(rows, insertIndex) {
+  const above = rows[insertIndex - 1] || null;
+  if (!above) return null;
+  if (above.kind === 'folder' && !collapsedEncyclopediaFolderNodes.has(above.id)) return above.id;
+  return above.parentFolderId || null;
+}
+
+/** onEnd handler for the flat Lore Sortable: maps the DOM drop position back to the flat model. */
+function _handleFlatLoreDrop(evt) {
+  const v = _loreSeg.els;
+  if (!v) return;
+
+  const item = evt.item;
+  const draggedId = item.dataset.entryId || item.dataset.folderId;
+  if (!draggedId) return;
+
+  // Dropped outside the lore segment (e.g. on the map — the map's own drop handler creates
+  // the pin). Just refresh and bail (legacy parity).
+  if (evt.to !== v.mountEl) {
+    refreshAtlasTree();
+    return;
+  }
+
+  const draggedFlatIdx = _loreSeg.rows.findIndex(r => r.id === draggedId);
+
+  let domIdx = 0;
+  let n = v.topSpacer.nextElementSibling;
+  while (n && n !== v.bottomSpacer && n !== item) { domIdx++; n = n.nextElementSibling; }
+  if (!n || n === v.bottomSpacer) { refreshEncyclopediaView(); return; }
+
+  const rowsExcl = draggedFlatIdx >= 0 ? _loreSeg.rows.filter((r, i) => i !== draggedFlatIdx) : _loreSeg.rows;
+  const startExcl = (draggedFlatIdx !== -1 && draggedFlatIdx < _loreSeg.window.start)
+    ? _loreSeg.window.start - 1 : _loreSeg.window.start;
+  const newParentFolderId = _resolveLoreFlatDropTarget(rowsExcl, startExcl + domIdx);
+
+  const idsToMove = (multiSelectedIds.has(draggedId)) ? Array.from(multiSelectedIds) : [draggedId];
+  _applyEncyclopediaMove(idsToMove, newParentFolderId, !!item.dataset.entryId);
+}
 
 function _onAtlasScroll() {
   if (!_atlasVirtualOn || _vsegScrollRaf) return;
@@ -1661,6 +1874,29 @@ async function refreshEncyclopediaView() {
     container.innerHTML = '';
 
     const query = normalizeForSearch(oldQuery.trim());
+
+    // Phase M part 2: windowed flat-row renderer (same kill switch as the atlas tree).
+    if (loadLS('atlasVirtualTree', true)) {
+      const rows = _computeLoreFlatRows(query);
+      const listContainer = el('div', { class: 'encyclopedia-list', style: 'padding: 0.75rem 1rem;' });
+      const encCat = (featureFilter !== 'all' && featureFilter !== 'on-map') ? featureFilter : null;
+      if (rows.length === 0 && !query && !encCat && activeTags.size === 0) {
+        listContainer.appendChild(buildPanelEmptyState(
+          'book-open',
+          'No lore entries yet',
+          'Characters, items, and locations for your world.',
+          role === 'gm' ? { text: 'Create First Entry', action: () => window.createNewEncyclopediaEntry?.() } : null
+        ));
+        container.append(listContainer);
+      } else {
+        _loreSeg.setup($('#atlasView'), listContainer, rows);
+        container.append(listContainer);
+        await _loreSeg.slice(true);
+      }
+      updateCollapseExpandAllBtn();
+      isEncyclopediaRefreshing = false;
+      return;
+    }
   // Exclude sessions — rendered in the Sessions section.
   // All lore (placed and unplaced) lives here. The Lore section is the organisational home;
   // the Atlas tree's lore subsection is a read-only navigation view of placed entries.
