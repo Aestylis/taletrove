@@ -229,4 +229,28 @@ test.describe('MOB-B T1 — bottom navigation bar', () => {
     expect(s.drawerHidden, 'Map closes the drawer').toBe(true);
     expect(s.active, 'bar active = map').toBe('map');
   });
+
+  test('More opens a tools sheet; Calendar launches from it', async ({ page }) => {
+    await gotoCompact(page);
+    const more = await page.locator('#mobileNavBar [data-mnav="more"]').boundingBox();
+    await page.touchscreen.tap(more.x + more.width / 2, more.y + more.height / 2);
+    await page.waitForTimeout(500);
+    const sheet = await page.locator('#mobileMoreSheet .mobile-more-content').boundingBox();
+    expect(sheet, 'More sheet rendered').not.toBeNull();
+    expect(sheet.width, 'sheet spans full width').toBeGreaterThanOrEqual(392);
+    expect(sheet.y + sheet.height, 'bottom-anchored').toBeGreaterThanOrEqual(845);
+    const rows = await page.locator('#mobileMoreSheet [data-mnav-more]').all();
+    expect(rows.length, 'tool rows present').toBeGreaterThanOrEqual(6);
+    for (const row of rows.slice(0, 3)) {
+      const rb = await row.boundingBox();
+      expect(rb.height, 'row target >= 48px').toBeGreaterThanOrEqual(48);
+    }
+    // tap Calendar row → sheet closes, calendar opens
+    const cal = await page.locator('#mobileMoreSheet [data-mnav-more="calendarBtn"]').boundingBox();
+    await page.touchscreen.tap(cal.x + cal.width / 2, cal.y + cal.height / 2);
+    await page.waitForSelector('#calendarModal:not(.hidden)', { timeout: 5000 });
+    // sheet hides after its 250ms exit animation
+    await page.waitForFunction(() =>
+      document.querySelector('#mobileMoreSheet').classList.contains('hidden'), null, { timeout: 3000 });
+  });
 });

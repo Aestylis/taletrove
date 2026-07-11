@@ -50,7 +50,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@700&family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Space+Grotesk:wght@400;500;600&family=Nunito:wght@400;500;600&family=Ubuntu:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="worldbuilder.css?v=2026.07.11.04">
+    <link rel="stylesheet" href="worldbuilder.css?v=2026.07.11.05">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
           integrity="sha384-6LFfkTKLRlzFtgx8xsWyBdKGpcMMQTkv+dB7rAbugeJAu1Ym2q1Aji1cjHBG12Xh" crossorigin="anonymous">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
@@ -685,6 +685,20 @@
             <span>More</span>
         </button>
     </nav>
+    <!-- MOB-B "More" sheet — compact-only tool list; rows delegate to the rail buttons' handlers. -->
+    <div id="mobileMoreSheet" class="mobile-more-sheet hidden" role="dialog" aria-modal="true" aria-label="More tools">
+        <div class="mobile-more-scrim"></div>
+        <div class="mobile-more-content">
+            <button data-mnav-more="timelineBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/hourglass.svg'); mask-image: url('ui-icons/hourglass.svg');"></div><span>Global Timeline</span></button>
+            <button data-mnav-more="calendarBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/calendar-dots.svg'); mask-image: url('ui-icons/calendar-dots.svg');"></div><span>Calendar</span></button>
+            <button data-mnav-more="relationalGraphBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/graph.svg'); mask-image: url('ui-icons/graph.svg');"></div><span>Relational Graph</span></button>
+            <button data-mnav-more="familyTreeBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/tree-view.svg'); mask-image: url('ui-icons/tree-view.svg');"></div><span>Family Tree</span></button>
+            <button data-mnav-more="notificationBellBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/bell.svg'); mask-image: url('ui-icons/bell.svg');"></div><span>What's New</span></button>
+            <button data-mnav-more="helpBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/question.svg'); mask-image: url('ui-icons/question.svg');"></div><span>Help</span></button>
+            <button data-mnav-more="bugReportBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/bug.svg'); mask-image: url('ui-icons/bug.svg');"></div><span>Feedback</span></button>
+            <button data-mnav-more="themeRailBtn"><div class="icon-container" style="-webkit-mask-image: url('ui-icons/paintbrush.svg'); mask-image: url('ui-icons/paintbrush.svg');"></div><span>Appearance</span></button>
+        </div>
+    </div>
     <!-- Atlas panel and its toggle live outside #mainContainer so that
          mainContainer's will-change/transform does not create a new containing
          block that would misplace the position:fixed atlas panel. -->
@@ -1276,38 +1290,38 @@
         </div>
     </div>
     <div id="dice-box"></div>
-    <script defer src="utils.js?v=2026.07.11.04"></script>
-    <script defer src="state.js?v=2026.07.11.04"></script>
-    <script defer src="data.js?v=2026.07.11.04"></script>
-    <script defer src="styles.js?v=2026.07.11.04"></script>
-    <script defer src="data/blocks.js?v=2026.07.11.04"></script>
-    <script defer src="markdown-extensions.js?v=2026.07.11.04"></script>
-    <script defer src="worldbuilder.js?v=2026.07.11.04"></script>
-    <script defer src="app-init.js?v=2026.07.11.04"></script>
-    <script defer src="toolbar-popovers.js?v=2026.07.11.04"></script>
-    <script defer src="toolbar-modes.js?v=2026.07.11.04"></script>
-    <script defer src="user-chip.js?v=2026.07.11.04"></script>
-    <script defer src="import-export.js?v=2026.07.11.04"></script>
-    <script defer src="command-palette.js?v=2026.07.11.04"></script>
-    <script defer src="keyboard-shortcuts.js?v=2026.07.11.04"></script>
-    <script defer src="map.js?v=2026.07.11.04"></script>
-    <script defer src="grid.js?v=2026.07.11.04"></script>
-    <script defer src="ui.js?v=2026.07.11.04"></script>
-    <script defer src="panels.js?v=2026.07.11.04"></script>
-    <script defer src="image-search.js?v=2026.07.11.04"></script>
-    <script defer src="relational-graph.js?v=2026.07.11.04"></script>
-    <script defer src="family-tree.js?v=2026.07.11.04"></script>
-    <script defer src="inspector.js?v=2026.07.11.04"></script>
-    <script defer src="block-editor.js?v=2026.07.11.04"></script>
-    <script defer src="modals.js?v=2026.07.11.04"></script>
-    <script defer src="generator.js?v=2026.07.11.04"></script>
-    <script defer src="tutorial.js?v=2026.07.11.04"></script>
-    <script type="module" src="dice-roller.js?v=2026.07.11.04"></script>
-    <script defer src="obsidian-importer.js?v=2026.07.11.04"></script>
-    <script type="module" src="armoria.js?v=2026.07.11.04"></script>
+    <script defer src="utils.js?v=2026.07.11.05"></script>
+    <script defer src="state.js?v=2026.07.11.05"></script>
+    <script defer src="data.js?v=2026.07.11.05"></script>
+    <script defer src="styles.js?v=2026.07.11.05"></script>
+    <script defer src="data/blocks.js?v=2026.07.11.05"></script>
+    <script defer src="markdown-extensions.js?v=2026.07.11.05"></script>
+    <script defer src="worldbuilder.js?v=2026.07.11.05"></script>
+    <script defer src="app-init.js?v=2026.07.11.05"></script>
+    <script defer src="toolbar-popovers.js?v=2026.07.11.05"></script>
+    <script defer src="toolbar-modes.js?v=2026.07.11.05"></script>
+    <script defer src="user-chip.js?v=2026.07.11.05"></script>
+    <script defer src="import-export.js?v=2026.07.11.05"></script>
+    <script defer src="command-palette.js?v=2026.07.11.05"></script>
+    <script defer src="keyboard-shortcuts.js?v=2026.07.11.05"></script>
+    <script defer src="map.js?v=2026.07.11.05"></script>
+    <script defer src="grid.js?v=2026.07.11.05"></script>
+    <script defer src="ui.js?v=2026.07.11.05"></script>
+    <script defer src="panels.js?v=2026.07.11.05"></script>
+    <script defer src="image-search.js?v=2026.07.11.05"></script>
+    <script defer src="relational-graph.js?v=2026.07.11.05"></script>
+    <script defer src="family-tree.js?v=2026.07.11.05"></script>
+    <script defer src="inspector.js?v=2026.07.11.05"></script>
+    <script defer src="block-editor.js?v=2026.07.11.05"></script>
+    <script defer src="modals.js?v=2026.07.11.05"></script>
+    <script defer src="generator.js?v=2026.07.11.05"></script>
+    <script defer src="tutorial.js?v=2026.07.11.05"></script>
+    <script type="module" src="dice-roller.js?v=2026.07.11.05"></script>
+    <script defer src="obsidian-importer.js?v=2026.07.11.05"></script>
+    <script type="module" src="armoria.js?v=2026.07.11.05"></script>
     <!-- Google Identity Services — loaded last so it doesn't block app init -->
     <script defer src="https://accounts.google.com/gsi/client"></script>
-    <script defer src="google-drive.js?v=2026.07.11.04"></script>
+    <script defer src="google-drive.js?v=2026.07.11.05"></script>
     <datalist id="encyclopediaTypes">
         <option value="Character"></option>
         <option value="Item"></option>

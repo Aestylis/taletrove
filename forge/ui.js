@@ -485,6 +485,39 @@ function initMobileNavBar() {
   });
 }
 
+/** MOB-B "More" sheet — lists the nav-rail tools; each row delegates to the rail button. */
+function openMobileMoreSheet() {
+  const sheet = document.getElementById('mobileMoreSheet');
+  if (!sheet) return;
+  sheet.classList.remove('hidden');
+  requestAnimationFrame(() => sheet.classList.add('is-open'));
+}
+window.openMobileMoreSheet = openMobileMoreSheet;
+
+function closeMobileMoreSheet() {
+  const sheet = document.getElementById('mobileMoreSheet');
+  if (!sheet) return;
+  sheet.classList.remove('is-open');
+  setTimeout(() => sheet.classList.add('hidden'), 250);
+}
+
+function initMobileMoreSheet() {
+  const sheet = document.getElementById('mobileMoreSheet');
+  if (!sheet) return;
+  sheet.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-mnav-more]');
+    if (row) {
+      closeMobileMoreSheet();
+      document.getElementById(row.dataset.mnavMore)?.click();
+      return;
+    }
+    if (e.target.closest('.mobile-more-scrim')) closeMobileMoreSheet();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !sheet.classList.contains('hidden')) closeMobileMoreSheet();
+  });
+}
+
 /** Reflects drawer/tab state onto the bar's active item (no-op when bar absent). */
 function _syncMobileNavActive() {
   const bar = document.getElementById('mobileNavBar');
