@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-62",
+    "date": "2026-07-11",
+    "title": "Alpha 6.62: Mobile — Properties & Panels as Bottom Sheets",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "On phones, the properties editor, help, news, and bug-report panels now slide up from the bottom as full-width sheets instead of desktop side panels that overflowed the screen.",
+    "content": "<h4>Editing works on phones now</h4><p>The properties editor (the ··· panel), plus the help, what's-new, and bug-report panels, now open as bottom sheets on phone-sized screens — full width, rounded top, sliding up from the bottom edge. Previously these were fixed-width desktop side sheets that didn't fit narrow displays. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-61",
     "date": "2026-07-10",
     "title": "Alpha 6.61: Mobile — Peek Becomes a Bottom Sheet",

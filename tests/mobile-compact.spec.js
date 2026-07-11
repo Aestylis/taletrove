@@ -91,3 +91,31 @@ test.describe('MOB-A T3 — peek is a bottom sheet over the map', () => {
     await page.evaluate(() => exitPeekMode());
   });
 });
+
+test.describe('MOB-A T4 — properties + chrome sheets are bottom sheets', () => {
+  test('properties sheet bottom-anchored full width', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    // #propertiesSheet is only used from article mode (openPropertiesSheet branches on articleViewMode)
+    await page.evaluate(async () => { await enterArticleMode('mc-1', 'encyclopedia'); });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => openPropertiesSheet('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+    const box = await page.locator('#propertiesSheet').boundingBox();
+    expect(box.width, 'sheet spans full width').toBeGreaterThanOrEqual(392);
+    expect(box.y, 'bottom-anchored').toBeGreaterThanOrEqual(852 * 0.25);
+    expect(box.y + box.height, 'reaches the bottom edge').toBeGreaterThanOrEqual(845);
+  });
+
+  test('help side-sheet fits the viewport as a bottom sheet', async ({ page }) => {
+    await gotoCompact(page);
+    await page.locator('#helpBtn').dispatchEvent('click');
+    await page.waitForTimeout(500);
+    const box = await page.locator('#helpModal .modal-content').boundingBox();
+    expect(box.width, 'full width, no 360px side sheet').toBeGreaterThanOrEqual(392);
+    expect(box.x, 'flush left').toBeLessThanOrEqual(1);
+    expect(box.y, 'top edge on screen (sheet actually open, not resting offscreen)').toBeLessThan(700);
+    expect(box.y + box.height, 'anchored to bottom edge').toBeGreaterThanOrEqual(845);
+    expect(box.y + box.height, 'not hanging below the viewport').toBeLessThanOrEqual(853);
+  });
+});

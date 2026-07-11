@@ -15536,4 +15536,46 @@ a.image-search-license-chip:hover {
   body.peek-mode #atlasPanel.is-hidden ~ #infoPanel {
     width: 100dvw;
   }
+
+  /* T4a -- properties sheet: modal bottom sheet (axis flip translateX->translateY) */
+  #propertiesSheet {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100dvw;
+    height: 65dvh;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(110%);
+  }
+  #propertiesSheet.is-open {
+    transform: translateY(0);
+  }
+  /* Sheet overlays the article instead of squishing it (desktop sets right:360px) */
+  body.article-mode.properties-sheet-open #infoPanel {
+    right: 0;
+  }
+
+  /* T4b -- chrome side-sheets (help/news/bug-report + any is-side-sheet modal)
+     become modal bottom sheets. IDs listed to out-specify per-modal width rules. */
+  .modal-overlay.is-side-sheet .modal-content,
+  #newsModal.is-side-sheet .modal-content,
+  #bugReportModal.is-side-sheet .modal-content,
+  #helpModal.is-side-sheet .modal-content {
+    width: 100dvw;
+    max-width: 100dvw;
+    height: 70dvh;
+    max-height: 70dvh;
+    align-self: flex-end;
+    margin-top: auto;
+    border-radius: 16px 16px 0 0;
+    border-right: none;
+    transform: translateY(110%);
+  }
+  .modal-overlay.is-side-sheet.is-open .modal-content,
+  #newsModal.is-side-sheet.is-open .modal-content,
+  #bugReportModal.is-side-sheet.is-open .modal-content,
+  #helpModal.is-side-sheet.is-open .modal-content {
+    transform: translateY(0);
+  }
 }
