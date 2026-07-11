@@ -2986,60 +2986,7 @@ function initEventListeners() {
     });
   });
 
-  // Helper used by the custom icon upload flow.
-  async function saveCustomIcon(file, iconKey, feature, modal) {
-    const reader = new FileReader();
-    reader.onerror = () => showAlertModal('Read Error', 'Could not read the SVG file. It may be in use or inaccessible.');
-    reader.onload = async (e_read) => {
-      const clean = DOMPurify.sanitize(e_read.target.result, { USE_PROFILES: { svg: true } });
-      const blob = new Blob([clean], { type: 'image/svg+xml' });
-      // Evict stale blob URL before writing new one (handles icon replacement).
-      if (window.evictCustomIconUrl) window.evictCustomIconUrl(iconKey);
-      await idbSet(iconKey, blob);
-      recordState();
-      feature.iconClass = iconKey;
-      render({ full: true });
-      debouncedSave();
-      await loadCustomAssets();
-      if (modal && modal.populateGrid) await modal.populateGrid();
-    };
-    reader.readAsText(file);
-  }
-
-  $('#customIconFile').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    const feature = window.currentTargetFeatureForIcon;
-    const modal = $('#iconPickerModal');
-
-    if (!file || !feature) return;
-
-    // Reset value immediately so the same file can be picked again if needed,
-    // and even if the following modal is cancelled.
-    e.target.value = null;
-
-    showInputModal('Name this Icon', 'Icon name', file.name.replace(/\.svg/i, ''), async (rawName) => {
-      const sanitizedName = rawName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      const iconKey = `ci-${sanitizedName}`;
-
-      try {
-        const existingIcon = await idbGet(iconKey);
-        if (existingIcon) {
-          showConfirmationModal(
-            'Icon Already Exists',
-            `An icon named "${iconKey}" already exists. Overwrite it?`,
-            'Overwrite',
-            async () => {
-              await saveCustomIcon(file, iconKey, feature, modal);
-            }
-          );
-        } else {
-          await saveCustomIcon(file, iconKey, feature, modal);
-        }
-      } catch (err) {
-        console.error("Failed to upload custom icon:", err);
-      }
-    });
-  });
+  initCustomIconUpload();
 
   initFileDropListeners();
   $('#toggleFreeMoveBtn').addEventListener('click', () => toggleFreeMove());

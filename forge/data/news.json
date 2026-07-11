@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-56",
+    "date": "2026-07-10",
+    "title": "Alpha 6.56: Internal Cleanup — Custom Icon Upload",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): the custom SVG icon upload flow moved next to the icon picker it feeds, continuing the core cleanup.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. The code that handles uploading a custom SVG pin icon (including its sanitization step) now lives alongside the icon picker modal. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-55",
     "date": "2026-07-10",
     "title": "Alpha 6.55: Internal Cleanup — Fog Controls",
