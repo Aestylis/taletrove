@@ -133,3 +133,118 @@ L.CustomGrid = L.Layer.extend({
         ctx.restore();
     }
 });
+
+/**
+ * Grid-settings wiring (WS7 #9, extracted from worldbuilder.js initEventListeners).
+ * Owns the grid popover controls, reset, set-origin, and two-click align flow.
+ * gridAlignPhase / gridAlignFirstWorldPt / cancelGridAlign are worldbuilder.js globals
+ * shared at call time. Called from initEventListeners() at DOMContentLoaded.
+ */
+function initGridListeners() {
+  let _gridSessionRecorded = false;
+
+  $('#gridSettingsBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const popover = $('#gridSettingsPopover');
+    popover.classList.toggle('hidden');
+    _gridSessionRecorded = false;
+    if (!popover.classList.contains('hidden')) {
+      const activeMap = state.maps.find(m => m.id === state.activeMapId);
+      if (activeMap) {
+        $('#gridEnableChk').checked = activeMap.grid.enabled;
+        $('#gridSizeXIn').value = activeMap.grid.sizeX || activeMap.grid.size || 50;
+        $('#gridSizeYIn').value = activeMap.grid.sizeY || activeMap.grid.size || 50;
+        $('#gridWidthIn').value = activeMap.grid.width || 1;
+        $('#gridColorIn').value = activeMap.grid.color;
+        $('#gridOpacityIn').value = activeMap.grid.opacity;
+        $('#gridOpacityVal').textContent = parseFloat(activeMap.grid.opacity).toFixed(2);
+        $('#gridOffsetXIn').value = activeMap.grid.offsetX || 0;
+        $('#gridOffsetYIn').value = activeMap.grid.offsetY || 0;
+      }
+    }
+  });
+
+  const updateGridFromUI = () => {
+    const activeMap = state.maps.find(m => m.id === state.activeMapId);
+    if (!activeMap) return;
+
+    if (!_gridSessionRecorded) { recordState(); _gridSessionRecorded = true; }
+    activeMap.grid.enabled = $('#gridEnableChk').checked;
+    activeMap.grid.sizeX = parseInt($('#gridSizeXIn').value, 10) || 50;
+    activeMap.grid.sizeY = parseInt($('#gridSizeYIn').value, 10) || 50;
+    activeMap.grid.width = parseInt($('#gridWidthIn').value, 10) || 1;
+    activeMap.grid.color = $('#gridColorIn').value;
+    activeMap.grid.opacity = parseFloat($('#gridOpacityIn').value);
+    $('#gridOpacityVal').textContent = activeMap.grid.opacity.toFixed(2);
+    activeMap.grid.offsetX = parseInt($('#gridOffsetXIn').value, 10) || 0;
+    activeMap.grid.offsetY = parseInt($('#gridOffsetYIn').value, 10) || 0;
+
+    markEntityDirty('map', activeMap.id);
+    window.updateGridLayer();
+    debouncedSave();
+  };
+
+  $('#gridEnableChk').addEventListener('change', updateGridFromUI);
+  $('#gridSizeXIn').addEventListener('input', debounce(updateGridFromUI, 200));
+  $('#gridSizeYIn').addEventListener('input', debounce(updateGridFromUI, 200));
+  $('#gridWidthIn').addEventListener('input', debounce(updateGridFromUI, 200));
+  $('#gridColorIn').addEventListener('input', debounce(updateGridFromUI, 200));
+  $('#gridOpacityIn').addEventListener('input', updateGridFromUI);
+  $('#gridOffsetXIn').addEventListener('input', debounce(updateGridFromUI, 200));
+  $('#gridOffsetYIn').addEventListener('input', debounce(updateGridFromUI, 200));
+
+  $('#gridResetBtn').addEventListener('click', () => {
+    const activeMap = state.maps.find(m => m.id === state.activeMapId);
+    if (!activeMap) return;
+    recordState();
+    _gridSessionRecorded = true;
+    activeMap.grid = { enabled: false, size: 50, sizeX: 50, sizeY: 50, color: '#ffffff', opacity: 0.5, width: 1, offsetX: 0, offsetY: 0 };
+    $('#gridEnableChk').checked = false;
+    $('#gridSizeXIn').value = 50;
+    $('#gridSizeYIn').value = 50;
+    $('#gridWidthIn').value = 1;
+    $('#gridColorIn').value = '#ffffff';
+    $('#gridOpacityIn').value = 0.5;
+    $('#gridOpacityVal').textContent = '0.50';
+    $('#gridOffsetXIn').value = 0;
+    $('#gridOffsetYIn').value = 0;
+    markEntityDirty('map', activeMap.id);
+    window.updateGridLayer();
+    debouncedSave();
+  });
+
+  $('#gridSetOriginBtn').addEventListener('click', () => {
+    $('#gridSettingsPopover').classList.add('hidden');
+    document.querySelector('.map-wrap').classList.add('cursor-set-origin');
+    map.once('click', (e) => {
+      document.querySelector('.map-wrap').classList.remove('cursor-set-origin');
+      const activeMap = state.maps.find(m => m.id === state.activeMapId);
+      if (!activeMap) return;
+      const origin = map.getPixelOrigin();
+      const pt = map.latLngToContainerPoint(e.latlng);
+      const wx = origin.x + pt.x;
+      const wy = origin.y + pt.y;
+      const sx = activeMap.grid.sizeX || activeMap.grid.size || 50;
+      const sy = activeMap.grid.sizeY || activeMap.grid.size || 50;
+      recordState();
+      activeMap.grid.offsetX = ((wx % sx) + sx) % sx;
+      activeMap.grid.offsetY = ((wy % sy) + sy) % sy;
+      markEntityDirty('map', activeMap.id);
+      if (window.updateGridLayer) window.updateGridLayer();
+      debouncedSave();
+    });
+  });
+
+  $('#gridAlignBtn').addEventListener('click', () => {
+    $('#gridSettingsPopover').classList.add('hidden');
+    gridAlignPhase = 1;
+    gridAlignFirstWorldPt = null;
+    const hint = $('#gridAlignHint');
+    hint.classList.remove('hidden');
+    $('#gridAlignHintText').textContent = 'Click the first corner of a grid cell';
+    document.querySelector('.map-wrap').classList.add('cursor-set-origin');
+    map.on('click', gridAlignClickHandler);
+  });
+
+  $('#gridAlignCancelBtn').addEventListener('click', cancelGridAlign);
+}

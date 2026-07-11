@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-53",
+    "date": "2026-07-10",
+    "title": "Alpha 6.53: Internal Cleanup — Grid Controls",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): the map grid's settings controls — popover, sizing, reset, set-origin, and align — moved into the grid module, continuing the core cleanup.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. The wiring for the map grid's settings (the popover controls, reset, set-origin, and the two-click align flow) now lives in the grid module alongside the grid renderer. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-52",
     "date": "2026-07-10",
     "title": "Alpha 6.52: Fix — Hero Image Drag & Drop Works Immediately",
