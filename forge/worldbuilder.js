@@ -2729,29 +2729,6 @@ async function handleCustomThemeUpload(imageFile, cssFile) {
 }
 
 /**
- * Updates the state of the theme toggle in the project actions menu.
- * Disables it if a custom theme is applied.
- */
-function updateThemeToggleState() {
-  const themeToggle = document.getElementById('themeToggleInMenu');
-  if (!themeToggle) return;
-
-  const isCustomTheme = !!settings.customTheme;
-  themeToggle.disabled = isCustomTheme;
-
-  const parentLi = themeToggle.closest('li.has-control');
-  if (parentLi) {
-    if (isCustomTheme) {
-      parentLi.classList.add('disabled');
-      parentLi.title = "Dark Mode is disabled while a custom theme is applied.";
-    } else {
-      parentLi.classList.remove('disabled');
-      parentLi.title = "";
-    }
-  }
-}
-
-/**
  * Applies the saved custom theme to the document, or removes it if none exists.
  */
 async function applyCustomTheme() {
@@ -2766,7 +2743,6 @@ async function applyCustomTheme() {
   const theme = settings.customTheme;
 
   syncMapBackground(); // Call the new sync function
-  updateThemeToggleState();
 
   if (!theme) return;
 
@@ -3037,40 +3013,7 @@ function initEventListeners() {
 
   // (project-name breadcrumb — handled in delegated handler below)
 
-  const mapContainer = $('#map');
-  if (mapContainer && map) {
-    mapContainer.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      // Encyclopedia entries are dragged by SortableJS which locks effectAllowed to 'move'.
-      // Use 'move' for those so the browser accepts the drop. Files and asset chips use 'copy'.
-      e.dataTransfer.dropEffect = e.dataTransfer.types.includes('application/x-taleprove-entry')
-        ? 'move'
-        : 'copy';
-    });
-
-    mapContainer.addEventListener('drop', (e) => {
-      e.preventDefault();
-
-      const assetKey = e.dataTransfer.getData("application/x-taleprove-asset");
-      const entryId = e.dataTransfer.getData("application/x-taleprove-entry");
-
-      if (assetKey) {
-        const latlng = map.containerPointToLatLng([e.clientX, e.clientY]);
-        recordState();
-        const newFeat = addFeatureFromLayer({ toGeoJSON: () => L.marker(latlng).toGeoJSON() }, 'point');
-        newFeat.title = "New Image Feature";
-        newFeat.heroImageKey = assetKey;
-        render({ full: true });
-        debouncedSave();
-        selectFeature(newFeat.id);
-        showToast("Feature created from Asset");
-      }
-      else if (entryId) {
-        const latlng = map.containerPointToLatLng([e.clientX, e.clientY]);
-        createLinkedPinFromEntry(entryId, latlng);
-      }
-    });
-  }
+  initMapDropListeners();
   
     // ([data-action="edit"] — handled in delegated handler below)
   

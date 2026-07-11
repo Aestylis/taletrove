@@ -3314,12 +3314,9 @@ function initModalListeners() {
   const projectModal = document.getElementById('projectActionsModal');
   if (projectModal) {
 
-    const themeToggle = projectModal.querySelector('#themeToggleInMenu');
-    const catToggle = projectModal.querySelector('#catToggleInMenu');
     const closeModal = () => {
       projectModal.classList.add('hidden');
-    };    if (themeToggle) themeToggle.checked = siteTheme === 'dark';
-    if (catToggle) catToggle.checked = showCats;
+    };
 
     projectModal.addEventListener('click', (e) => {
       if (e.target === projectModal) {

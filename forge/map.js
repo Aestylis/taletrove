@@ -2324,3 +2324,45 @@ function rhdPlacePlayerSeat() {
 window.rhdSyncStart       = rhdSyncStart;
 window.rhdSyncStop        = rhdSyncStop;
 window.rhdPlacePlayerSeat = rhdPlacePlayerSeat;
+
+/**
+ * Map asset/entry drop wiring (WS7 #13, extracted from worldbuilder.js initEventListeners).
+ * Dropping an Assets-panel chip creates an image feature; dropping a lore entry places a
+ * linked pin. Called from initEventListeners() at DOMContentLoaded (map exists by then).
+ */
+function initMapDropListeners() {
+  const mapContainer = $('#map');
+  if (mapContainer && map) {
+    mapContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      // Encyclopedia entries are dragged by SortableJS which locks effectAllowed to 'move'.
+      // Use 'move' for those so the browser accepts the drop. Files and asset chips use 'copy'.
+      e.dataTransfer.dropEffect = e.dataTransfer.types.includes('application/x-taleprove-entry')
+        ? 'move'
+        : 'copy';
+    });
+
+    mapContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+
+      const assetKey = e.dataTransfer.getData("application/x-taleprove-asset");
+      const entryId = e.dataTransfer.getData("application/x-taleprove-entry");
+
+      if (assetKey) {
+        const latlng = map.containerPointToLatLng([e.clientX, e.clientY]);
+        recordState();
+        const newFeat = addFeatureFromLayer({ toGeoJSON: () => L.marker(latlng).toGeoJSON() }, 'point');
+        newFeat.title = "New Image Feature";
+        newFeat.heroImageKey = assetKey;
+        render({ full: true });
+        debouncedSave();
+        selectFeature(newFeat.id);
+        showToast("Feature created from Asset");
+      }
+      else if (entryId) {
+        const latlng = map.containerPointToLatLng([e.clientX, e.clientY]);
+        createLinkedPinFromEntry(entryId, latlng);
+      }
+    });
+  }
+}

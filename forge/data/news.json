@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-57",
+    "date": "2026-07-10",
+    "title": "Alpha 6.57: Internal Cleanup — Map Drops & Dead Code",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): the map's drag-and-drop wiring for asset chips and lore entries moved into the map module, and leftover wiring for controls removed in an earlier redesign was deleted.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. Dropping an asset chip or lore entry onto the map is now wired inside the map module, and some leftover code for project-menu toggles that no longer exist (replaced by the Settings hub) was removed. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-56",
     "date": "2026-07-10",
     "title": "Alpha 6.56: Internal Cleanup — Custom Icon Upload",
