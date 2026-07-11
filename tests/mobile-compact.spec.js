@@ -8,13 +8,28 @@ import { gotoApp } from './helpers.js';
 
 test.use({ viewport: { width: 393, height: 852 }, hasTouch: true });
 
+/**
+ * gotoApp + compact-safe first-run settling. At 393px some dismiss buttons fail
+ * Playwright's actionability (offscreen in the pre-fix layouts), so gotoApp's
+ * click()s get swallowed — dispatchEvent bypasses that, then Escape closes any
+ * remaining overlay (help/tutorial).
+ */
+async function gotoCompact(page) {
+  await gotoApp(page);
+  for (const sel of ['#startFreshBtn', '#welcomeSkipBtn', '#tutorialCloseBtn']) {
+    try { await page.locator(sel).dispatchEvent('click', { timeout: 1200 }); } catch { /* absent */ }
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+}
+
 /** Seed one lore article and return its id (peek/article target). */
 async function seedEntry(page) {
   await page.evaluate(async () => {
     state.articles.push({
       id: 'mc-1', _silo: 'lore', name: 'Compact Test Entry', title: 'Compact Test Entry',
       type: 'Character', folderId: null, tags: [], links: [],
-      blocks: [{ blockId: 'mc-b1', type: 'text', data: { content: 'Body text for compact testing.' } }],
+      blocks: [{ blockId: 'mc-b1', type: 'TextField', data: { content: 'Body text for compact testing.' } }],
       visibleToPlayers: true,
     });
     syncArticleViews();
@@ -24,7 +39,7 @@ async function seedEntry(page) {
 
 test.describe('MOB-A T1 — atlas panel is a full-width drawer', () => {
   test('open panel fills viewport width; closing restores the map', async ({ page }) => {
-    await gotoApp(page);
+    await gotoCompact(page);
     // toggleAsidePanel(hide): false = show, true = hide
     await page.evaluate(() => toggleAsidePanel(false));
     await page.waitForTimeout(500); // drawer transition
@@ -41,5 +56,19 @@ test.describe('MOB-A T1 — atlas panel is a full-width drawer', () => {
 
     const mapBox = await page.locator('#map').boundingBox();
     expect(mapBox.width, 'map is the base pane').toBeGreaterThan(300);
+  });
+});
+
+test.describe('MOB-A T2 — article mode takes over the screen', () => {
+  test('article fills the viewport and shows content', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => enterArticleMode('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+    const box = await page.locator('#infoPanel').boundingBox();
+    expect(box.x, 'article starts at left edge').toBeLessThanOrEqual(1);
+    expect(box.width, 'article spans full width').toBeGreaterThanOrEqual(392);
+    await expect(page.locator('#selectionPanelContent')).toContainText('Body text for compact testing');
+    await page.evaluate(() => exitArticleMode());
   });
 });

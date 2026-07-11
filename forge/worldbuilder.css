@@ -15504,4 +15504,12 @@ a.image-search-license-chip:hover {
     height: calc(100dvh - 52px);
     border-right: none;
   }
+
+  /* T2 -- article mode is a true full takeover (desktop rule puts left at
+     panel+rail width, which exceeds a phone viewport) */
+  body.article-mode #infoPanel {
+    left: 0;
+    width: 100dvw;
+    height: calc(100dvh - 52px);
+  }
 }

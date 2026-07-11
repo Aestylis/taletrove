@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-60",
+    "date": "2026-07-10",
+    "title": "Alpha 6.60: Mobile — Full-Screen Article View",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "On phones, opening an article now takes over the whole screen as a proper reading view — previously the article panel rendered off-screen entirely on narrow displays.",
+    "content": "<h4>Articles now readable on phones</h4><p>Article view on phone-sized screens is now a clean full-screen reading page — title, hero area, and content edge-to-edge, with the back arrow and map card to return. Previously the article panel was positioned for desktop widths and never appeared on phones at all. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-59",
     "date": "2026-07-10",
     "title": "Alpha 6.59: Mobile — Full-Width Panel Drawer",
