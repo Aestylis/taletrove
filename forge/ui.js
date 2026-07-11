@@ -459,6 +459,17 @@ function toggleAsidePanel(hide) {
  * Called from initEventListeners() at DOMContentLoaded.
  */
 function initMobileNavBar() {
+  // Compact-only map-tools toggle: the main toolbar is collapsed by default on
+  // phones (long-press radial is the primary map interaction).
+  const toolsToggle = document.getElementById('mobileToolsToggle');
+  if (toolsToggle) {
+    toolsToggle.addEventListener('click', () => {
+      const open = document.body.classList.toggle('mobile-tools-open');
+      toolsToggle.setAttribute('aria-pressed', String(open));
+      toolsToggle.setAttribute('aria-label', open ? 'Hide map tools' : 'Show map tools');
+    });
+  }
+
   const bar = document.getElementById('mobileNavBar');
   if (!bar) return;
   bar.addEventListener('click', (e) => {

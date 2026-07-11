@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-72",
+    "date": "2026-07-11",
+    "title": "Alpha 6.72: Mobile — Leaner Chrome, Popup-First Pins",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "More map, less chrome on phones: a slimmer bottom bar, the map toolbar tucks behind a pencil button (long-press does the heavy lifting), and tapping a pin opens a compact popup card instead of a half-screen panel.",
+    "content": "<h4>More map on your screen</h4><p>Three refinements from device testing: the bottom navigation bar is slimmer; the map toolbar is collapsed behind a pencil button by default (press-and-hold on the map or a pin remains the quickest way to act, and the toolbar wraps properly when opened — fixing the hidden ··· menu); and tapping a pin now opens a compact popup card with the essentials and an \"Open Article\" button, instead of a half-screen panel that hid the text. Desktop is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-71",
     "date": "2026-07-11",
     "title": "Alpha 6.71: Mobile — Map Navigation Feels Right",

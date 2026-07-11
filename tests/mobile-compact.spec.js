@@ -175,7 +175,8 @@ test.describe('MOB-B T1 — bottom navigation bar', () => {
     expect(bar, 'nav bar rendered').not.toBeNull();
     expect(bar.width, 'bar spans full width').toBeGreaterThanOrEqual(392);
     expect(bar.y + bar.height, 'bar at bottom edge').toBeGreaterThanOrEqual(845);
-    expect(bar.height, 'bar tall enough (64px M3 token)').toBeGreaterThanOrEqual(60);
+    expect(bar.height, 'bar height ~56px (compact-lean, still >=48 targets)').toBeGreaterThanOrEqual(52);
+    expect(bar.height, 'bar not oversized').toBeLessThanOrEqual(62);
     const items = await page.locator('#mobileNavBar .mobile-nav-item').all();
     expect(items.length, 'four destinations').toBe(4);
     for (const item of items) {
@@ -493,5 +494,75 @@ test.describe('MOB-D — meta + bar sync follow-ups', () => {
     expect(r.active, 'navigated to the map').toBe('m3');
     expect(r.panelVisible, 'map info panel stays closed at compact').toBe(false);
     expect(r.peek, 'no peek either').toBe(false);
+  });
+
+  test('main toolbar collapsed by default; pencil toggle reveals it', async ({ page }) => {
+    await gotoCompact(page);
+    const before = await page.evaluate(() => ({
+      toolbar: getComputedStyle(document.querySelector('#mainToolbar')).display,
+      toggle: getComputedStyle(document.querySelector('#mobileToolsToggle')).display,
+    }));
+    expect(before.toolbar, 'toolbar hidden by default at compact').toBe('none');
+    expect(before.toggle, 'pencil toggle visible at compact').not.toBe('none');
+    const t = await page.locator('#mobileToolsToggle').boundingBox();
+    await page.touchscreen.tap(t.x + t.width / 2, t.y + t.height / 2);
+    await page.waitForTimeout(300);
+    const open = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('#mainToolbar')).display);
+    expect(open, 'toolbar shown after toggle').not.toBe('none');
+    // the expanded toolbar must wrap within the viewport, and its overflow (···)
+    // menu must open fully on-screen (0.6.71 device bug: unwrapped toolbar pushed
+    // the ··· button offscreen, so its popover opened invisibly)
+    const overflow = await page.evaluate(async () => {
+      const tb = document.querySelector('#mainToolbar').getBoundingClientRect();
+      const btn = document.querySelector('#toolbarOverflowBtn');
+      const bb = btn.getBoundingClientRect();
+      btn.click();
+      await new Promise(res => setTimeout(res, 400));
+      const pb = document.querySelector('#toolbarOverflowPopover').getBoundingClientRect();
+      document.body.click(); // close popover again
+      return { tbRight: tb.right, btnRight: bb.right, popLeft: pb.x, popRight: pb.right };
+    });
+    expect(overflow.tbRight, 'toolbar fits viewport').toBeLessThanOrEqual(394);
+    expect(overflow.btnRight, 'overflow button on-screen').toBeLessThanOrEqual(394);
+    expect(overflow.popLeft, 'popover left edge on-screen').toBeGreaterThanOrEqual(0);
+    expect(overflow.popRight, 'popover right edge on-screen').toBeLessThanOrEqual(394);
+    await page.touchscreen.tap(t.x + t.width / 2, t.y + t.height / 2);
+    await page.waitForTimeout(300);
+    const closed = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('#mainToolbar')).display);
+    expect(closed, 'toolbar hidden again').toBe('none');
+  });
+
+  test('tapping a pin at compact opens the map popup, not the half-screen peek', async ({ page }) => {
+    await gotoCompact(page);
+    await page.evaluate(async () => {
+      const m = state.maps.find(x => x.id === state.activeMapId);
+      m.width = 1200; m.height = 800;
+      state.articles.push({ id: 'pp-1', _silo: 'atlas', name: 'Popup Pin', title: 'Popup Pin', type: 'City',
+        mapId: state.activeMapId, geometry: 'point',
+        geojson: { type: 'Feature', geometry: { type: 'Point', coordinates: [400, 400] } },
+        tags: [], links: [], blocks: [{ blockId: 'pb', type: 'TextField', data: { content: 'A city of popups.' } }],
+        visibleToPlayers: true });
+      syncArticleViews();
+      await render({ full: true });
+      map.setView([400, 400], 1, { animate: false });
+    });
+    await page.waitForTimeout(600);
+    // fire through Leaflet's own event pipeline (headless touch synthesis does
+    // not reach layer handlers reliably) — this still runs onFeatureClick
+    const r = await page.evaluate(async () => {
+      const layers = [];
+      allLayers.eachLayer(l => layers.push(l));
+      const target = layers.find(l => l._isPoint);
+      target.fire('click', { latlng: target.getLatLng(), originalEvent: new MouseEvent('click') });
+      await new Promise(res => setTimeout(res, 700)); // 220ms debounce + popup open
+      return {
+        popup: !!document.querySelector('.standardized-map-popup'),
+        peek: document.body.classList.contains('peek-mode'),
+      };
+    });
+    expect(r.popup, 'map popup opened').toBe(true);
+    expect(r.peek, 'no half-screen peek at compact').toBe(false);
   });
 });

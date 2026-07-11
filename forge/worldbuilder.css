@@ -15497,6 +15497,7 @@ a.image-search-license-chip:hover {
 #mobileNavBar { display: none; }
 #mobileMoreSheet { display: none; }
 .sheet-drag-handle { display: none; }
+#mobileToolsToggle { display: none; }
 
 /* ===== MOB-A: compact shell (<600px, M3 compact class) =====
    All mobile-compact overrides live in THIS block only. Desktop rules above
@@ -15507,7 +15508,7 @@ a.image-search-license-chip:hover {
     left: 0;
     width: 100dvw;
     /* stop above the bottom nav bar -- the bar is how you switch destinations */
-    height: calc(100dvh - 52px - 64px - env(safe-area-inset-bottom, 0px));
+    height: calc(100dvh - 52px - 56px - env(safe-area-inset-bottom, 0px));
     border-right: none;
   }
 
@@ -15656,7 +15657,7 @@ a.image-search-license-chip:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--panel);
     border-top: 1px solid var(--border);
@@ -15689,12 +15690,53 @@ a.image-search-license-chip:hover {
   }
   .mobile-nav-item.is-active { color: var(--accent-orange); }
   /* lift bottom map chrome above the bar */
-  .toolbar.bottom { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
-  .leaflet-bottom .leaflet-control { margin-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+  .toolbar.bottom { bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+  .leaflet-bottom .leaflet-control { margin-bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
   /* custom zoom control (slider + eye toggle) is not a .leaflet-control -- lift it too */
-  .map-zoom-controls { bottom: calc(3.5rem + 64px + env(safe-area-inset-bottom, 0px)); }
+  .map-zoom-controls { bottom: calc(3.5rem + 56px + env(safe-area-inset-bottom, 0px)); }
   /* the panel pull tab is redundant at compact -- the nav bar owns open/close */
   .aside-toggle-btn { display: none; }
+
+  /* main map toolbar collapses at compact -- long-press radial is the go-to;
+     the pencil toggle brings the full toolbar back when needed */
+  #mainToolbar { display: none; }
+  body.mobile-tools-open #mainToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100dvw - 16px);
+  }
+  #mobileToolsToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    z-index: 1001;
+    cursor: pointer;
+  }
+  body.mobile-tools-open #mobileToolsToggle {
+    color: var(--accent-orange);
+    border-color: var(--accent-orange);
+  }
+  #mobileToolsToggle .icon-container {
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+  }
 
   /* MOB-B T3 -- "More" modal bottom sheet (scrim + slide-up tool list) */
   #mobileMoreSheet {

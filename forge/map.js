@@ -1396,6 +1396,13 @@ async function onFeatureClick(feat, layer, ev) {
   L.DomEvent.stopPropagation(ev);
   dismissRadialMenu();
   map.closePopup();
+  // Compact viewports get the glance tier first: the map popup (hero + snippet +
+  // "Open Article") instead of a half-screen peek sheet that hides the map and
+  // truncates the text. Article mode is one tap away from the popup.
+  if (window.matchMedia?.('(max-width: 599.98px)').matches) {
+    showMapPopup(feat, layer, ev);
+    return;
+  }
   const type = (feat.kind === 'entry' || feat._silo === 'lore') ? 'encyclopedia' : 'feature';
   if (window.enterPeekMode) window.enterPeekMode(feat.id, type);
 }
