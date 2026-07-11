@@ -3458,21 +3458,7 @@ function initEventListeners() {
 
   $('#centerOnSelectionBtn').addEventListener('click', () => { if (selectedId) navigateToFeature(selectedId) });
 
-  ['toggleFogBtn', 'toggleFogBtnFullscreen'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const activeMap = state.maps.find(m => m.id === state.activeMapId);
-      const popover = $('#fogControlsPopover');
-      if (activeMap?.fog?.enabled && popover && popover.classList.contains('hidden')) {
-        // Fog is on but popover was dismissed — reopen it
-        showFogPopover(btn);
-      } else {
-        toggleFog();
-      }
-    });
-  });
+  initFogControlListeners();
 
   $('#togglePinsBtnFullscreen')?.addEventListener('click', (e) => {
     if (!window.map || !window.allLayers) return;
@@ -3519,46 +3505,6 @@ function initEventListeners() {
     });
   });
 
-  $('#fogOpacitySlider').addEventListener('input', e => {
-    const val = parseFloat(e.target.value);
-    const activeMap = state.maps.find(m => m.id === state.activeMapId);
-    if (activeMap && activeMap.fog) {
-      activeMap.fog.opacity = val;
-      const fl = window.getFogLayer();
-      if (fl) fl.setOpacity(val);
-      debouncedSave();
-    }
-  });
-
-  const updateBrushSize = (val) => {
-    const size = parseInt(val, 10);
-    const activeMap = state.maps.find(m => m.id === state.activeMapId);
-    if (activeMap && activeMap.fog) {
-      activeMap.fog.brushSize = size;
-      $('#fogBrushSizeSlider').value = size;
-      $('#fogBrushSizeInput').value = size;
-      const fl = window.getFogLayer();
-      if (fl) fl.setBrushSize(size);
-      updateFogBrushCursorSize(size);
-      debouncedSave();
-    }
-  };
-
-  $('#fogBrushSizeSlider').addEventListener('input', e => updateBrushSize(e.target.value));
-  $('#fogBrushSizeInput').addEventListener('change', e => updateBrushSize(e.target.value));
-
-  // Fog brush cursor — follow mouse over the map
-  const _mapEl = $('#map');
-  if (_mapEl) {
-    _mapEl.addEventListener('mousemove', (e) => {
-      if (window.uiMode !== 'fog') return;
-      const fogCursor = $('#fogBrushCursor');
-      if (!fogCursor) return;
-      const rect = _mapEl.getBoundingClientRect();
-      fogCursor.style.left = `${e.clientX - rect.left}px`;
-      fogCursor.style.top = `${e.clientY - rect.top}px`;
-    });
-  }
   $('#toggleOverlayBtn').addEventListener('click', () => {
     settings.overlayVisible = !settings.overlayVisible;
     const btn = $('#toggleOverlayBtn');

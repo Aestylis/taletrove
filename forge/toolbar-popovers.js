@@ -261,3 +261,68 @@ function initToolbarPopoverListeners() {
     if (!e.target.closest('#toolbarOverflowPopover, #toolbarOverflowBtn')) _closeToolbarOverflowPopover();
   });
 }
+
+/**
+ * Fog-control wiring (WS7 #11, extracted from worldbuilder.js initEventListeners).
+ * Owns: the fog toggle buttons (toolbar + fullscreen), fog opacity slider, brush-size
+ * slider/input, and the brush cursor that follows the mouse over the map.
+ * Called from initEventListeners() at DOMContentLoaded.
+ */
+function initFogControlListeners() {
+  ['toggleFogBtn', 'toggleFogBtnFullscreen'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const activeMap = state.maps.find(m => m.id === state.activeMapId);
+      const popover = $('#fogControlsPopover');
+      if (activeMap?.fog?.enabled && popover && popover.classList.contains('hidden')) {
+        // Fog is on but popover was dismissed — reopen it
+        showFogPopover(btn);
+      } else {
+        toggleFog();
+      }
+    });
+  });
+
+  $('#fogOpacitySlider').addEventListener('input', e => {
+    const val = parseFloat(e.target.value);
+    const activeMap = state.maps.find(m => m.id === state.activeMapId);
+    if (activeMap && activeMap.fog) {
+      activeMap.fog.opacity = val;
+      const fl = window.getFogLayer();
+      if (fl) fl.setOpacity(val);
+      debouncedSave();
+    }
+  });
+
+  const updateBrushSize = (val) => {
+    const size = parseInt(val, 10);
+    const activeMap = state.maps.find(m => m.id === state.activeMapId);
+    if (activeMap && activeMap.fog) {
+      activeMap.fog.brushSize = size;
+      $('#fogBrushSizeSlider').value = size;
+      $('#fogBrushSizeInput').value = size;
+      const fl = window.getFogLayer();
+      if (fl) fl.setBrushSize(size);
+      updateFogBrushCursorSize(size);
+      debouncedSave();
+    }
+  };
+
+  $('#fogBrushSizeSlider').addEventListener('input', e => updateBrushSize(e.target.value));
+  $('#fogBrushSizeInput').addEventListener('change', e => updateBrushSize(e.target.value));
+
+  // Fog brush cursor — follow mouse over the map
+  const _mapEl = $('#map');
+  if (_mapEl) {
+    _mapEl.addEventListener('mousemove', (e) => {
+      if (window.uiMode !== 'fog') return;
+      const fogCursor = $('#fogBrushCursor');
+      if (!fogCursor) return;
+      const rect = _mapEl.getBoundingClientRect();
+      fogCursor.style.left = `${e.clientX - rect.left}px`;
+      fogCursor.style.top = `${e.clientY - rect.top}px`;
+    });
+  }
+}
