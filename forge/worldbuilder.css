@@ -15496,6 +15496,7 @@ a.image-search-license-chip:hover {
 /* MOB-B: bottom navigation bar exists only at compact -- hidden by default */
 #mobileNavBar { display: none; }
 #mobileMoreSheet { display: none; }
+.sheet-drag-handle { display: none; }
 
 /* ===== MOB-A: compact shell (<600px, M3 compact class) =====
    All mobile-compact overrides live in THIS block only. Desktop rules above
@@ -15744,6 +15745,40 @@ a.image-search-license-chip:hover {
     mask-position: center;
     -webkit-mask-position: center;
   }
+
+  /* MOB-D T2 -- drag handles on the compact bottom sheets (M3: 32x4 pill,
+     generous vertical hit area, tap = single-pointer close) */
+  body.peek-mode #infoPanel .sheet-drag-handle,
+  #propertiesSheet .sheet-drag-handle,
+  .mobile-more-content .sheet-drag-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+  .sheet-drag-handle span {
+    width: 32px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  /* MOB-D T2 -- M3 motion tokens: rest state = exit (200ms emphasized accelerate),
+     open state = enter (400ms emphasized decelerate). reduced-motion rules above
+     still disable transitions entirely. */
+  body.peek-mode #infoPanel,
+  #propertiesSheet,
+  .mobile-more-content {
+    transition: transform 200ms cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  }
+  body.peek-mode #infoPanel.is-visible,
+  #propertiesSheet.is-open,
+  #mobileMoreSheet.is-open .mobile-more-content {
+    transition: transform 400ms cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  }
 }
 
 /* ===== MOB-C: coarse-pointer affordances (touch devices, any width) =====
@@ -15752,4 +15787,13 @@ a.image-search-license-chip:hover {
 @media (pointer: coarse) {
   .row-actions { opacity: 1; }
   .small-x-btn { opacity: 1; }
+
+  /* MOB-D T1 -- touch target sweep. M3: 48dp touch / 44dp pointer minimum.
+     tab-action-btn at 40px is a documented deviation (48 breaks the tab bar row;
+     surrounding gap provides the 8dp separation M3 asks for). */
+  .tree-row,
+  .encyclopedia-item { min-height: 44px; }
+  .panel-tabs .tab-action-btn { width: 40px; height: 40px; }
+  .row-more-btn,
+  .row-vis-btn { width: 36px; height: 36px; }
 }

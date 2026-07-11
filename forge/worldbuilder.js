@@ -3182,6 +3182,7 @@ function initEventListeners() {
   initMobileNavBar();
   initMobileMoreSheet();
   initLongPressContextMenu();
+  initSheetDragDismiss();
 
   $('#centerOnSelectionBtn').addEventListener('click', () => { if (selectedId) navigateToFeature(selectedId) });
 

@@ -2282,6 +2282,7 @@ function setupPrimaryPanelTabs() {
 
     updateCollapseExpandAllBtn();
     updateCompactModeBtn();
+    window._syncMobileNavActive?.(); // keep the mobile bottom bar's active item honest
   };
 
   if (collapseExpandAllBtn) {

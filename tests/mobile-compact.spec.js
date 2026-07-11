@@ -315,3 +315,103 @@ test.describe('MOB-C — touch long-press opens context menus', () => {
     expect(r.opacity, 'row ··· actions fully visible without hover').toBe('1');
   });
 });
+
+test.describe('MOB-D — touch target sizes', () => {
+  test('rows and panel buttons meet minimum touch sizes on coarse pointers', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => toggleAsidePanel(false));
+    await page.waitForTimeout(500);
+    const sizes = await page.evaluate(() => {
+      const h = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? el.getBoundingClientRect().height : null;
+      };
+      return {
+        row: h('.encyclopedia-item[data-entry-id="mc-1"]'),
+        tabAction: h('.panel-tabs .tab-action-btn'),
+        navItem: h('#mobileNavBar .mobile-nav-item'),
+      };
+    });
+    expect(sizes.row, 'list row >= 44px').toBeGreaterThanOrEqual(44);
+    expect(sizes.tabAction, 'panel action button >= 40px (documented deviation)').toBeGreaterThanOrEqual(40);
+    expect(sizes.navItem, 'nav destination >= 48px').toBeGreaterThanOrEqual(48);
+  });
+});
+
+test.describe('MOB-D — sheet drag handles + dismiss + motion', () => {
+  test('peek sheet has a handle; dragging it down dismisses; motion uses M3 tokens', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => enterPeekMode('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+
+    const handle = await page.locator('#infoPanel .sheet-drag-handle').boundingBox();
+    expect(handle, 'drag handle visible on peek sheet').not.toBeNull();
+
+    // M3 enter token on the open sheet
+    const motion = await page.evaluate(() => {
+      const s = getComputedStyle(document.querySelector('#infoPanel'));
+      return { dur: s.transitionDuration, ease: s.transitionTimingFunction };
+    });
+    expect(motion.dur, 'enter duration 400ms').toContain('0.4s');
+
+    // drag the handle down ~50% of the sheet → dismiss
+    await page.evaluate(async () => {
+      const h = document.querySelector('#infoPanel .sheet-drag-handle');
+      const r = h.getBoundingClientRect();
+      const x = r.x + r.width / 2;
+      let y = r.y + r.height / 2;
+      const fire = (type, cy) => h.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 9,
+        clientX: x, clientY: cy, isPrimary: true }));
+      fire('pointerdown', y);
+      for (let i = 1; i <= 10; i++) {
+        await new Promise(res => setTimeout(res, 20));
+        fire('pointermove', y + i * 25);
+      }
+      fire('pointerup', y + 250);
+    });
+    await page.waitForTimeout(600);
+    const peekClosed = await page.evaluate(() => !document.body.classList.contains('peek-mode'));
+    expect(peekClosed, 'drag-down dismisses the peek sheet').toBe(true);
+
+    // tap the handle → also closes (M3 single-pointer alternative)
+    await page.evaluate(() => enterPeekMode('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+    await page.evaluate(async () => {
+      const h = document.querySelector('#infoPanel .sheet-drag-handle');
+      const r = h.getBoundingClientRect();
+      const opts = { bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 9,
+        clientX: r.x + r.width / 2, clientY: r.y + r.height / 2, isPrimary: true };
+      h.dispatchEvent(new PointerEvent('pointerdown', opts));
+      await new Promise(res => setTimeout(res, 80));
+      h.dispatchEvent(new PointerEvent('pointerup', opts));
+    });
+    await page.waitForTimeout(600);
+    const closedByTap = await page.evaluate(() => !document.body.classList.contains('peek-mode'));
+    expect(closedByTap, 'handle tap dismisses the sheet').toBe(true);
+  });
+});
+
+test.describe('MOB-D — meta + bar sync follow-ups', () => {
+  test('iOS meta present; direct tab taps sync the bottom bar', async ({ page }) => {
+    await gotoCompact(page);
+    const meta = await page.evaluate(() => ({
+      viewportFit: document.querySelector('meta[name="viewport"]').content.includes('viewport-fit=cover'),
+      appleIcon: !!document.querySelector('link[rel="apple-touch-icon"]'),
+    }));
+    expect(meta.viewportFit, 'viewport-fit=cover set').toBe(true);
+    expect(meta.appleIcon, 'apple-touch-icon set').toBe(true);
+
+    // open the drawer via the bar, then tap the Assets TAB directly — bar must follow
+    const world = await page.locator('#mobileNavBar [data-mnav="world"]').boundingBox();
+    await page.touchscreen.tap(world.x + world.width / 2, world.y + world.height / 2);
+    await page.waitForTimeout(500);
+    await page.locator('#assetsTabBtn').dispatchEvent('click');
+    await page.waitForTimeout(400);
+    const active = await page.evaluate(() =>
+      document.querySelector('#mobileNavBar .mobile-nav-item.is-active')?.dataset.mnav);
+    expect(active, 'bar follows direct tab tap').toBe('assets');
+  });
+});

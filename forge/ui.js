@@ -568,6 +568,62 @@ function initMobileMoreSheet() {
   });
 }
 
+/**
+ * MOB-D — sheet drag handles + swipe/tap dismiss for the compact bottom sheets.
+ * A handle is injected into each sheet; dragging it >25% of the sheet height
+ * (or a quick flick) closes via the sheet's own close function, a short tap
+ * also closes (M3's single-pointer alternative), anything else snaps back.
+ * Handles are display:none outside the compact media query.
+ * Called from initEventListeners() at DOMContentLoaded.
+ */
+function initSheetDragDismiss() {
+  const sheets = [
+    { el: document.getElementById('infoPanel'), close: () => window.exitPeekMode?.() },
+    { el: document.getElementById('propertiesSheet'), close: () => window.closePropertiesSheet?.() },
+    { el: document.querySelector('#mobileMoreSheet .mobile-more-content'), close: () => closeMobileMoreSheet() },
+  ];
+
+  for (const { el: sheet, close } of sheets) {
+    if (!sheet) continue;
+    const handle = document.createElement('div');
+    handle.className = 'sheet-drag-handle';
+    handle.setAttribute('role', 'button');
+    handle.setAttribute('aria-label', 'Close sheet');
+    handle.appendChild(document.createElement('span'));
+    sheet.prepend(handle);
+
+    let startY = 0, lastDy = 0, startT = 0, dragging = false;
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      lastDy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = `translateY(${lastDy}px)`;
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      const quickFlick = lastDy > 30 && (Date.now() - startT) < 250;
+      const isTap = lastDy < 8;
+      const farEnough = lastDy > sheet.getBoundingClientRect().height * 0.25;
+      sheet.style.transform = ''; // release to CSS-driven state
+      if (isTap || farEnough || quickFlick) close();
+    };
+
+    handle.addEventListener('pointerdown', (e) => {
+      startY = e.clientY;
+      lastDy = 0;
+      startT = Date.now();
+      dragging = true;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    });
+  }
+}
+
 /** Reflects drawer/tab state onto the bar's active item (no-op when bar absent). */
 function _syncMobileNavActive() {
   const bar = document.getElementById('mobileNavBar');
