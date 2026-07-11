@@ -566,3 +566,31 @@ test.describe('MOB-D — meta + bar sync follow-ups', () => {
     expect(r.peek, 'no half-screen peek at compact').toBe(false);
   });
 });
+
+test.describe('demo=1 entry link (any viewport; guards the shareable demo URL)', () => {
+  test('fresh visitor: ?demo=1 loads Aethermoor and cleans the URL', async ({ page }) => {
+    await page.goto('/forge/?demo=1');
+    await page.waitForSelector('.header-controls', { state: 'visible' });
+    await page.waitForFunction(() => state.articles.length > 5, null, { timeout: 20000 });
+    try { await page.locator('#tutorialCloseBtn').dispatchEvent('click', { timeout: 3000 }); } catch { /* tour absent */ }
+    const r = await page.evaluate(() => ({
+      map: state.maps[0]?.name, count: state.articles.length, search: location.search,
+    }));
+    expect(r.map, 'sample world loaded').toBe('Aethermoor');
+    expect(r.count, 'articles imported').toBeGreaterThanOrEqual(10);
+    expect(r.search, 'param cleaned from URL').toBe('');
+  });
+
+  test('existing world: ?demo=1 asks first; cancel keeps the world', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(async () => { markEntityDirty('article', 'mc-1'); markEntityDirty('meta'); await save(); });
+    await page.goto('/forge/?demo=1');
+    await page.waitForSelector('.header-controls', { state: 'visible' });
+    await page.waitForSelector('#confirmModal:not(.hidden)', { timeout: 15000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(600);
+    const intact = await page.evaluate(() => !!state.encyclopedia.find(e => e.id === 'mc-1'));
+    expect(intact, 'declining the demo preserves the existing world').toBe(true);
+  });
+});

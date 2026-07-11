@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-73",
+    "date": "2026-07-11",
+    "title": "Alpha 6.73: Shareable Demo Link",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "The instant-demo link (taletrove.app/forge/?demo=1) is now covered by tests, and search engines get a proper canonical address for the app.",
+    "content": "<h4>One link, straight into a world</h4><p>Opening taletrove.app/forge/?demo=1 drops a first-time visitor straight into the Aethermoor sample world with the guided tour. If you already have a world, it asks before touching anything. This existed quietly; it is now tested and official, so share it freely. A canonical tag was also added for search engines. No visible changes otherwise.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-72",
     "date": "2026-07-11",
     "title": "Alpha 6.72: Mobile — Leaner Chrome, Popup-First Pins",
