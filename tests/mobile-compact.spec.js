@@ -159,3 +159,74 @@ test.describe('MOB-A T6 — hub + large editors fit compact', () => {
     expect(box.height, 'full height').toBeGreaterThanOrEqual(750);
   });
 });
+
+test.describe('MOB-B T1 — bottom navigation bar', () => {
+  test('bar shown at compact with 48px targets; rail hidden; map controls lifted', async ({ page }) => {
+    await gotoCompact(page);
+    const bar = await page.locator('#mobileNavBar').boundingBox();
+    expect(bar, 'nav bar rendered').not.toBeNull();
+    expect(bar.width, 'bar spans full width').toBeGreaterThanOrEqual(392);
+    expect(bar.y + bar.height, 'bar at bottom edge').toBeGreaterThanOrEqual(845);
+    expect(bar.height, 'bar tall enough (64px M3 token)').toBeGreaterThanOrEqual(60);
+    const items = await page.locator('#mobileNavBar .mobile-nav-item').all();
+    expect(items.length, 'four destinations').toBe(4);
+    for (const item of items) {
+      const ib = await item.boundingBox();
+      expect(ib.height, 'destination target >= 48px').toBeGreaterThanOrEqual(48);
+    }
+    const railHidden = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('#navRail')).display === 'none');
+    expect(railHidden, 'nav rail hidden at compact').toBe(true);
+    const toolbarClear = await page.evaluate(() => {
+      const t = document.querySelector('.toolbar.bottom, .map-toolbar.bottom');
+      if (!t) return true; // no bottom toolbar variant present
+      const bar = document.querySelector('#mobileNavBar').getBoundingClientRect();
+      return t.getBoundingClientRect().bottom <= bar.top + 1;
+    });
+    expect(toolbarClear, 'bottom map toolbar sits above the bar').toBe(true);
+
+    // desktop: bar hidden, rail visible
+    await page.setViewportSize({ width: 1366, height: 1000 });
+    await page.waitForTimeout(300);
+    const desktop = await page.evaluate(() => ({
+      bar: getComputedStyle(document.querySelector('#mobileNavBar')).display,
+      rail: getComputedStyle(document.querySelector('#navRail')).display,
+    }));
+    expect(desktop.bar, 'bar hidden on desktop').toBe('none');
+    expect(desktop.rail, 'rail visible on desktop').not.toBe('none');
+  });
+
+  test('destinations drive the drawer and tabs; active state follows', async ({ page }) => {
+    await gotoCompact(page);
+    const tap = async (dest) => {
+      const el = await page.locator(`#mobileNavBar [data-mnav="${dest}"]`).boundingBox();
+      await page.touchscreen.tap(el.x + el.width / 2, el.y + el.height / 2);
+      await page.waitForTimeout(500);
+    };
+    await tap('world');
+    let s = await page.evaluate(() => ({
+      drawerOpen: !document.querySelector('#atlasPanel').classList.contains('is-hidden'),
+      worldTab: document.querySelector('#atlasTabBtn').classList.contains('active'),
+      active: document.querySelector('#mobileNavBar .mobile-nav-item.is-active')?.dataset.mnav,
+    }));
+    expect(s.drawerOpen, 'World opens the drawer').toBe(true);
+    expect(s.worldTab, 'World tab active').toBe(true);
+    expect(s.active, 'bar active = world').toBe('world');
+
+    await tap('assets');
+    await page.waitForFunction(() =>
+      document.querySelector('#assetsTabBtn').classList.contains('active'), null, { timeout: 5000 });
+    s = await page.evaluate(() => ({
+      active: document.querySelector('#mobileNavBar .mobile-nav-item.is-active')?.dataset.mnav,
+    }));
+    expect(s.active, 'bar active = assets').toBe('assets');
+
+    await tap('map');
+    s = await page.evaluate(() => ({
+      drawerHidden: document.querySelector('#atlasPanel').classList.contains('is-hidden'),
+      active: document.querySelector('#mobileNavBar .mobile-nav-item.is-active')?.dataset.mnav,
+    }));
+    expect(s.drawerHidden, 'Map closes the drawer').toBe(true);
+    expect(s.active, 'bar active = map').toBe('map');
+  });
+});

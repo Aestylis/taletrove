@@ -448,9 +448,55 @@ function toggleAsidePanel(hide) {
 
   _syncToolbarOffset(shouldHide);
   _syncBothPanelsClass();
+  _syncMobileNavActive();
   if (map) setTimeout(() => map.invalidateSize({ pan: false }), 350);
 }
 
+/**
+ * MOB-B — mobile bottom navigation bar (<600px). Destinations delegate to the
+ * existing drawer/tab handlers; the bar only exists visually at compact, but the
+ * wiring is harmless at desktop (the element is display:none).
+ * Called from initEventListeners() at DOMContentLoaded.
+ */
+function initMobileNavBar() {
+  const bar = document.getElementById('mobileNavBar');
+  if (!bar) return;
+  bar.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-mnav]');
+    if (!item) return;
+    const dest = item.dataset.mnav;
+    if (dest === 'map') {
+      toggleAsidePanel(true);
+    } else if (dest === 'world') {
+      toggleAsidePanel(false);
+      $('#atlasTabBtn')?.click();
+    } else if (dest === 'assets') {
+      toggleAsidePanel(false);
+      $('#assetsTabBtn')?.click();
+    } else if (dest === 'more') {
+      window.openMobileMoreSheet?.();
+    }
+    if (dest !== 'more') {
+      // Set from tapped intent — the tab handlers apply .active asynchronously,
+      // so deriving state here would read the previous tab.
+      bar.querySelectorAll('.mobile-nav-item').forEach(b =>
+        b.classList.toggle('is-active', b.dataset.mnav === dest));
+    }
+  });
+}
+
+/** Reflects drawer/tab state onto the bar's active item (no-op when bar absent). */
+function _syncMobileNavActive() {
+  const bar = document.getElementById('mobileNavBar');
+  if (!bar) return;
+  const drawerHidden = document.getElementById('atlasPanel')?.classList.contains('is-hidden');
+  let dest = 'map';
+  if (!drawerHidden) {
+    dest = document.getElementById('assetsTabBtn')?.classList.contains('active') ? 'assets' : 'world';
+  }
+  bar.querySelectorAll('.mobile-nav-item').forEach(b =>
+    b.classList.toggle('is-active', b.dataset.mnav === dest));
+}
 
 /**
  * Creates a custom, searchable select/dropdown component.

@@ -15493,6 +15493,9 @@ a.image-search-license-chip:hover {
   }
 }
 
+/* MOB-B: bottom navigation bar exists only at compact -- hidden by default */
+#mobileNavBar { display: none; }
+
 /* ===== MOB-A: compact shell (<600px, M3 compact class) =====
    All mobile-compact overrides live in THIS block only. Desktop rules above
    are never edited -- source order + specificity make these win at <600px. */
@@ -15637,4 +15640,49 @@ a.image-search-license-chip:hover {
     max-height: 100dvh;
     border-radius: 0;
   }
+
+  /* MOB-B T1 -- bottom navigation bar (M3 nav bar, 64px + safe area); the left
+     nav rail is replaced at compact (one primary nav component per size class) */
+  #navRail { display: none; }
+  #mobileNavBar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    z-index: calc(var(--z-panels) - 1);
+  }
+  .mobile-nav-item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text-muted, var(--text));
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .mobile-nav-item .icon-container {
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+  }
+  .mobile-nav-item.is-active { color: var(--accent-orange); }
+  /* lift bottom map chrome above the bar */
+  .toolbar.bottom { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+  .leaflet-bottom .leaflet-control { margin-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
 }

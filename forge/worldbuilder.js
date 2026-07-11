@@ -3179,6 +3179,7 @@ function initEventListeners() {
   });
 
   initToolbarPopoverListeners();
+  initMobileNavBar();
 
   $('#centerOnSelectionBtn').addEventListener('click', () => { if (selectedId) navigateToFeature(selectedId) });
 

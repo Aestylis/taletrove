@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-65",
+    "date": "2026-07-11",
+    "title": "Alpha 6.65: Mobile — Bottom Navigation Bar",
+    "tags": [
+      "Mobile"
+    ],
+    "summary": "Phones now get a proper bottom navigation bar — Map, World, Assets, and More — replacing the desktop side rail, following Material Design's compact navigation pattern.",
+    "content": "<h4>Navigate like a native app</h4><p>On phone-sized screens TaleTrove now shows a bottom navigation bar with four destinations: Map (your world map), World (the full atlas/lore/sessions panel), Assets, and More. The desktop side rail is hidden on phones, and map controls sit above the bar. Desktop layout is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-64",
     "date": "2026-07-11",
     "title": "Alpha 6.64: Mobile — Settings Hub & Editors Fit the Screen",
