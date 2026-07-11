@@ -70,6 +70,16 @@ DATE        SET            full→thumb         bytes total      decode
   innerHTML. Layer sync is ~7–9% of a `render({full:true})` (126.7 ms / 650 ms); the other ~90% is
   `refreshAtlasTree` (C4/WS7 territory). An icon-signature dirty-diff would risk stale-pin bugs
   (signature must cover icon/color/pinShape/sizes/labels/CoA-links/role) for a single-digit-% win.
+- **WS6 (canvas renderer + IDB-in-worker) measured & skipped (2026-07-10)** —
+  `scripts/measure-ws6-vectors.mjs` @ 250/1000/2000 polygons+polylines (16-vertex blobs, 10% smooth
+  curves): **pan is vsync-locked at every size** (16.7 ms p50 — SVG pans by pane transform, shape
+  count irrelevant); zoom re-projection is **8.8 ms** median @ 1000 and **17.0/23.0 ms** p50/max
+  @ 2000 (at worst one borderline frame, at 2× any realistic map density); `render({full:true})`
+  28.7 ms @ 1000. A canvas swap would also *regress*: CSS-class selection highlight
+  (`path.leaflet-interactive.leaflet-feature-selected`), SVG-only `L.curve` smooth lines, and
+  keyboard-focusable paths. IDB-in-worker: `save()` with **all** 2000 entities dirty is 196 ms —
+  an import-only pathological case; a normal edit dirties 1–10 entities (~0.1 ms each), so the
+  main-thread save cost is ~1–2 ms in practice. Neither half is justified.
 
 ## Findings (2026-06-04)
 
