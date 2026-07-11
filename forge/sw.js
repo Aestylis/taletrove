@@ -1,11 +1,12 @@
 // Bump CACHE_NAME on every deploy (same cadence as ?v= strings in index.html).
 // Old caches with a different name are deleted on activate.
-const CACHE_NAME = 'taletrove-2026.07.10h';
+const CACHE_NAME = 'taletrove-2026.07.10i';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './worldbuilder.css',
   './worldbuilder.js',
+  './toolbar-popovers.js',
   './import-export.js',
   './command-palette.js',
   './keyboard-shortcuts.js',
