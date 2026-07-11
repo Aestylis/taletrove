@@ -67,3 +67,6 @@ tests/perf/fixtures/
 
 # Production build artifact (regenerate with `npm run build:prod`)
 dist/
+v2-preview/
+index-old-backup.html
+landing-v2.html

@@ -1,785 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaleTrove | Free Worldbuilding App for Writers & Game Masters</title>
-  <meta name="description" content="TaleTrove is a free, local-first worldbuilding app for writers, authors, and GMs. Create interactive maps, organize lore, and chart histories with total privacy and ownership.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TaleTrove | Free Worldbuilding App for Writers & Game Masters</title>
+<meta name="description" content="TaleTrove is a free, local-first worldbuilding app for writers, authors, and GMs. Create interactive maps, organize lore, and chart histories with total privacy and ownership.">
+<meta property="og:title" content="TaleTrove | Free Worldbuilding App for Writers & Game Masters">
+<meta property="og:description" content="Chart worlds. Forge legends. A free, local-first worldbuilding app for lore, locations, and campaigns. No accounts, total ownership.">
+<meta property="og:image" content="https://taletrove.app/TaleTrove.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://taletrove.app/">
+<meta property="og:site_name" content="TaleTrove">
+<link rel="canonical" href="https://taletrove.app/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TaleTrove | Free Worldbuilding App for Writers & Game Masters">
+<meta name="twitter:description" content="Chart worlds. Forge legends. A free, local-first worldbuilding app for lore, locations, and campaigns. No accounts, total ownership.">
+<meta name="twitter:image" content="https://taletrove.app/TaleTrove.png">
+<link rel="icon" type="image/svg+xml" href="forge/TaleTrove.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── tokens ─────────────────────────────────────────────
+   ink: warm near-black · parchment: map-cream text
+   candle (gold): story/brand accents · ember (orange): the PRODUCT.
+   every interactive product element is ember, teaching the eye
+   that orange means "touch the app". moss: Verdant-Expanse tint. */
+:root {
+  --ink: #0b0a08;
+  --ink-soft: #14120e;
+  --parchment: #e8dcc0;
+  --parchment-dim: #b3a888;
+  --candle: #d9b36c;
+  --ember: #ff7a1a;
+  --moss: #4a5d43;
+  --line: rgba(217, 179, 108, 0.22);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--parchment); font-family: var(--sans); font-weight: 300; line-height: 1.6; }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+h1, h2, .display { font-family: var(--serif); font-weight: 400; line-height: 1.05; }
+em { font-style: italic; color: var(--candle); }
+.eyebrow { font-size: 0.72rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--candle); display: flex; align-items: center; gap: 0.8em; }
+.eyebrow::before { content: ''; width: 2.2em; height: 1px; background: var(--candle); opacity: 0.6; }
+.section { padding: 96px 6vw; max-width: 1200px; margin: 0 auto; }
+.btn { display: inline-flex; align-items: center; gap: 0.5em; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border-radius: 8px; padding: 0.95em 1.7em; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.btn-ember { background: var(--ember); color: #1a0d00; box-shadow: 0 6px 24px rgba(255, 122, 26, 0.35); }
+.btn-ember:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(255, 122, 26, 0.5); }
+.btn-ghost { color: var(--parchment-dim); border: 1px solid transparent; padding-left: 0.4em; }
+.btn-ghost:hover { color: var(--parchment); }
+.assure { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--parchment-dim); }
+.assure b { color: var(--candle); font-weight: 500; }
 
-  <meta property="og:title" content="TaleTrove | Free Worldbuilding App for Writers & Game Masters">
-  <meta property="og:description" content="Chart worlds. Forge legends. A free, local-first worldbuilding app for lore, locations, and campaigns. No accounts, total ownership.">
-  <meta property="og:image" content="https://taletrove.app/TaleTrove.png">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://taletrove.app/">
-  <meta property="og:site_name" content="TaleTrove">
-  <link rel="canonical" href="https://taletrove.app/">
+/* ── header ── */
+header { position: fixed; inset: 0 0 auto 0; display: flex; justify-content: space-between; align-items: center; padding: 18px 4vw; z-index: 50; background: linear-gradient(rgba(11,10,8,0.85), transparent); }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 1.4rem; letter-spacing: 0.02em; text-decoration: none; }
+.brand img { height: 34px; }
+header .btn { padding: 0.7em 1.3em; }
 
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="TaleTrove | Free Worldbuilding App for Writers & Game Masters">
-  <meta name="twitter:description" content="Chart worlds. Forge legends. A free, local-first worldbuilding app for lore, locations, and campaigns. No accounts, total ownership.">
-  <meta name="twitter:image" content="https://taletrove.app/TaleTrove.png">
+/* ── hero: art backdrop, product lands on it ── */
+.hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 5vw 0; overflow: hidden; }
+.hero-bg { position: absolute; inset: 0; background: url('art/Warrior_Tortoise.png') center 22% / cover no-repeat; }
+.hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(11,10,8,0.38) 0%, rgba(11,10,8,0.12) 34%, rgba(11,10,8,0.55) 70%, var(--ink) 97%); }
+.hero > :not(.hero-bg) { position: relative; } /* .hero-bg must stay absolute */
+.hero-copy { padding: 3rem 3.5rem 2.6rem; border-radius: 24px; background: radial-gradient(ellipse at center, rgba(11,10,8,0.72) 0%, rgba(11,10,8,0.5) 55%, transparent 78%); }
+.hero-copy .btn-ghost { color: var(--parchment); }
+.hero h1 { font-size: clamp(2.6rem, 6.5vw, 5rem); text-shadow: 0 2px 30px rgba(0,0,0,0.6); }
+.hero h1 em { display: inline; }
+.hero .sub { max-width: 34em; margin: 1.2em auto 1.6em; font-size: clamp(0.95rem, 1.4vw, 1.1rem); color: var(--parchment); text-shadow: 0 1px 12px rgba(0,0,0,0.7); }
+.hero .sub b { font-weight: 500; color: var(--candle); }
+.hero-ctas { display: flex; gap: 1.2em; align-items: center; justify-content: center; flex-wrap: wrap; }
+.hero .assure { margin-top: 1.4em; }
 
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "TaleTrove",
-    "url": "https://taletrove.app",
-    "description": "A free, local-first worldbuilding app for writers and GMs to create interactive maps, lore, and timelines.",
-    "applicationCategory": "ProductivityApplication",
-    "operatingSystem": "Web Browser",
-    "offers": {
-      "@type": "Offer",
-      "price": "0.00",
-      "priceCurrency": "USD"
-    },
-    "featureList": [
-      "Interactive Maps",
-      "Encyclopedia and Lore Management",
-      "Custom Timelines and Calendars",
-      "Relational Graphs",
-      "Offline Capability",
-      "Privacy Focused"
-    ]
-  }
-  </script>
+/* the signature: the app frame the pin drops onto */
+.hero-frame { width: min(1020px, 94vw); margin: 56px auto -1px; border-radius: 14px 14px 0 0; border: 1px solid var(--line); border-bottom: none; box-shadow: 0 -20px 80px rgba(0,0,0,0.55); overflow: hidden; position: relative; background: var(--ink-soft); }
+.hero-frame .chrome { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(217,179,108,0.12); }
+.hero-frame .chrome i { width: 10px; height: 10px; border-radius: 50%; background: rgba(217,179,108,0.25); }
+.hero-frame .shot { aspect-ratio: 16 / 9.6; overflow: hidden; }
+.hero-frame .shot img { width: 138%; max-width: none; height: 100%; object-fit: cover; object-position: left top; }
+.pin-drop { position: absolute; left: 58%; top: 38%; width: 46px; height: 46px; pointer-events: none; }
+.pin-drop svg { width: 100%; height: 100%; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.5)); animation: pindrop 1.1s cubic-bezier(0.2, 0.9, 0.3, 1.3) 0.7s both; }
+.pin-drop::after { content: ''; position: absolute; left: 50%; top: 88%; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--ember); transform: translate(-50%, -50%); opacity: 0; animation: ripple 1.4s ease-out 1.55s; }
+@keyframes pindrop { from { transform: translateY(-140px); opacity: 0; } 60% { opacity: 1; } to { transform: translateY(0); opacity: 1; } }
+@keyframes ripple { 0% { opacity: 0.9; scale: 0.4; } 100% { opacity: 0; scale: 4; } }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="forge/TaleTrove.svg">
+/* ── stinger strip: the human line ── */
+.stinger { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ink-soft); }
+.stinger .section { display: flex; justify-content: space-between; align-items: center; gap: 2em; flex-wrap: wrap; padding-top: 34px; padding-bottom: 34px; }
+.stinger p { font-family: var(--serif); font-size: 1.25rem; font-style: italic; color: var(--candle); }
+.stinger .assure { text-align: right; }
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
-    body {
-      background: #0c0a07;
-      color: #e8dcc8;
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    a { text-decoration: none; color: inherit; }
-    b { font-weight: 600; }
+/* ── feature sections ── */
+.feature { display: grid; grid-template-columns: 5fr 6fr; gap: 5vw; align-items: center; }
+.feature.flip { grid-template-columns: 6fr 5fr; }
+.feature.flip .copy { order: 2; }
+.feature h2 { font-size: clamp(2.1rem, 4.2vw, 3.2rem); margin: 0.4em 0 0.5em; }
+.feature p { color: var(--parchment-dim); max-width: 32em; }
+.feature p + p { margin-top: 0.8em; }
+.feature .btn { margin-top: 1.6em; }
+.shotcard { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+.shotcard img { width: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1.4em; }
+.chips span { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.6em 1em; border: 1px solid var(--line); border-radius: 999px; color: var(--parchment-dim); }
+.art-atlas { background: linear-gradient(rgba(11,10,8,0.88), rgba(11,10,8,0.88)), url('art/valley.png') center / cover fixed; }
+.art-secrets { background: linear-gradient(rgba(11,10,8,0.9), rgba(11,10,8,0.9)), url('art/elf_fire_fern.png') center / cover fixed; }
 
-    /* ── NAV — barely there ──────────────────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      padding: 1.5rem 2.5rem;
-      display: flex; align-items: center; justify-content: space-between;
-      pointer-events: none;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: .6rem;
-      font-size: 1.75rem; font-weight: 400; letter-spacing: .06em;
-      color: #fff;
-      pointer-events: auto;
-      text-shadow: 0 1px 6px rgba(0,0,0,.9), 0 2px 20px rgba(0,0,0,.7);
-    }
-    .nav-logo img {
-      width: 36px; height: 36px;
-      filter: drop-shadow(0 1px 6px rgba(0,0,0,.9));
-    }
-    .nav-launch {
-      font-family: 'Inter', sans-serif;
-      font-size: .68rem; font-weight: 400;
-      text-transform: uppercase; letter-spacing: .22em;
-      color: rgba(232,220,200,.95);
-      pointer-events: auto;
-      padding: .5rem 1.25rem;
-      border: 1px solid rgba(232,220,200,.55);
-      border-radius: 2px;
-      background: rgba(12,10,7,.35);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      transition: background .2s, border-color .2s, color .2s;
-      text-shadow: 0 1px 8px rgba(0,0,0,.9);
-    }
-    .nav-launch:hover {
-      background: rgba(232,220,200,.1);
-      border-color: rgba(232,220,200,.5);
-      color: rgba(232,220,200,1);
-    }
+/* ── yours: the trust grid ── */
+.yours { text-align: center; }
+.yours h2 { font-size: clamp(2.2rem, 4.5vw, 3.4rem); margin: 0.4em 0 0.3em; }
+.yours > p { color: var(--parchment-dim); max-width: 38em; margin: 0 auto; }
+.trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; text-align: left; }
+.trust-grid article { border: 1px solid var(--line); border-radius: 12px; padding: 26px 22px; background: rgba(20,18,14,0.65); }
+.trust-grid h3 { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--candle); margin-bottom: 0.4em; }
+.trust-grid p { font-size: 0.88rem; color: var(--parchment-dim); }
 
-    /* ── SECTIONS ────────────────────────────────────────────────────── */
-    section {
-      height: 100vh; min-height: 560px;
-      position: relative;
-      display: flex;
-      scroll-snap-align: start;
-      overflow: hidden;
-    }
+/* ── mobile section ── */
+.mobile-sec { display: grid; grid-template-columns: 7fr 4fr; gap: 5vw; align-items: center; }
+.mobile-sec h2 { font-size: clamp(2.1rem, 4.2vw, 3.2rem); margin: 0.4em 0 0.5em; }
+.mobile-sec p { color: var(--parchment-dim); max-width: 32em; }
+.mobile-sec p + p { margin-top: 0.8em; }
+.phone-frame { width: min(280px, 70vw); margin: 0 auto; border-radius: 30px; border: 1px solid var(--line); overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
 
-    /* Full-bleed art background */
-    .art-bg {
-      position: absolute; inset: -5%;
-      background-size: cover;
-      background-repeat: no-repeat;
-      transition: transform 8s ease-out;
-      filter: blur(4px) saturate(0.8) brightness(0.75);
-    }
+/* ── faq ── */
+.faq { max-width: 760px; }
+.faq h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.8em; }
+.faq details { border-top: 1px solid var(--line); padding: 1.1em 0; }
+.faq details:last-of-type { border-bottom: 1px solid var(--line); }
+.faq summary { font-family: var(--serif); font-size: 1.25rem; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.faq summary::after { content: '+'; color: var(--candle); font-size: 1.4em; }
+.faq details[open] summary::after { content: '-'; }
+.faq details p { padding-top: 0.7em; color: var(--parchment-dim); max-width: 40em; }
 
-    /* ── SECTION 1 — OBELISK — INTRO ────────────────────────────────── */
-    #s1 { align-items: center; justify-content: center; }
-    #s1 .art-bg {
-      background-image: url('art/Warrior_Tortoise.png');
-      background-position: center 30%;
-    }
-    #s1::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        linear-gradient(to top, rgba(12,10,7,.95) 0%, rgba(12,10,7,.65) 40%, rgba(12,10,7,.35) 65%, rgba(12,10,7,.1) 85%, transparent 100%),
-        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(12,10,7,.4) 0%, transparent 100%);
-    }
-    .s1-content {
-      position: relative; z-index: 1;
-      padding: 0 5vw 6vh;
-      max-width: 680px;
-      text-align: center;
-    }
-    .s1-logo {
-      display: flex; justify-content: center;
-      margin-bottom: 1.25rem;
-    }
-    .s1-logo img { width: 80px; height: 80px; }
-    .s1-sub {
-      font-family: 'Inter', sans-serif;
-      font-size: 1rem; font-weight: 500; line-height: 1.75;
-      color: rgba(232,220,200,.6);
-      max-width: 420px;
-      margin: 0 auto 1.75rem;
-    }
-    .btn-hero {
-      display: inline-flex; align-items: center; gap: .6rem;
-      padding: .85rem 2.25rem;
-      background: rgba(201,168,108,.15);
-      border: 1px solid rgba(201,168,108,.5);
-      color: rgba(201,168,108,.95);
-      font-family: 'Inter', sans-serif;
-      font-size: .72rem; font-weight: 400;
-      text-transform: uppercase; letter-spacing: .2em;
-      border-radius: 2px;
-      transition: background .25s, border-color .25s;
-    }
-    .btn-hero:hover {
-      background: rgba(201,168,108,.28);
-      border-color: rgba(201,168,108,.8);
-    }
-    .btn-demo {
-      display: inline-flex; align-items: center; gap: .6rem;
-      padding: .85rem 2.25rem;
-      background: rgba(232,220,200,.06);
-      border: 1px solid rgba(232,220,200,.25);
-      color: rgba(232,220,200,.6);
-      font-family: 'Inter', sans-serif;
-      font-size: .72rem; font-weight: 400;
-      text-transform: uppercase; letter-spacing: .2em;
-      border-radius: 2px;
-      transition: background .25s, border-color .25s, color .25s;
-    }
-    .btn-demo:hover {
-      background: rgba(232,220,200,.12);
-      border-color: rgba(232,220,200,.45);
-      color: rgba(232,220,200,.85);
-    }
-    .hero-cta-group {
-      display: flex; align-items: center; justify-content: center;
-      gap: 1rem; flex-wrap: wrap;
-    }
-    /* Page position indicator */
-    .page-indicator {
-      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-      z-index: 200;
-      display: flex; flex-direction: column; align-items: center; gap: .55rem;
-    }
-    .page-indicator-track {
-      position: relative;
-      display: flex; flex-direction: column; align-items: center; gap: .55rem;
-    }
-    .page-indicator-anchor {
-      width: 7px; height: 7px; flex-shrink: 0;
-    }
-    .page-indicator-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: rgba(201,168,108,.2);
-      transition: background .4s;
-      flex-shrink: 0;
-    }
-    .page-indicator-dot.active { background: rgba(201,168,108,.5); }
-    .page-indicator-pin {
-      position: absolute; left: 50%; transform: translateX(-50%);
-      color: rgba(201,168,108,.8);
-      transition: top .55s cubic-bezier(.16,1,.3,1);
-      pointer-events: none;
-    }
-    @keyframes hint-fade { 0%,100%{opacity:.7;} 50%{opacity:.25;} }
+/* ── final CTA ── */
+.final { position: relative; text-align: center; padding: 140px 6vw; overflow: hidden; }
+.final-bg { position: absolute; inset: 0; background: url('art/valley_town.png') center / cover no-repeat; }
+.final-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(var(--ink) 0%, rgba(11,10,8,0.45) 35%, rgba(11,10,8,0.75) 100%); }
+.final > * { position: relative; }
+.final h2 { font-size: clamp(2.4rem, 5.5vw, 4.2rem); margin-bottom: 0.5em; }
+.final .assure { margin-top: 1.6em; }
+footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; padding: 26px 4vw; font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--parchment-dim); border-top: 1px solid var(--line); }
+footer a { text-decoration: none; }
+footer a:hover { color: var(--candle); }
 
-    /* ── SECTION 2 — VALLEY — ATLAS ─────────────────────────────────── */
-    #s2 { align-items: center; }
-    #s2 .art-bg {
-      background-image: url('art/valley.png');
-      background-position: center 40%;
-    }
-    #s2::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        linear-gradient(to left,  rgba(12,10,7,.92) 0%, rgba(12,10,7,.5) 42%, transparent 65%),
-        linear-gradient(to right, rgba(12,10,7,.35) 0%, transparent 30%);
-    }
-    .s2-photos {
-      position: relative;
-      flex: 1;
-      align-self: stretch;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .s2-route {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      overflow: visible;
-    }
-    .s2-route-line {
-      fill: none;
-      stroke: rgba(255,210,90,.3);
-      stroke-width: 1.5px;
-      stroke-dasharray: 3 8;
-      stroke-linecap: round;
-      vector-effect: non-scaling-stroke;
-    }
-    .s2-pin {
-      position: absolute;
-      width: 22px;
-      height: 30px;
-      background: rgba(255,210,90,.8);
-      -webkit-mask-image: url('forge/ui-icons/map-pin.svg');
-      mask-image: url('forge/ui-icons/map-pin.svg');
-      -webkit-mask-size: contain;
-      mask-size: contain;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 25;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.6));
-    }
-    .story-photo {
-      position: absolute;
-      width: clamp(150px, 16vw, 220px);
-      border-radius: 3px;
-      border: 7px solid rgba(255,252,245,.12);
-      border-bottom: 26px solid rgba(255,252,245,.12);
-      box-shadow: 0 3px 12px rgba(0,0,0,.45), 0 8px 32px rgba(0,0,0,.4);
-      transform: rotate(var(--r, 0deg));
-      transform-origin: center;
-      transition: transform .35s cubic-bezier(.34,1.4,.64,1), box-shadow .25s ease;
-      will-change: transform;
-      pointer-events: auto;
-      cursor: zoom-in;
-      display: block;
-    }
-    .story-photo:hover {
-      transform: rotate(0deg) scale(1.22) translateY(-8px);
-      box-shadow: 0 24px 80px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.15);
-      z-index: 20;
-    }
-    /* Predefined scatter slots — positions + rotations via CSS var */
-    .story-photo:nth-child(1) { --r: -5deg;   top: 10%; left:  5%; z-index: 4; }
-    .story-photo:nth-child(2) { --r:  3.5deg; top:  6%; left: 40%; z-index: 3; }
-    .story-photo:nth-child(3) { --r: -2deg;   top: 36%; left: 20%; z-index: 5; }
-    .story-photo:nth-child(4) { --r:  5.5deg; top: 40%; left: 54%; z-index: 4; }
-    .story-photo:nth-child(5) { --r:  1.5deg; top: 63%; left:  4%; z-index: 3; }
-    .story-photo:nth-child(6) { --r: -4.5deg; top: 57%; left: 38%; z-index: 4; }
-    .story-photo:nth-child(7) { --r: -2.5deg; top: 22%; left: 62%; z-index: 3; }
-    .s2-content {
-      position: relative; z-index: 1;
-      padding: 0 5vw 0 2vw;
-      max-width: 480px;
-      width: 45%;
-    }
-
-    /* ── SECTION 3 — ELF FIRE FERN — SECRETS ────────────────────────── */
-    #s3 { align-items: center; justify-content: flex-start; }
-    #s3 .art-bg {
-      background-image: url('art/elf_fire_fern.png');
-      background-position: center 30%;
-    }
-    #s3::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        linear-gradient(to top,   rgba(8,12,20,.75) 0%, transparent 50%),
-        linear-gradient(to right, rgba(8,12,20,.8)  0%, rgba(8,12,20,.2) 55%, transparent 80%);
-    }
-    .s3-content {
-      position: relative; z-index: 1;
-      padding: 0 5vw;
-      max-width: 1060px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 4rem;
-    }
-    .s3-text { flex: 0 0 auto; max-width: 360px; }
-    .s3-showcase {
-      flex: 1;
-      max-width: 640px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .s3-tabs {
-      display: flex;
-      gap: .5rem;
-    }
-    .s3-tab {
-      font-family: 'Inter', sans-serif;
-      font-size: .72rem;
-      font-weight: 500;
-      padding: .35rem .85rem;
-      border-radius: 99px;
-      border: 1px solid rgba(232,220,200,.2);
-      background: rgba(232,220,200,.06);
-      color: rgba(232,220,200,.5);
-      cursor: pointer;
-      transition: background .2s, border-color .2s, color .2s;
-    }
-    .s3-tab:hover {
-      background: rgba(232,220,200,.1);
-      color: rgba(232,220,200,.75);
-    }
-    .s3-tab.active {
-      background: rgba(201,168,108,.18);
-      border-color: rgba(201,168,108,.6);
-      color: rgba(232,220,200,.95);
-    }
-    .s3-img-wrap {
-      position: relative;
-    }
-    .s3-showcase-img {
-      display: block;
-      width: 100%;
-      border-radius: 12px;
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.5),
-        0 16px 48px rgba(0,0,0,.75),
-        0 0 0 1px rgba(255,255,255,.06);
-      position: absolute;
-      top: 0; left: 0;
-      opacity: 0;
-      transition: opacity .3s ease;
-      pointer-events: none;
-    }
-    .s3-showcase-img.active {
-      opacity: 1;
-      position: relative;
-      pointer-events: auto;
-    }
-
-    /* ── SECTION 4 — WARRIOR TORTOISE — CTA ─────────────────────────── */
-    #s4 { align-items: flex-end; justify-content: flex-start; }
-    #s4 .art-bg {
-      background-image: url('art/valley_town.png');
-      background-position: center center;
-    }
-    #s4::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        linear-gradient(to top,   rgba(12,10,7,.92) 0%, rgba(12,10,7,.4) 45%, transparent 75%),
-        linear-gradient(to right, rgba(12,10,7,.7)  0%, transparent 55%);
-    }
-    .s4-content {
-      position: relative; z-index: 1;
-      padding: 0 5vw 7vh;
-      max-width: 600px;
-    }
-
-    /* ── SHARED SECTION TEXT ─────────────────────────────────────────── */
-    .section-num {
-      font-family: 'Inter', sans-serif;
-      font-size: .72rem; letter-spacing: .36em; text-transform: uppercase;
-      color: rgba(201,168,108,.75);
-      margin-bottom: 1.25rem;
-      display: flex; align-items: center; gap: .75rem;
-      text-shadow: 0 1px 8px rgba(0,0,0,.8);
-    }
-    .section-num::before {
-      content: ''; width: 20px; height: 1px;
-      background: rgba(201,168,108, var(--line-opacity, .4));
-    }
-    .section-h2 {
-      font-size: clamp(3.2rem, 6.5vw, 7rem);
-      font-weight: 300; line-height: .97;
-      letter-spacing: -.02em;
-      margin-bottom: 1.5rem;
-    }
-    .section-h2 em {
-      font-style: italic;
-      color: rgba(201,168,108,.85);
-    }
-    .section-body {
-      font-family: 'Inter', sans-serif;
-      font-size: 1rem; font-weight: 500; line-height: 1.75;
-      color: rgba(232,220,200,.6);
-      max-width: 380px;
-      margin-bottom: 1.75rem;
-    }
-    .section-body strong { color: rgba(232,220,200,.9); font-weight: 500; }
-
-    /* Feature pills */
-    .pill-row {
-      display: flex; flex-wrap: wrap; gap: .5rem;
-      margin-top: 1.5rem;
-    }
-    .pill {
-      font-family: 'Inter', sans-serif;
-      font-size: .6rem; font-weight: 400;
-      text-transform: uppercase; letter-spacing: .18em;
-      padding: .35rem .8rem;
-      border: 1px solid rgba(232,220,200,.15);
-      border-radius: 2px;
-      color: rgba(232,220,200,.4);
-    }
-
-    /* Screenshot callout — minimal */
-    .shot-wrap {
-      margin-top: 1.75rem;
-      border-radius: 6px; overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(232,220,200,.07);
-      max-width: 400px;
-    }
-    .shot-wrap img { width: 100%; display: block; }
-
-    /* CTA section specifics */
-    .s4-content .section-h2 {
-      font-size: clamp(4rem, 8vw, 8.5rem);
-      margin-bottom: 2rem;
-    }
-    .s4-note {
-      font-family: 'Inter', sans-serif;
-      font-size: .76rem; font-weight: 300;
-      letter-spacing: .18em; text-transform: uppercase;
-      color: rgba(232,220,200,.55);
-      margin-top: 1.25rem;
-      text-shadow: 0 1px 8px rgba(0,0,0,.8);
-    }
-
-
-    /* ── FOOTER ──────────────────────────────────────────────────────── */
-    .site-footer {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.25rem 2.5rem;
-      font-family: 'Inter', sans-serif;
-      font-size: .72rem; font-weight: 400;
-      text-transform: uppercase; letter-spacing: .18em;
-      color: rgba(232,220,200,.22);
-    }
-    .footer-links { display: flex; gap: 2rem; }
-    .footer-links a {
-      color: rgba(232,220,200,.22);
-      text-decoration: none;
-      transition: color .2s;
-    }
-    .footer-links a:hover { color: rgba(232,220,200,.55); }
-
-    /* Reveal animation */
-    .reveal {
-      opacity: 0; transform: translateY(18px);
-      transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1);
-    }
-    .reveal.visible { opacity: 1; transform: none; }
-    .r2 { transition-delay: .15s; }
-    .r3 { transition-delay: .3s; }
-    .r4 { transition-delay: .45s; }
-
-    /* Subtle parallax on art bg */
-    @media (min-width: 768px) {
-      .art-bg { will-change: transform; }
-    }
-
-    @media (max-width: 768px) {
-      html { scroll-snap-type: none; }
-      section { height: auto; min-height: 100vh; }
-      #s2::after { background: linear-gradient(to top, rgba(12,10,7,.92) 0%, rgba(12,10,7,.6) 40%, transparent 70%); }
-      .s2-photos { display: none; }
-      .s2-content { margin: auto 0 0; width: 100%; max-width: none; padding: 0 1.5rem 4rem; }
-      .s1-content { padding: 0 1.5rem 4rem; }
-      .s1-logo img { width: 64px; height: 64px; }
-      .s3-content { padding: 0 1.5rem 4rem; flex-direction: column; gap: 2rem; }
-      .s3-showcase { max-width: 100%; }
-      .s4-content { padding: 0 1.5rem 5rem; }
-    }
-  </style>
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .pin-drop svg, .pin-drop::after { animation: none; }
+  .btn { transition: none; }
+  .art-atlas, .art-secrets { background-attachment: scroll; }
+}
+@media (max-width: 900px) {
+  .feature, .feature.flip, .mobile-sec { grid-template-columns: 1fr; }
+  .feature.flip .copy { order: 0; }
+  .trust-grid { grid-template-columns: 1fr 1fr; }
+  .section { padding: 72px 6vw; }
+  .art-atlas, .art-secrets { background-attachment: scroll; }
+}
+@media (max-width: 560px) { .trust-grid { grid-template-columns: 1fr; } .stinger .assure { text-align: left; } }
+</style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <a class="nav-logo" href="#">
-      <img src="forge/TaleTrove.svg" alt="">
-      TaleTrove
-    </a>
-    <a class="nav-launch" href="/forge/">Launch App</a>
-  </nav>
+<header>
+  <a class="brand" href="#"><img src="forge/TaleTrove.svg" alt="">TaleTrove</a>
+  <a class="btn btn-ember" href="forge/">Start building</a>
+</header>
 
-  <!-- 01 — INTRO — OBELISK -->
-  <section id="s1">
-    <div class="art-bg" id="bg1"></div>
-    <div class="s1-content">
-      <div class="s1-logo reveal">
-        <img src="forge/TaleTrove.svg" alt="TaleTrove">
-      </div>
-      <h1 class="section-h2 reveal r2">
-        The world<br>
-        in your head,<br>
-        <em><b>set free.</b></em>
-      </h1>
-      <p class="s1-sub reveal r3">A map-first worldbuilding app for writers and game masters. Organise your world with interactive maps and lore.</p>
-      <div class="hero-cta-group reveal r4">
-        <a class="btn-hero" href="/forge/">
-          Launch App
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <a class="btn-demo" href="/forge/?demo=1">
-          Try Demo
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </a>
-      </div>
+<!-- HERO: the world above, the product beneath it, a pin stitching them together -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-copy">
+    <h1>The world in your head,<br><em>set free.</em></h1>
+    <p class="sub">A map-first worldbuilding app for writers and game masters.
+    Organise your world with interactive maps and lore. <b>Free, forever.</b></p>
+    <div class="hero-ctas">
+      <a class="btn btn-ember" href="forge/">Start building</a>
+      <a class="btn btn-ghost" href="forge/?demo=1">Wander the demo world →</a>
     </div>
-  </section>
-
-  <!-- 02 — ATLAS — VALLEY -->
-  <section id="s2">
-    <div class="art-bg" id="bg2"></div>
-    <div class="s2-photos">
-      <!-- Photos first so nth-child(1–5) selectors stay correct -->
-      <img class="story-photo" src="art/story_calendar.png" alt="Calendar view">
-      <img class="story-photo" src="art/story_graph.png"    alt="Relational graph">
-      <img class="story-photo" src="art/story_family.png"   alt="Family tree">
-      <img class="story-photo" src="art/story_pins.png"     alt="Map pins">
-      <img class="story-photo" src="art/story_fog.png"      alt="Fog of war">
-      <!-- Decorative overlay: bezier route + pin markers (rendered above photos via z-index) -->
-      <svg class="s2-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path class="s2-route-line"
-              d="M 21,18 C 39,15 52,7 56,14
-                 C 60,21 33,36 36,44
-                 C 40,52 74,41 70,48
-                 C 66,55 28,69 20,71"/>
-      </svg>
-      <div class="s2-pin" style="left:21%;top:18%;" aria-hidden="true"></div>
-      <div class="s2-pin" style="left:56%;top:14%;" aria-hidden="true"></div>
-      <div class="s2-pin" style="left:36%;top:44%;" aria-hidden="true"></div>
-      <div class="s2-pin" style="left:70%;top:48%;" aria-hidden="true"></div>
-      <div class="s2-pin" style="left:20%;top:71%;" aria-hidden="true"></div>
-    </div>
-    <div class="s2-content">
-      <div class="section-num reveal">Atlas</div>
-      <h2 class="section-h2 reveal r2">
-        Every path<br>
-        has a <em><b>story.</b></em>
-      </h2>
-      <p class="section-body reveal r3">Pin any character, ruin, or secret on the map to let geography help shape your world.</p>
-      <p class="section-body reveal r4">Relational graphs, family trees, custom calendars, and more help you uncover the path less traveled.</p>
-      <div class="pill-row reveal r4">
-        <span class="pill">Custom maps</span>
-        <span class="pill">Fog of war</span>
-        <span class="pill">Lore pins</span>
-        <span class="pill">Spatial search</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- 03 — SECRETS — THUNDER WARRIOR -->
-  <section id="s3">
-    <div class="art-bg" id="bg3"></div>
-    <div class="s3-content">
-      <div class="s3-text">
-        <div class="section-num reveal">GM Secrets</div>
-        <h2 class="section-h2 reveal r2">
-          Your players<br>
-          see <em><b>part</b></em><br>
-          of the truth.
-        </h2>
-        <p class="section-body reveal r3">Each article, pin, and text block can be hidden from players with a simple visibility toggle.</p>
-        <p class="section-body reveal r4">Export a player-view bundle to share details without giving too much away.</p>
-      </div>
-      <div class="s3-showcase reveal r3">
-        <div class="s3-tabs">
-          <button class="s3-tab active" onclick="s3Switch(this,0)">Pin</button>
-          <button class="s3-tab"        onclick="s3Switch(this,1)">Text Block</button>
-          <button class="s3-tab"        onclick="s3Switch(this,2)">Article</button>
-        </div>
-        <div class="s3-img-wrap">
-          <img class="s3-showcase-img active" src="art/gm_secrets_pin.png"     alt="GM-only pin">
-          <img class="s3-showcase-img"        src="art/gm_secrets_text.png"    alt="GM-only text block">
-          <img class="s3-showcase-img"        src="art/gm_secrets_article.png" alt="GM-only article">
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 04 — CTA — WARRIOR TORTOISE -->
-  <section id="s4">
-    <div class="art-bg" id="bg4"></div>
-    <div class="site-footer">
-      <span>&copy; 2026 TaleTrove. Built for storytellers.</span>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="terms.html">Terms of Service</a>
-        <a href="https://ko-fi.com/aestylis" target="_blank" rel="noopener">Support on Ko-fi</a>
-      </div>
-    </div>
-    <div class="s4-content">
-      <div class="section-num reveal" style="justify-content:center; --line-opacity:0">A love letter to the TTRPG community. Always free.</div>
-      <h2 class="section-h2 reveal r2">
-        Build a world<br>
-        <em>worth <b>exploring.</b></em>
-      </h2>
-      <a class="btn-hero reveal r3" href="/forge/">
-        Launch App
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-      <p class="s4-note reveal r4">Works in any browser · Installs as a PWA · No sign-up ever</p>
-    </div>
-  </section>
-
-
-  <div class="page-indicator" aria-hidden="true">
-    <div class="page-indicator-track" id="indicatorTrack">
-      <span class="page-indicator-anchor"></span>
-      <span class="page-indicator-dot"></span>
-      <span class="page-indicator-dot"></span>
-      <span class="page-indicator-dot"></span>
-      <span class="page-indicator-dot"></span>
-      <svg class="page-indicator-pin" id="indicatorPin" width="28" height="28" viewBox="0 0 256 256" fill="currentColor">
-        <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"/>
-      </svg>
-    </div>
+    <p class="assure"><b>Always free</b> · no sign-up ever</p>
   </div>
 
-  <div id="storyLightbox" role="dialog" aria-modal="true" aria-label="Screenshot preview">
-    <img id="storyLightboxImg" src="" alt="">
+  <div class="hero-frame">
+    <div class="chrome"><i></i><i></i><i></i></div>
+    <div class="shot"><img src="art/app_workspace.jpg" alt="The TaleTrove workspace: the world tree beside the map of Aethermoor, with regions, pins, and lore"></div>
+    <div class="pin-drop">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z" fill="#ff7a1a" stroke="#1a0d00" stroke-width="1.2"/><circle cx="12" cy="9" r="2.6" fill="#1a0d00"/></svg>
+    </div>
   </div>
+</section>
 
-  <script>
-    // Page position indicator
-    const indicatorPin = document.getElementById('indicatorPin');
-    const indicatorDots = document.querySelectorAll('.page-indicator-dot');
-    const indicatorPositions = document.querySelectorAll('.page-indicator-anchor, .page-indicator-dot');
-    const indicatorTrack = document.getElementById('indicatorTrack');
-    const PIN_SIZE = 28;
+<!-- STINGER: the human line, promoted from the footer -->
+<div class="stinger">
+  <div class="section">
+    <p>Made by humans. A love letter to the TTRPG community.</p>
+    <p class="assure">hand-painted panels · supported on <b>Ko-fi</b></p>
+  </div>
+</div>
 
-    function setIndicator(idx) {
-      // Pin moves to position [idx]. Dots (idx 1-4) become active if idx matches.
-      indicatorDots.forEach((d, i) => d.classList.toggle('active', (i + 1) === idx));
-      const dot = indicatorPositions[idx];
-      if (!dot) return;
-      const trackTop = indicatorTrack.getBoundingClientRect().top;
-      const dotRect = dot.getBoundingClientRect();
-      const dotCenter = dotRect.top - trackTop + dotRect.height / 2;
-      indicatorPin.style.top = (dotCenter - PIN_SIZE / 2) + 'px';
-    }
-    setIndicator(0);
+<!-- ATLAS -->
+<div class="art-atlas">
+  <section class="section feature">
+    <div class="copy">
+      <p class="eyebrow">Atlas</p>
+      <h2>Every path has a <em>story.</em></h2>
+      <p>Pin any character, ruin, or secret on the map to let geography help shape your world.</p>
+      <p>Relational graphs, family trees, custom calendars, and more help you uncover the path less traveled.</p>
+      <div class="chips"><span>Custom maps</span><span>Fog of war</span><span>Lore pins</span><span>Spatial search</span></div>
+      <a class="btn btn-ember" href="forge/">Drop a pin</a>
+    </div>
+    <div class="shotcard"><img src="art/app_atlas.jpg" alt="A parchment world map with painted region overlays and labeled pins"></div>
+  </section>
+</div>
 
-    const sectionIds = ['s1', 's2', 's3', 's4'];
-    const sectionObs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting && e.intersectionRatio >= 0.5)
-          setIndicator(sectionIds.indexOf(e.target.id));
-      });
-    }, { threshold: 0.5 });
-    sectionIds.forEach(id => sectionObs.observe(document.getElementById(id)));
+<!-- GM SECRETS -->
+<div class="art-secrets">
+  <section class="section feature flip">
+    <div class="copy">
+      <p class="eyebrow">GM Secrets</p>
+      <h2>Your players see <em>part</em> of the truth.</h2>
+      <p>Each article, pin, and text block can be hidden from players with a simple visibility toggle.</p>
+      <p>Export a player-view bundle to share details without giving too much away.
+      No player accounts needed.</p>
+      <a class="btn btn-ember" href="forge/">Keep a secret</a>
+    </div>
+    <div class="shotcard"><img src="art/app_peek.jpg" alt="Reading a lore article in the peek panel beside the map"></div>
+  </section>
+</div>
 
-    // Reveal on scroll
-    const obs = new IntersectionObserver(
-      entries => entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-      }),
-      { threshold: 0.08 }
-    );
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+<!-- YOURS: the trust section this niche demands; TaleTrove's claim is the strongest -->
+<section class="section yours">
+  <p class="eyebrow" style="justify-content:center">Own your world</p>
+  <h2>It never leaves <em>your hands.</em></h2>
+  <p>Other tools keep your world on their servers.
+  TaleTrove keeps it on your device.</p>
+  <div class="trust-grid">
+    <article><h3>Lives on your device</h3><p>Your world is stored in your browser. Nobody else can read it, not even us.</p></article>
+    <article><h3>One file, yours</h3><p>Export everything as a single .trv file. Back it up anywhere and keep it forever.</p></article>
+    <article><h3>Works offline</h3><p>Installs as an app and runs without a connection. No Wi-Fi at the table? The world still loads.</p></article>
+    <article><h3>Free means free</h3><p>No tiers and no trials. If TaleTrove earns a spot at your table, a Ko-fi coffee says thanks.</p></article>
+  </div>
+</section>
 
-    // GM Secrets showcase switcher
-    window.s3Switch = function(tab, idx) {
-      document.querySelectorAll('.s3-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-      document.querySelectorAll('.s3-showcase-img').forEach((img, i) => img.classList.toggle('active', i === idx));
-    };
+<!-- MOBILE -->
+<section class="section mobile-sec">
+  <div class="copy">
+    <p class="eyebrow">At the table</p>
+    <h2>Built for <em>the table.</em></h2>
+    <p>TaleTrove fits your phone. Tap a pin to read its story. Press and hold to act.</p>
+    <p>No app store needed. Open it in your browser and add it to your home screen.</p>
+    <p>Prep on the big screen. Run the session from your hand.</p>
+    <a class="btn btn-ember" href="forge/" style="margin-top:1.6em">Open it on your phone</a>
+  </div>
+  <div class="phone-frame"><img src="art/app_phone.jpg" alt="The Aethermoor map on a phone with the bottom navigation bar"></div>
+</section>
 
-    // Subtle parallax on art backgrounds
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      const bgs = [
-        { el: document.getElementById('bg1'), section: document.getElementById('s1'), speed: 0.12 },
-        { el: document.getElementById('bg2'), section: document.getElementById('s2'), speed: 0.1  },
-        { el: document.getElementById('bg3'), section: document.getElementById('s3'), speed: 0.08 },
-        { el: document.getElementById('bg4'), section: document.getElementById('s4'), speed: 0.1  },
-      ];
-      let ticking = false;
-      window.addEventListener('scroll', () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          bgs.forEach(({ el, section, speed }) => {
-            const rect = section.getBoundingClientRect();
-            const offset = rect.top * speed;
-            el.style.transform = `translateY(${offset}px)`;
-          });
-          ticking = false;
-        });
-      }, { passive: true });
-    }
+<!-- SHOWCASE / DEMO -->
+<div class="art-atlas">
+  <section class="section" style="text-align:center">
+    <p class="eyebrow" style="justify-content:center">The demo world</p>
+    <h2 class="display" style="font-size:clamp(2.2rem,4.5vw,3.4rem)">Wander <em>Aethermoor</em> first.</h2>
+    <p style="color:var(--parchment-dim);max-width:36em;margin:0.8em auto 1.8em">A shattered realm with a stubborn Iron Order and secrets under the waves.
+    One click loads it. Try a real world before you build your own.</p>
+    <a class="btn btn-ember" href="forge/?demo=1">Explore the demo world</a>
+  </section>
+</div>
 
-    // Story photo lightbox — CSS
-    const lbStyle = document.createElement('style');
-    lbStyle.textContent = `
-      #storyLightbox {
-        display: flex; align-items: center; justify-content: center;
-        position: fixed; inset: 0; z-index: 9999;
-        background: rgba(0,0,0,.88);
-        backdrop-filter: blur(8px);
-        opacity: 0; pointer-events: none;
-        transition: opacity .2s ease;
-        cursor: zoom-out;
-      }
-      #storyLightbox.open { opacity: 1; pointer-events: auto; }
-      #storyLightboxImg {
-        max-width: 90vw; max-height: 88vh;
-        border-radius: 6px;
-        box-shadow: 0 32px 120px rgba(0,0,0,.9);
-        transform: scale(.92);
-        transition: transform .25s cubic-bezier(.34,1.4,.64,1);
-        cursor: default;
-      }
-      #storyLightbox.open #storyLightboxImg { transform: scale(1); }
-    `;
-    document.head.appendChild(lbStyle);
+<!-- FAQ -->
+<section class="section faq">
+  <p class="eyebrow">Questions</p>
+  <h2>Fair <em>questions.</em></h2>
+  <details><summary>Is it really free, or is this a trial?</summary><p>Yes. Everything is free, forever. TaleTrove is a passion project. If it helps your table, buy the developer a coffee on Ko-fi.</p></details>
+  <details><summary>Where is my world stored?</summary><p>On your device, in your browser. Nothing is uploaded anywhere. Export a .trv backup anytime and sync it to your own Google Drive if you like.</p></details>
+  <details><summary>Do my players need accounts?</summary><p>No. Nobody needs an account, including you. Export a player bundle with the secrets stripped out. Your players open it in a browser.</p></details>
+  <details><summary>How is this different from LegendKeeper or World Anvil?</summary><p>Those are server-hosted platforms with subscriptions. TaleTrove is local-first and free. Your world works offline and never expires with a plan.</p></details>
+  <details><summary>Does it work on my phone?</summary><p>Yes. Open taletrove.app in your phone's browser and add it to your home screen. It installs like an app from there, no app store needed. It works offline once installed.</p></details>
+</section>
 
-    // Story photo lightbox
-    (function () {
-      const lb = document.getElementById('storyLightbox');
-      const lbImg = document.getElementById('storyLightboxImg');
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="final-bg"></div>
+  <h2>Build a world<br><em>worth exploring.</em></h2>
+  <a class="btn btn-ember" href="forge/">Start building</a>
+  <p class="assure">works in any browser · installs as a PWA · <b>no sign-up ever</b></p>
+</section>
 
-      document.querySelectorAll('.story-photo').forEach(img => {
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', () => {
-          lbImg.src = img.src;
-          lbImg.alt = img.alt;
-          lb.classList.add('open');
-          document.addEventListener('keydown', onLbKey);
-        });
-      });
+<footer>
+  <span>© 2026 TaleTrove · built for storytellers</span>
+  <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="https://ko-fi.com/aestylis">Support on Ko-fi</a></span>
+</footer>
 
-      lb.addEventListener('click', closeLb);
-      lbImg.addEventListener('click', e => e.stopPropagation());
-
-      function closeLb() {
-        lb.classList.remove('open');
-        document.removeEventListener('keydown', onLbKey);
-      }
-      function onLbKey(e) { if (e.key === 'Escape') closeLb(); }
-    })();
-  </script>
 </body>
 </html>
