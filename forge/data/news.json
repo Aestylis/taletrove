@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-69",
+    "date": "2026-07-11",
+    "title": "Alpha 6.69: Mobile — Fix: Peek Sheet Over the Panel",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "Tapping an entry with the world panel open now correctly shows the peek sheet on top of the panel on phones.",
+    "content": "<h4>Sheet on top, as intended</h4><p>On phones, tapping an entry while the world panel drawer was open technically opened the peek sheet — but it was painted behind the drawer and invisible. The sheet now always appears above the panel, giving a natural list-on-top, details-below flow. Desktop is unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-68",
     "date": "2026-07-11",
     "title": "Alpha 6.68: Mobile — Polish Pass",

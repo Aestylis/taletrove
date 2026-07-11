@@ -88,7 +88,15 @@ test.describe('MOB-A T3 — peek is a bottom sheet over the map', () => {
       return m && getComputedStyle(m).display !== 'none';
     });
     expect(mapVisible, 'map remains the base pane behind the sheet').toBe(true);
-    await page.evaluate(() => exitPeekMode());
+    // paint-order guard: with the drawer open, the sheet must still be on top
+    const paintedOnTop = await page.evaluate(() => {
+      toggleAsidePanel(false); // open drawer under the sheet
+      const r = document.querySelector('#infoPanel').getBoundingClientRect();
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return !!hit && !!hit.closest('#infoPanel');
+    });
+    expect(paintedOnTop, 'peek sheet paints above the open drawer').toBe(true);
+    await page.evaluate(() => { toggleAsidePanel(true); exitPeekMode(); });
   });
 });
 

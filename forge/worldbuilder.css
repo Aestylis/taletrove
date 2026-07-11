@@ -15523,6 +15523,9 @@ a.image-search-license-chip:hover {
      map, no scrim). Axis flip: desktop slides in from the right via `right`,
      compact slides up via translateY. */
   body.peek-mode #infoPanel {
+    /* desktop peek lowers z to 400; at compact the sheet must paint over the
+       full-width drawer (z 1001) or it is invisible behind it */
+    z-index: calc(var(--z-panels) + 2);
     top: auto;
     bottom: 0;
     left: 0;
