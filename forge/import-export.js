@@ -692,3 +692,134 @@ async function openDriveFilePicker() {
 
 window.openDriveFilePicker = openDriveFilePicker;
 window.renderDriveHub = renderDriveHub;
+
+/**
+ * File-drop intake (WS7 #8, extracted from worldbuilder.js initEventListeners).
+ * Wires: image drops on the map/hero surfaces (handleFileDrop) and the Settings-hub
+ * project-import drop zone. Called from initEventListeners() at DOMContentLoaded.
+ */
+function initFileDropListeners() {
+  const dropZones = [$('.map-wrap')];
+
+  const handleFileDrop = async (file, dropTarget) => {
+    // We only care about the first image file
+    if (!file || !file.type.startsWith('image/')) {
+      showToast('Invalid file type. Please drop an image.');
+      return;
+    }
+    window.handleFileDrop = handleFileDrop;
+    const reader = new FileReader();
+    reader.onerror = () => showToast('Could not read the dropped file. It may be in use or inaccessible.');
+    reader.onload = (e_read) => {
+      const dataUrl = e_read.target.result;
+
+      if (dropTarget.id === 'map') {
+        // If dropped on the map, set it as the base map image.
+        setMapImage(state.activeMapId, dataUrl);
+        showToast('Map image updated.');
+      } else if (dropTarget.id === 'infoPanelHero' || dropTarget.classList.contains('hero-image-preview')) {
+        const item = window.currentTargetForHeroImage;
+        if (item) {
+          const blob = dataUrlToBlob(dataUrl);
+          const imageKey = 'img-' + uid();
+          idbSet(imageKey, blob).then(() => {
+            state.assetNames = state.assetNames || {};
+            state.assetNames[imageKey] = file.name;
+            markEntityDirty('meta');
+            recordState();
+            item.heroImageKey = imageKey;
+
+            // Re-render and refresh UIs depending on if it's an atlas feature or encyclopedia entry
+            if (item.geometry) render(); // It's an atlas feature
+            if ($('#infoPanel').classList.contains('is-visible')) {
+                const type = item.geometry ? 'feature' : 'encyclopedia';
+                showInfoPanel(item.id, type);
+            }
+            refreshAssetsView(true);
+            debouncedSave();
+            showToast('Hero image updated.');
+          }).catch(e => { console.error('[worldbuilder] Hero image save failed:', e); showAlertModal('Save Error', 'Could not save the hero image.'); });
+        }
+      } else if (dropTarget.id === 'infoPanel' && selectedId) {
+        // If dropped on the info panel, add it as a new Image block to the selected feature.
+        const feature = state.features.find(f => f.id === selectedId);
+        if (feature) {
+          const blob = dataUrlToBlob(dataUrl);
+          const imageKey = 'img-' + uid();
+          idbSet(imageKey, blob).then(() => {
+            state.assetNames = state.assetNames || {};
+            state.assetNames[imageKey] = file.name;
+            markEntityDirty('meta');
+            const imageBlock = {
+              blockId: 'blk-' + uid(),
+              type: 'Image',
+              visibleToPlayers: true,
+              data: { src: imageKey, caption: '', size: 100 }
+            };
+            recordState();
+            feature.blocks = feature.blocks || [];
+            feature.blocks.push(imageBlock);
+            showInfoPanel(selectedId);
+            refreshAssetsView(true);
+            debouncedSave();
+            showToast('Image added to feature.');
+          }).catch(e => { console.error('[worldbuilder] Image block save failed:', e); showAlertModal('Save Error', 'Could not save the image.'); });
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  dropZones.forEach(zone => {
+    if (!zone) return;
+
+    // The target for the drop event is the #map div, not its wrapper
+    const dropTarget = zone.classList.contains('map-wrap') ? $('#map') : zone;
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault(); // Always required to allow a drop
+      // Only show the "Drop Image to Upload" overlay for actual file drags.
+      // Encyclopedia entries and asset chips have their own handlers on #map.
+      if (e.dataTransfer.types.includes('Files')) {
+        zone.classList.add('drag-over');
+      }
+    });
+
+    zone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+    });
+
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+
+      if (e.dataTransfer.files.length > 0) {
+        handleFileDrop(e.dataTransfer.files[0], dropTarget);
+      }
+    });
+  });
+
+  // Hub drop zone — drag-and-drop project import
+  const hubDropZone = $('#hubDropZone');
+  if (hubDropZone) {
+    const hubModal = $('#projectActionsModal');
+    hubModal.addEventListener('dragover', e => {
+      if ([...e.dataTransfer.types].includes('Files')) {
+        e.preventDefault();
+        hubDropZone.classList.add('drag-over');
+      }
+    });
+    hubModal.addEventListener('dragleave', e => {
+      if (!hubModal.contains(e.relatedTarget)) {
+        hubDropZone.classList.remove('drag-over');
+      }
+    });
+    hubModal.addEventListener('drop', e => {
+      e.preventDefault();
+      hubDropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleImportFile(file);
+    });
+  }
+}

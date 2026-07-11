@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-51",
+    "date": "2026-07-10",
+    "title": "Alpha 6.51: Internal Cleanup — File Drop Intake",
+    "tags": [
+      "Internal"
+    ],
+    "summary": "Internal restructuring (no visible changes): the drag-and-drop file intake — image drops onto the map or hero areas, and project-file drops onto the Settings hub — moved into the import/export module, continuing the core cleanup.",
+    "content": "<h4>Continuing the core cleanup</h4><p>This release contains no user-facing changes. The code that handles dropping files into the app (images onto the map or an article's hero area, and .trv project files onto the Settings hub) now lives with the rest of the import/export logic. Everything behaves exactly as before.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-50",
     "date": "2026-07-10",
     "title": "Alpha 6.50: Internal Cleanup — User Chip & Recent Projects",
