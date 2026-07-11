@@ -485,6 +485,56 @@ function initMobileNavBar() {
   });
 }
 
+/**
+ * MOB-C — long-press = right-click for touch pointers. A 500ms still hold
+ * dispatches a synthetic `contextmenu` MouseEvent at the press point, so every
+ * existing contextmenu handler (atlas rows, Leaflet map + pins, blocks) gains a
+ * touch path with zero per-surface changes. Native long-press contextmenu
+ * (Android) is left alone — a suppression window prevents double-fire.
+ * Called from initEventListeners() at DOMContentLoaded.
+ */
+function initLongPressContextMenu() {
+  let timer = null;
+  let startX = 0, startY = 0;
+  let target = null;
+  let lastSynthetic = 0;
+
+  const cancel = () => { clearTimeout(timer); timer = null; target = null; };
+
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch' || !e.isPrimary) return;
+    startX = e.clientX; startY = e.clientY;
+    target = e.target;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (!target) return;
+      lastSynthetic = Date.now();
+      target.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true, cancelable: true, view: window,
+        clientX: startX, clientY: startY, button: 2,
+      }));
+      cancel();
+    }, 500);
+  }, { passive: true });
+
+  document.addEventListener('pointermove', (e) => {
+    if (!timer || e.pointerType !== 'touch') return;
+    if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) cancel();
+  }, { passive: true });
+
+  document.addEventListener('pointerup', cancel, { passive: true });
+  document.addEventListener('pointercancel', cancel, { passive: true });
+
+  // If the browser already fired a native long-press contextmenu just before or
+  // after ours, swallow the duplicate (700ms window, capture phase).
+  document.addEventListener('contextmenu', (e) => {
+    if (e.isTrusted && Date.now() - lastSynthetic < 700) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { capture: true });
+}
+
 /** MOB-B "More" sheet — lists the nav-rail tools; each row delegates to the rail button. */
 function openMobileMoreSheet() {
   const sheet = document.getElementById('mobileMoreSheet');

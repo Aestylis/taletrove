@@ -15745,3 +15745,11 @@ a.image-search-license-chip:hover {
     -webkit-mask-position: center;
   }
 }
+
+/* ===== MOB-C: coarse-pointer affordances (touch devices, any width) =====
+   Hover cannot be load-bearing on touch -- reveal-on-hover actions are always
+   visible when the primary pointer is coarse (phones AND tablets). */
+@media (pointer: coarse) {
+  .row-actions { opacity: 1; }
+  .small-x-btn { opacity: 1; }
+}

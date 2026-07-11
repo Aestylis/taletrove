@@ -254,3 +254,64 @@ test.describe('MOB-B T1 — bottom navigation bar', () => {
       document.querySelector('#mobileMoreSheet').classList.contains('hidden'), null, { timeout: 3000 });
   });
 });
+
+test.describe('MOB-C — touch long-press opens context menus', () => {
+  /** Simulate a touch long-press: pointerdown (touch) → hold → pointerup. */
+  const longPress = async (page, selector) => {
+    await page.evaluate(async (sel) => {
+      const el = document.querySelector(sel);
+      const r = el.getBoundingClientRect();
+      const x = r.x + r.width / 2, y = r.y + r.height / 2;
+      const opts = { bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 7,
+        clientX: x, clientY: y, isPrimary: true };
+      el.dispatchEvent(new PointerEvent('pointerdown', opts));
+      await new Promise(res => setTimeout(res, 650));
+      el.dispatchEvent(new PointerEvent('pointerup', opts));
+    }, selector);
+    await page.waitForTimeout(300);
+  };
+
+  test('long-press on an atlas row opens the context menu', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => toggleAsidePanel(false));
+    await page.waitForTimeout(500);
+    await longPress(page, '#encyclopediaView .encyclopedia-item[data-entry-id="mc-1"]');
+    const menu = await page.locator('#atlasContextMenu').count();
+    expect(menu, 'atlas context menu opened by long-press').toBe(1);
+  });
+
+  test('long-press on a map pin opens the radial menu', async ({ page }) => {
+    await gotoCompact(page);
+    await page.evaluate(async () => {
+      const m = state.maps.find(x => x.id === state.activeMapId);
+      m.width = 1200; m.height = 800;
+      state.articles.push({ id: 'mc-pin', _silo: 'atlas', name: 'Pin', title: 'Pin', type: 'City',
+        mapId: state.activeMapId, geometry: 'point',
+        geojson: { type: 'Feature', geometry: { type: 'Point', coordinates: [400, 400] } },
+        tags: [], links: [], blocks: [], visibleToPlayers: true });
+      syncArticleViews();
+      await render({ full: true });
+      map.setView([400, 400], 1, { animate: false });
+    });
+    await page.waitForTimeout(600);
+    await longPress(page, '.leaflet-marker-icon');
+    const radial = await page.evaluate(() =>
+      !!document.querySelector('.radial-backdrop, .radial-ring'));
+    expect(radial, 'radial menu opened by long-press on pin').toBe(true);
+  });
+
+  test('row delete affordance is visible without hover on coarse pointers', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => toggleAsidePanel(false));
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(() => {
+      const coarse = matchMedia('(pointer: coarse)').matches;
+      const actions = document.querySelector('.encyclopedia-item .row-actions, .tree-row .row-actions');
+      return { coarse, opacity: actions ? getComputedStyle(actions).opacity : null };
+    });
+    expect(r.coarse, 'Playwright touch context emulates pointer:coarse').toBe(true);
+    expect(r.opacity, 'row ··· actions fully visible without hover').toBe('1');
+  });
+});
