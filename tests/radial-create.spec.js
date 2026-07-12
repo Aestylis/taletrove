@@ -107,6 +107,31 @@ test.describe('Area radial — Create Here', () => {
   });
 });
 
+test.describe('Map empty-state card does not block map presses', () => {
+  test('long-press through the hint card still opens the creation radial', async ({ page }) => {
+    await gotoApp(page);
+    // Fresh world: the empty-state card sits centered over the map. Hit-test
+    // at the card's center (as a real press would) — the element under the
+    // finger must be the map, and a contextmenu there opens the radial.
+    const hit = await page.evaluate(() => {
+      const r = document.getElementById('mapEmptyState').getBoundingClientRect();
+      const x = r.x + r.width / 2, y = r.y + r.height / 2;
+      const el = document.elementFromPoint(x, y);
+      el.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true, cancelable: true, view: window, button: 2,
+        clientX: x, clientY: y,
+      }));
+      return { insideMap: !!el.closest('#map') };
+    });
+    expect(hit.insideMap, 'press at card center reaches the map').toBe(true);
+    await expect(radialBtn(page, 'Add Pin')).toBeVisible();
+    // The Load Map Image CTA must stay clickable.
+    const cta = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('.map-empty-cta')).pointerEvents);
+    expect(cta).toBe('auto');
+  });
+});
+
 test.describe('Demo tour survives the post-import reload', () => {
   test('fresh pendingDemoTour flag starts the tutorial at boot', async ({ page }) => {
     await page.addInitScript(() => {

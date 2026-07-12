@@ -616,9 +616,13 @@ test.describe('MOB-D — meta + bar sync follow-ups', () => {
 test.describe('demo=1 entry link (any viewport; guards the shareable demo URL)', () => {
   test('fresh visitor: ?demo=1 loads Aethermoor and cleans the URL', async ({ page }) => {
     await page.goto('/forge/?demo=1');
-    await page.waitForSelector('.header-controls', { state: 'visible' });
-    await page.waitForFunction(() => state.articles.length > 5, null, { timeout: 20000 });
-    try { await page.locator('#tutorialCloseBtn').dispatchEvent('click', { timeout: 3000 }); } catch { /* tour absent */ }
+    // The import commits, reloads, and the demo tour starts on the reloaded
+    // page (pendingDemoTour handoff) — waiting for the tour also guarantees
+    // boot has settled, so `state` is safe to read afterwards.
+    await page.waitForSelector('#tutorialOverlay:not(.hidden)', { timeout: 20000 });
+    await page.locator('#tutorialCloseBtn').dispatchEvent('click');
+    await page.waitForFunction(
+      () => typeof state !== 'undefined' && state.articles.length > 5, null, { timeout: 20000 });
     const r = await page.evaluate(() => ({
       map: state.maps[0]?.name, count: state.articles.length, search: location.search,
     }));

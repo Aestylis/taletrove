@@ -10949,6 +10949,11 @@ mark {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   text-align: center;
   max-width: 280px;
+  /* The card is informational — presses must fall through to the map beneath
+     (a first long-press on mobile lands here). Only the CTA is interactive. */
+  pointer-events: none;
+}
+.map-empty-cta {
   pointer-events: auto;
 }
 .map-empty-icon {

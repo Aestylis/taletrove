@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-76",
+    "date": "2026-07-12",
+    "title": "Alpha 6.76: First Long-Press Always Works",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "The hint card on an empty map no longer blocks presses; your very first long-press opens the creation menu.",
+    "content": "<h4>Small fix, big first impression</h4><p>On a brand new world the centered hint card was swallowing taps and long-presses at its own footprint. Presses now pass straight through to the map, and the Load Map Image button still works. Nothing else changed.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-75",
     "date": "2026-07-12",
     "title": "Alpha 6.75: Pin Types from the Map, Create Inside Areas, Demo Tour Fix",
