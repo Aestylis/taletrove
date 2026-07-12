@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-74",
+    "date": "2026-07-11",
+    "title": "Alpha 6.74: Mobile — Smoother Sheet Dragging",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "Bottom sheets now follow your finger exactly while dragging, and an interrupted gesture snaps the sheet back instead of closing it.",
+    "content": "<h4>Findings from a code audit</h4><p>Three fixes to sheet dragging on phones: the sheet now tracks your finger with no lag while dragging, a gesture interrupted by the browser snaps the sheet back instead of closing it, and a stray second finger no longer confuses the drag. The landing page also gained a content security policy. Thanks for the continued bug reports.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-73",
     "date": "2026-07-11",
     "title": "Alpha 6.73: Shareable Demo Link",

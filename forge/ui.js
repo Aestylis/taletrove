@@ -610,34 +610,46 @@ function initSheetDragDismiss() {
     handle.appendChild(document.createElement('span'));
     sheet.prepend(handle);
 
-    let startY = 0, lastDy = 0, startT = 0, dragging = false;
+    let startY = 0, lastDy = 0, startT = 0, dragging = false, activePointer = null;
 
-    const onMove = (e) => {
-      if (!dragging) return;
-      lastDy = Math.max(0, e.clientY - startY);
-      sheet.style.transform = `translateY(${lastDy}px)`;
-    };
-    const onUp = () => {
+    // cancelled=true (pointercancel: browser took over the gesture) always snaps
+    // back and never closes; only a completed pointerup may dismiss.
+    const finish = (cancelled) => {
       if (!dragging) return;
       dragging = false;
+      activePointer = null;
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('pointercancel', onCancel);
+      sheet.classList.remove('sheet-dragging');
       const quickFlick = lastDy > 30 && (Date.now() - startT) < 250;
       const isTap = lastDy < 8;
       const farEnough = lastDy > sheet.getBoundingClientRect().height * 0.25;
       sheet.style.transform = ''; // release to CSS-driven state
-      if (isTap || farEnough || quickFlick) close();
+      if (!cancelled && (isTap || farEnough || quickFlick)) close();
     };
+    const onMove = (e) => {
+      if (!dragging || e.pointerId !== activePointer) return;
+      lastDy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = `translateY(${lastDy}px)`;
+    };
+    const onUp = (e) => { if (e.pointerId === activePointer) finish(false); };
+    const onCancel = (e) => { if (e.pointerId === activePointer) finish(true); };
 
     handle.addEventListener('pointerdown', (e) => {
+      if (dragging) return; // a second finger must not restart the drag
+      activePointer = e.pointerId;
       startY = e.clientY;
       lastDy = 0;
       startT = Date.now();
       dragging = true;
+      // transition:none while dragging so the sheet tracks the finger 1:1
+      // (the M3 motion tokens otherwise ease every inline transform update)
+      sheet.classList.add('sheet-dragging');
+      try { handle.setPointerCapture(e.pointerId); } catch { /* synthetic events */ }
       document.addEventListener('pointermove', onMove);
       document.addEventListener('pointerup', onUp);
-      document.addEventListener('pointercancel', onUp);
+      document.addEventListener('pointercancel', onCancel);
     });
   }
 }

@@ -401,6 +401,52 @@ test.describe('MOB-D — sheet drag handles + dismiss + motion', () => {
     const closedByTap = await page.evaluate(() => !document.body.classList.contains('peek-mode'));
     expect(closedByTap, 'handle tap dismisses the sheet').toBe(true);
   });
+
+  test('drag tracks 1:1 (no transition) and pointercancel never dismisses', async ({ page }) => {
+    await gotoCompact(page);
+    await seedEntry(page);
+    await page.evaluate(() => enterPeekMode('mc-1', 'encyclopedia'));
+    await page.waitForTimeout(600);
+    const r = await page.evaluate(async () => {
+      const sheet = document.querySelector('#infoPanel');
+      const h = sheet.querySelector('.sheet-drag-handle');
+      const rect = h.getBoundingClientRect();
+      const x = rect.x + rect.width / 2;
+      const y = rect.y + rect.height / 2;
+      const fire = (type, cy, id = 11) => h.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, cancelable: true, pointerType: 'touch', pointerId: id,
+        clientX: x, clientY: cy, isPrimary: true }));
+      // start drag, move 60px
+      fire('pointerdown', y);
+      fire('pointermove', y + 60);
+      const during = {
+        transition: getComputedStyle(sheet).transitionDuration,
+        transform: sheet.style.transform,
+        draggingClass: sheet.classList.contains('sheet-dragging'),
+      };
+      // a second finger lands mid-drag: must not restart or corrupt the drag
+      fire('pointerdown', y + 5, 22);
+      fire('pointermove', y + 300, 22); // rogue pointer, must be ignored
+      const afterRogue = sheet.style.transform;
+      // browser cancels the gesture: snap back, never close
+      fire('pointercancel', y + 60);
+      await new Promise(res => setTimeout(res, 400));
+      return {
+        during, afterRogue,
+        stillOpen: document.body.classList.contains('peek-mode'),
+        inlineCleared: sheet.style.transform === '',
+        draggingCleared: !sheet.classList.contains('sheet-dragging'),
+      };
+    });
+    expect(r.during.draggingClass, 'sheet-dragging class applied').toBe(true);
+    expect(r.during.transition, 'transition disabled while dragging').toBe('0s');
+    expect(r.during.transform, 'inline transform follows the finger').toBe('translateY(60px)');
+    expect(r.afterRogue, 'second pointer ignored').toBe('translateY(60px)');
+    expect(r.stillOpen, 'pointercancel snaps back instead of closing').toBe(true);
+    expect(r.inlineCleared, 'inline transform released').toBe(true);
+    expect(r.draggingCleared, 'dragging class removed').toBe(true);
+    await page.evaluate(() => exitPeekMode());
+  });
 });
 
 test.describe('MOB-D — meta + bar sync follow-ups', () => {
