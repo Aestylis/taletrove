@@ -29,6 +29,8 @@ export async function gotoApp(page) {
   await dismissIfPresent(page, '#welcomeSkipBtn', '#welcomeModal');
   // Tutorial overlay (if shown).
   await dismissIfPresent(page, '#tutorialCloseBtn', '#tutorialOverlay');
+  // Mobile coach-mark tour (compact viewports route the tutorial here).
+  await dismissIfPresent(page, '#mobileTutorialSheet .mt-close', '#mobileTutorialSheet');
 }
 
 /**

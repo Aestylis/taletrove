@@ -16,7 +16,7 @@ test.use({ viewport: { width: 393, height: 852 }, hasTouch: true });
  */
 async function gotoCompact(page) {
   await gotoApp(page);
-  for (const sel of ['#startFreshBtn', '#welcomeSkipBtn', '#tutorialCloseBtn']) {
+  for (const sel of ['#startFreshBtn', '#welcomeSkipBtn', '#tutorialCloseBtn', '#mobileTutorialSheet .mt-close']) {
     try { await page.locator(sel).dispatchEvent('click', { timeout: 1200 }); } catch { /* absent */ }
   }
   await page.keyboard.press('Escape');
@@ -618,9 +618,10 @@ test.describe('demo=1 entry link (any viewport; guards the shareable demo URL)',
     await page.goto('/forge/?demo=1');
     // The import commits, reloads, and the demo tour starts on the reloaded
     // page (pendingDemoTour handoff) — waiting for the tour also guarantees
-    // boot has settled, so `state` is safe to read afterwards.
-    await page.waitForSelector('#tutorialOverlay:not(.hidden)', { timeout: 20000 });
-    await page.locator('#tutorialCloseBtn').dispatchEvent('click');
+    // boot has settled, so `state` is safe to read afterwards. At this file's
+    // compact viewport the tour is the mobile coach-mark sheet.
+    await page.waitForSelector('#mobileTutorialSheet', { timeout: 20000 });
+    await page.locator('#mobileTutorialSheet .mt-close').dispatchEvent('click');
     await page.waitForFunction(
       () => typeof state !== 'undefined' && state.articles.length > 5, null, { timeout: 20000 });
     const r = await page.evaluate(() => ({

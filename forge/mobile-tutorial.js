@@ -57,8 +57,52 @@ const MT_FIRST_RUN_STEPS = [
   },
 ];
 const MT_DEMO_STEPS = [
-  { title: 'Welcome to Aethermoor', text: 'Placeholder step one.', target: null, advanceOn: null },
-  { title: 'Your turn', text: 'Placeholder step two.', target: null, advanceOn: null },
+  {
+    title: 'Welcome to Aethermoor',
+    text: 'This is a sample world built with TaleTrove. The tour is hands-on and nothing you do here is permanent. Tap the close button any time to skip.',
+    target: null, advanceOn: null,
+  },
+  {
+    title: 'Try it: tap a pin',
+    text: 'Tap any pin on the map. A popup shows a quick summary of that place or person.',
+    target: '.leaflet-marker-icon',
+    advanceOn: { domAppears: '.leaflet-popup' },
+  },
+  {
+    title: 'Try it: open the article',
+    text: 'Tap <b>Open Article</b> in the popup. The full wiki view takes over the screen; the back arrow returns you to the map.',
+    target: '.map-popup-actions button',
+    advanceOn: { bodyClass: 'article-mode' },
+  },
+  {
+    title: 'Try it: long-press to create',
+    text: 'Press and hold anywhere on the map. This creation menu is how Aethermoor was built: pins, areas, lines, labels, and lore.',
+    target: '#map',
+    advanceOn: { domAppears: '#featureRadialMenu' },
+    onEnter: () => { window.exitArticleMode?.(); },
+  },
+  {
+    title: 'Try it: the World tab',
+    text: 'Tap <b>World</b> in the bottom bar to browse everything in Aethermoor: maps, characters, factions, and history in one tree.',
+    target: '[data-mnav="world"]',
+    advanceOn: { clickOn: '[data-mnav="world"]' },
+  },
+  {
+    title: 'Global search',
+    text: 'Search finds anything instantly, including text inside articles. Try <b>Ashvane</b> later to meet the ruling family.',
+    target: '#globalSearchInput', advanceOn: null,
+    onEnter: () => { document.querySelector('[data-mnav="map"]')?.click(); },
+  },
+  {
+    title: 'More views',
+    text: 'The More sheet opens the Timeline, Relational Graph, Calendar, and Family Tree, all pre-populated with Aethermoor lore.',
+    target: '[data-mnav="more"]', advanceOn: null,
+  },
+  {
+    title: 'Your turn',
+    text: 'You have seen the sample world. Build your own: load a map image, long-press to drop pins, and start writing. Your data stays on your device. Replay this tour any time from Help.',
+    target: null, advanceOn: null,
+  },
 ];
 
 function startMobileTutorial(isDemoMode = false) {
@@ -69,7 +113,14 @@ function startMobileTutorial(isDemoMode = false) {
 window.startMobileTutorial = startMobileTutorial;
 
 function _mtBuildShell() {
-  if (document.getElementById('mobileTutorialSheet')) return;
+  const existing = document.getElementById('mobileTutorialSheet');
+  if (existing) {
+    if (existing.classList.contains('is-open')) return;
+    // A just-closed sheet is still fading out (removed after 300ms) — clear it
+    // immediately so a fresh start does not race the delayed removal.
+    ['mobileTutorialSheet', 'mobileTutorialScrim', 'mobileTutorialRipple'].forEach((id) =>
+      document.getElementById(id)?.remove());
+  }
 
   const scrim = el('div', { id: 'mobileTutorialScrim' }, [
     el('div', { id: 'mobileTutorialSpotlight' }),

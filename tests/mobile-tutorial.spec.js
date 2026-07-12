@@ -91,3 +91,18 @@ test.describe('first-run try-it engine (compact)', () => {
     expect(flag).toBe(true);
   });
 });
+
+test.describe('demo tour boot handoff (compact)', () => {
+  test.use({ viewport: { width: 393, height: 852 }, hasTouch: true });
+
+  test('pendingDemoTour flag boots into the mobile demo tour', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('pendingDemoTour', JSON.stringify(Date.now()));
+    });
+    await page.goto('/forge/');
+    await expect(page.locator('#mobileTutorialSheet')).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('#mobileTutorialSheet .mt-title')).toHaveText('Welcome to Aethermoor');
+    await expect(page.locator('#mobileTutorialSheet .mt-dot')).toHaveCount(8);
+    await expect(page.locator('#tutorialOverlay')).toBeHidden();
+  });
+});
