@@ -387,6 +387,7 @@ function updateToolbarForRole() {
 
 function toggleFreeMove() {
   settings.freeMoveEnabled = !settings.freeMoveEnabled;
+  settings.freeMoveUserSet = true;
   saveLS('worldSettings', settings);
   window.applyFreeMoveState(); // This function will now handle all UI updates
 }

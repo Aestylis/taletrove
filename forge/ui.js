@@ -189,6 +189,9 @@ function setLoadingState(isLoading, text = "Processing...") {
       }
     }, 30000);
   } else {
+    // Disarm the watchdog — without this, every completed operation still
+    // toasts "taking longer than expected" 30 seconds after it started.
+    clearTimeout(loadingTimeout);
     // Small delay to prevent flickering on fast operations
     setTimeout(() => {
       overlay.classList.add('hidden');

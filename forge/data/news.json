@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-77",
+    "date": "2026-07-12",
+    "title": "Alpha 6.77: Free Pan on Phones, Quieter Loading",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "Free pan is now on by default on phones, and the false 'taking longer than expected' message after successful saves and loads is gone.",
+    "content": "<h4>Two quality of life fixes</h4><p>On phones the map now pans freely by default; your own toggle choice still wins and is remembered. Separately, the loading watchdog kept firing 30 seconds after operations that had already finished, so you saw 'this is taking longer than expected' after perfectly normal saves and imports. It now only appears when something is genuinely still running.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-76",
     "date": "2026-07-12",
     "title": "Alpha 6.76: First Long-Press Always Works",

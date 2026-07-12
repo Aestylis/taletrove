@@ -644,3 +644,28 @@ test.describe('demo=1 entry link (any viewport; guards the shareable demo URL)',
     expect(intact, 'declining the demo preserves the existing world').toBe(true);
   });
 });
+
+test.describe('free pan defaults at compact', () => {
+  test('fresh boot at compact enables free pan', async ({ page }) => {
+    await gotoCompact(page);
+    const r = await page.evaluate(() => ({
+      enabled: settings.freeMoveEnabled,
+      userSet: !!settings.freeMoveUserSet,
+    }));
+    expect(r.enabled, 'free pan on by default at compact').toBe(true);
+    expect(r.userSet, 'default is not recorded as an explicit choice').toBe(false);
+  });
+
+  test('an explicit off survives reload at compact', async ({ page }) => {
+    await gotoCompact(page);
+    await page.evaluate(() => toggleFreeMove()); // user turns it off
+    await page.reload();
+    await page.waitForSelector('.header-controls', { state: 'visible' });
+    const r = await page.evaluate(() => ({
+      enabled: settings.freeMoveEnabled,
+      userSet: !!settings.freeMoveUserSet,
+    }));
+    expect(r.enabled, 'explicit choice wins over the compact default').toBe(false);
+    expect(r.userSet).toBe(true);
+  });
+});

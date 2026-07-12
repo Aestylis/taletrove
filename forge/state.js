@@ -1,5 +1,5 @@
 
-const APP_VERSION = '0.6.76-alpha';
+const APP_VERSION = '0.6.77-alpha';
 let TAXONOMY = {};
 let NEWS_DATA = [];
 let ICON_MANIFEST = [];
@@ -27,6 +27,12 @@ let settings = loadLS('worldSettings', {
 if (settings.labelsVisible === undefined) settings.labelsVisible = true;
 if (settings.overlayVisible === undefined) settings.overlayVisible = false;
 if (settings.featureClickAction === undefined || settings.featureClickAction === 'panel' || settings.featureClickAction === 'navigate') settings.featureClickAction = 'content';
+// Free pan defaults per form factor: on for the compact shell (phones want
+// unconstrained panning), off on desktop. An explicit toggle (freeMoveUserSet,
+// set in toggleFreeMove) always wins over the default.
+if (!settings.freeMoveUserSet) {
+  settings.freeMoveEnabled = window.matchMedia('(max-width: 599.98px)').matches;
+}
 
 let state = {
   articles: [],      // Phase A — unified backing store for all entities
