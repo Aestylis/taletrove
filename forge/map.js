@@ -1114,10 +1114,11 @@ async function featureToLayer(feat) {
       if (window.enterArticleMode) window.enterArticleMode(feat.id, type);
     });
 
-    // Right-click / contextmenu: Open the unified radial menu
+    // Right-click / contextmenu: Open the unified radial menu. latlng rides
+    // along so area menus can offer "Create Here" at the pressed point.
     layer.on('contextmenu', (ev) => {
       L.DomEvent.stopPropagation(ev);
-      showFeatureRadialMenu(feat, ev.originalEvent.clientX, ev.originalEvent.clientY);
+      showFeatureRadialMenu(feat, ev.originalEvent.clientX, ev.originalEvent.clientY, ev.latlng);
     });
   }
 
@@ -1431,7 +1432,7 @@ function dismissRadialMenu() {
   _radialFeat = null;
 }
 
-async function showFeatureRadialMenu(feat, screenX, screenY) {
+async function showFeatureRadialMenu(feat, screenX, screenY, latlng = null) {
   dismissRadialMenu();
   if (map) map.closePopup();
 
@@ -1539,6 +1540,14 @@ async function showFeatureRadialMenu(feat, screenX, screenY) {
         action: () => { dismissRadialMenu(); if (window.openColorPicker) window.openColorPicker(feat, 'color'); }
       });
     }
+    // Areas cover ground the user still wants to populate — a long-press inside
+    // one never reaches the map's creation radial, so offer it from here.
+    if (feat.geometry === 'polygon' && latlng) {
+      primaryBtns.push({
+        label: 'Create Here', icon: 'plus',
+        action: () => { dismissRadialMenu(); showMapContextMenu(latlng, screenX, screenY); }
+      });
+    }
     primaryBtns.push({
       label: 'Delete', icon: 'x', cls: 'is-danger',
       action: () => { dismissRadialMenu(); showConfirmRadialDelete(feat); }
@@ -1624,15 +1633,6 @@ function showConfirmRadialDelete(feat) {
 async function showMapContextMenu(latlng, screenX, screenY) {
   dismissRadialMenu();
 
-  const createAtPoint = (templateId) => {
-    recordState();
-    const layer = L.marker(latlng);
-    const feat = addFeatureFromLayer(layer, 'point', templateId);
-    render({ full: true });
-    window.enterPeekMode?.(feat.id, 'feature');
-    debouncedSave();
-  };
-
   const createLoreAtPoint = () => {
     recordState();
     const layer = L.marker(latlng);
@@ -1650,7 +1650,7 @@ async function showMapContextMenu(latlng, screenX, screenY) {
   const buttons = [
     {
       label: 'Add Pin', icon: 'map-pin',
-      action: () => createAtPoint(null)
+      action: () => showPinTemplateRadial(latlng, screenX, screenY)
     },
     {
       label: 'Add Area', icon: 'area',
@@ -1677,6 +1677,37 @@ async function showMapContextMenu(latlng, screenX, screenY) {
     }
   ];
 
+  await showCreationRadial(buttons, screenX, screenY);
+}
+
+// Second-stage chooser after "Add Pin" — the same three generic types as the
+// toolbar pin flyout (showPinFlyout), but creating directly at the pressed
+// point instead of arming a draw mode. Primary pin path on phones, where the
+// toolbar is collapsed and long-press is the main creation surface.
+async function showPinTemplateRadial(latlng, screenX, screenY) {
+  const createTypedAtPoint = (templateId) => {
+    recordState();
+    const layer = L.marker(latlng);
+    const feat = addFeatureFromLayer(layer, 'point', templateId);
+    render({ full: true });
+    if (feat.kind === 'entry') selectEncyclopediaEntry(feat.id);
+    else window.enterPeekMode?.(feat.id, 'feature');
+    debouncedSave();
+  };
+
+  const buttons = [
+    { label: 'Person', icon: 'person', action: () => createTypedAtPoint('generic-person') },
+    { label: 'Place',  icon: 'pin',    action: () => createTypedAtPoint('generic-pin') },
+    { label: 'Thing',  icon: 'chest',  action: () => createTypedAtPoint('generic-item') },
+  ];
+
+  await showCreationRadial(buttons, screenX, screenY);
+}
+
+// Shared builder for the flat creation radials (map context menu + pin-type
+// chooser). Feature radials keep their own builder — they highlight the layer
+// and support per-button classes.
+async function showCreationRadial(buttons, screenX, screenY) {
   const RADIAL_MARGIN = 134;
   const clampedX = Math.max(RADIAL_MARGIN, Math.min(screenX, window.innerWidth  - RADIAL_MARGIN));
   const clampedY = Math.max(RADIAL_MARGIN, Math.min(screenY, window.innerHeight - RADIAL_MARGIN));

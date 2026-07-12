@@ -135,7 +135,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const hasCompletedTutorial = loadLS('hasCompletedTutorial', false);
     const _urlParams = new URLSearchParams(window.location.search);
-    if (_urlParams.get('demo') === '1') {
+    // Demo-tour handoff: the demo import ends in location.reload(), so the tour
+    // request is parked in localStorage. Consume it once; the freshness window
+    // keeps a flag orphaned by a failed import from firing days later.
+    const _pendingDemoTour = loadLS('pendingDemoTour', null);
+    if (_pendingDemoTour !== null) localStorage.removeItem('pendingDemoTour');
+    if (_pendingDemoTour && Date.now() - _pendingDemoTour < 5 * 60 * 1000) {
+      startTutorial(true);
+    } else if (_urlParams.get('demo') === '1') {
       history.replaceState({}, '', window.location.pathname);
       if (isNewUser) {
         _loadDemoWorld();

@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-75",
+    "date": "2026-07-12",
+    "title": "Alpha 6.75: Pin Types from the Map, Create Inside Areas, Demo Tour Fix",
+    "tags": [
+      "Bugfix",
+      "Mobile"
+    ],
+    "summary": "The map's Add Pin now asks Person, Place, or Thing; long-pressing inside an area offers Create Here; and the demo world's guided tour actually starts after loading.",
+    "content": "<h4>Creation from the map, everywhere</h4><p>Choosing Add Pin from the map's radial menu now opens the Person / Place / Thing chooser, matching the toolbar, and drops the new pin right where you pressed. Long-pressing (or right-clicking) inside an existing area gained a Create Here option, so you can populate areas with cities, dungeons, and characters without leaving the map. The demo world's guided tour now starts as promised after the world finishes loading. Thanks for the morning bug reports!</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-74",
     "date": "2026-07-11",
     "title": "Alpha 6.74: Mobile — Smoother Sheet Dragging",

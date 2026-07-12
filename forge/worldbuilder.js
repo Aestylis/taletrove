@@ -518,9 +518,13 @@ async function _loadDemoWorld() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const blob = await resp.blob();
     const file = new File([blob], 'SampleWorld.trv', { type: 'application/zip' });
+    // Import ends in location.reload(), which would wipe a tutorial started
+    // here. Leave a timestamped flag instead — boot (app-init.js) consumes it
+    // and starts the demo tour on the freshly loaded world.
+    saveLS('pendingDemoTour', Date.now());
     await window._handleImportFile(file);
-    startTutorial(true);
   } catch (err) {
+    localStorage.removeItem('pendingDemoTour');
     setLoadingState(false);
     showAlertModal('Demo Unavailable', 'Could not load the demo world. You can load it manually via Project Hub → Import.');
   }
