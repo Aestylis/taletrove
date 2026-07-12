@@ -7,10 +7,54 @@ let _mtSteps = [];
 let _mtIndex = -1;
 let _mtAbort = null; // tears down the active step's listeners/observers
 
-// Step sets are replaced with the real content in a later task.
 const MT_FIRST_RUN_STEPS = [
-  { title: 'Welcome to TaleTrove', text: 'Placeholder step one.', target: null, advanceOn: null },
-  { title: 'All set', text: 'Placeholder step two.', target: null, advanceOn: null },
+  {
+    title: 'Welcome to TaleTrove',
+    text: 'TaleTrove is a local-first world building tool. This short tour is hands-on: you will make your first pin as you go. Tap the close button any time to skip.',
+    target: null, advanceOn: null,
+  },
+  {
+    title: 'Your map',
+    text: 'Every world starts with a map. You can load an image from this card or from the map tools whenever you are ready. First, let us put something on it.',
+    target: '#mapEmptyState', advanceOn: null,
+  },
+  {
+    title: 'Try it: long-press the map',
+    text: 'Press and hold anywhere on the map for half a second. A creation menu blooms under your finger.',
+    target: '#map',
+    advanceOn: { domAppears: '#featureRadialMenu' },
+  },
+  {
+    title: 'Pick a pin type',
+    text: 'Tap <b>Add Pin</b>, then choose <b>Person</b>, <b>Place</b>, or <b>Thing</b>. Your first pin drops right where you pressed.',
+    target: '#featureRadialMenu',
+    advanceOn: { domAppears: '.custom-marker-wrapper' },
+  },
+  {
+    title: 'Try it: open your pin',
+    text: 'Tap the pin you just made. A popup shows its name and a button that opens the full article view.',
+    target: '.custom-marker-wrapper',
+    advanceOn: { domAppears: '.leaflet-popup' },
+    onEnter: () => { window.exitPeekMode?.(); },
+  },
+  {
+    title: 'Try it: the World tab',
+    text: 'Tap <b>World</b> in the bottom bar. Everything you create lives there: maps, pins, lore, and session notes in one tree.',
+    target: '[data-mnav="world"]',
+    advanceOn: { clickOn: '[data-mnav="world"]' },
+    onEnter: () => { map?.closePopup?.(); },
+  },
+  {
+    title: 'Map tools and search',
+    text: 'The pencil button reveals the drawing toolbar: areas, lines, labels, and fog of war. The search bar up top finds anything in your world.',
+    target: '#mobileToolsToggle', advanceOn: null,
+    onEnter: () => { document.querySelector('[data-mnav="map"]')?.click(); },
+  },
+  {
+    title: 'You are all set',
+    text: 'You made your first pin. Keep going: long-press to create, tap to read, and use the World tab to stay organized. Replay this tour any time from Help in the More sheet.',
+    target: null, advanceOn: null,
+  },
 ];
 const MT_DEMO_STEPS = [
   { title: 'Welcome to Aethermoor', text: 'Placeholder step one.', target: null, advanceOn: null },
