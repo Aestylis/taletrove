@@ -26,8 +26,10 @@ const MT_FIRST_RUN_STEPS = [
   },
   {
     title: 'Pick a pin type',
+    // No spotlight target: #featureRadialMenu is a 0x0 anchor and the radial
+    // brings its own backdrop; a scrim here would dim the buttons being tapped.
     text: 'Tap <b>Add Pin</b>, then choose <b>Person</b>, <b>Place</b>, or <b>Thing</b>. Your first pin drops right where you pressed.',
-    target: '#featureRadialMenu',
+    target: null,
     advanceOn: { domAppears: '.custom-marker-wrapper' },
   },
   {
