@@ -15858,3 +15858,95 @@ a.image-search-license-chip:hover {
   .row-more-btn,
   .row-vis-btn { width: 36px; height: 36px; }
 }
+
+/* --- MOB-TUT: interactive coach-mark tutorial (mobile-tutorial.js) --- */
+/* Base: these elements only ever render under the compact tour */
+#mobileTutorialScrim, #mobileTutorialRipple, #mobileTutorialSheet { display: none; }
+
+@media (max-width: 599.98px) {
+  #mobileTutorialScrim {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-tutorial) - 2);
+    pointer-events: none; /* try-it interactions happen through it */
+    display: none;
+    overflow: hidden;
+  }
+  #mobileTutorialScrim.is-visible { display: block; }
+  #mobileTutorialSpotlight {
+    position: absolute;
+    border-radius: var(--radius-xl);
+    /* cutout: everything but this rect is dimmed */
+    box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.55);
+  }
+  #mobileTutorialRipple {
+    position: fixed;
+    width: 56px;
+    height: 56px;
+    margin: -28px 0 0 -28px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-orange);
+    z-index: calc(var(--z-tutorial) - 1);
+    pointer-events: none;
+    display: none;
+  }
+  #mobileTutorialRipple.is-visible { display: block; animation: mt-ripple 1.6s ease-out infinite; }
+  @keyframes mt-ripple {
+    0%   { transform: scale(0.55); opacity: 0.9; }
+    70%  { transform: scale(1.15); opacity: 0.25; }
+    100% { transform: scale(1.3);  opacity: 0; }
+  }
+  #mobileTutorialSheet {
+    display: block;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px)); /* nav bar is 56px + safe area */
+    z-index: var(--z-tutorial);
+    padding: 1rem 1rem 0.75rem;
+    background: var(--surface-thick-glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    transform: translateY(120%);
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1); /* M3 emphasized-decelerate */
+  }
+  #mobileTutorialSheet.is-open { transform: translateY(0); }
+  #mobileTutorialSheet .mt-dots { display: flex; gap: 5px; margin-bottom: 0.5rem; }
+  #mobileTutorialSheet .mt-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border);
+  }
+  #mobileTutorialSheet .mt-dot.is-active { background: var(--accent-orange); }
+  #mobileTutorialSheet .mt-close {
+    position: absolute;
+    top: 0.6rem; right: 0.6rem;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+  }
+  #mobileTutorialSheet .mt-close .icon-container { width: 16px; height: 16px; }
+  #mobileTutorialSheet .mt-title {
+    font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 0.25rem;
+    padding-right: 2rem;
+  }
+  #mobileTutorialSheet .mt-text { font-size: 13px; line-height: 1.5; color: var(--muted); }
+  #mobileTutorialSheet .mt-actions {
+    display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  #mobileTutorialSheet .mt-actions .hidden { display: none; }
+  #mobileTutorialSheet .mt-skip-step {
+    background: transparent; border: none; color: var(--muted);
+    font-size: 12px; text-decoration: underline; cursor: pointer;
+    min-height: 44px;
+  }
+  #mobileTutorialSheet .mt-next {
+    border-radius: var(--radius-full); border: none;
+    background: var(--accent-orange); color: var(--primary-btn-text);
+    font-size: 13px; font-weight: 500; padding: 0.45rem 1.2rem; cursor: pointer;
+    min-height: 44px;
+  }
+}

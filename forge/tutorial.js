@@ -168,6 +168,12 @@ function showDummyInfoPanel() {
 }
 
 function startTutorial(isDemoMode = false) {
+    // Compact shell gets the touch-first interactive tour (mobile-tutorial.js).
+    // Chosen once at start; no live switching on rotate.
+    if (window.matchMedia('(max-width: 599.98px)').matches && window.startMobileTutorial) {
+        window.startMobileTutorial(isDemoMode);
+        return;
+    }
     _activeTourSteps = isDemoMode ? demoTourSteps : tourSteps;
     $('#tutorialOverlay').classList.remove('hidden');
     goToStep(0);

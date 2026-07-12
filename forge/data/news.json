@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-78",
+    "date": "2026-07-12",
+    "title": "Alpha 6.78: Hands-On Tutorial for Phones",
+    "tags": [
+      "Feature",
+      "Mobile"
+    ],
+    "summary": "The tutorial on phones is now a hands-on tour: long-press to create your first pin, tap it to read, and learn the bottom bar by using it.",
+    "content": "<h4>Learn by doing</h4><p>Phones now get their own tutorial built for touch. Instead of pointing at desktop menus, it waits for you to actually do things: long-press the map, drop your first pin, open its article, and browse the World tab. The Aethermoor demo tour got the same treatment. Desktop tours are unchanged.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-77",
     "date": "2026-07-12",
     "title": "Alpha 6.77: Free Pan on Phones, Quieter Loading",
