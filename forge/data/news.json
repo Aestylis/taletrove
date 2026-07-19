@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-80",
+    "date": "2026-07-19",
+    "title": "Alpha 6.80: Export Failures No Longer Trigger a False \"Still Running\" Warning",
+    "tags": [
+      "Bugfix"
+    ],
+    "summary": "On browsers without the native Save dialog (e.g. Firefox), a failed export used to fail silently and then nag you 30 seconds later. It now shows the real error immediately.",
+    "content": "<h4>Exporting on Firefox</h4><p>Firefox (and other browsers without the File System Access API) always use TaleTrove's in-memory export path. If that step failed for any reason, the failure was swallowed silently, the loading spinner never went away, and 30 seconds later you'd get a confusing \"this is taking longer than expected\" toast with no explanation. Export failures now surface immediately with a clear error message, and the spinner always clears.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-79",
     "date": "2026-07-18",
     "title": "Alpha 6.79: Move Tool Now Drags Clustered Pins",

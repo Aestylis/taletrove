@@ -148,24 +148,33 @@ async function exportBundleFrom(clone, filename, additionalKeys = [], password =
   }
 
   // 5. Fallback: Generate the final .wbundle file in memory and trigger the download.
+  // (This is the only path on browsers without showSaveFilePicker, e.g. Firefox — an
+  // uncaught error here used to skip setLoadingState(false), leaving the watchdog armed
+  // to fire a false "taking longer than expected" toast 30s after a silently failed export.)
   setLoadingState(true, password ? "Encrypting Project..." : "Generating Project...");
-  const out = await zip.generateAsync({ type: 'blob', streamFiles: true });
-  let finalContent = out;
+  try {
+    const out = await zip.generateAsync({ type: 'blob', streamFiles: true });
+    let finalContent = out;
 
-  if (password) {
-    const buffer = await out.arrayBuffer();
-    // encryptData now natively outputs the TEN2 format.
-    const encrypted = await encryptData(new Uint8Array(buffer), password);
-    finalContent = new Blob([encrypted], { type: 'application/octet-stream' });
+    if (password) {
+      const buffer = await out.arrayBuffer();
+      // encryptData now natively outputs the TEN2 format.
+      const encrypted = await encryptData(new Uint8Array(buffer), password);
+      finalContent = new Blob([encrypted], { type: 'application/octet-stream' });
+    }
+
+    const url = URL.createObjectURL(finalContent);
+    const a = el('a', { href: url, download: filename });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('[export] Fallback generation failed:', err);
+    showAlertModal('Export Failed', 'An error occurred while generating the project file: ' + err.message);
+  } finally {
+    setLoadingState(false);
   }
-
-  const url = URL.createObjectURL(finalContent);
-  const a = el('a', { href: url, download: filename });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  setLoadingState(false);
 }
 
 function sanitizeForPlayer(full) {
