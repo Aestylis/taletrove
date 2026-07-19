@@ -39,6 +39,12 @@ const debouncedSetMode = debounce((mode, options = {}) => {
       if (lyr.dragging) lyr.dragging.disable();
       if (lyr._moveModeOnDrag) { lyr.off('drag', lyr._moveModeOnDrag); delete lyr._moveModeOnDrag; }
       if (lyr._moveModeOnDragEnd) { lyr.off('dragend', lyr._moveModeOnDragEnd); delete lyr._moveModeOnDragEnd; }
+      // Restore clustering for pins pulled out for move mode (see below).
+      if (lyr._unclusteredForMove) {
+        map.removeLayer(lyr);
+        allLayers.addLayer(lyr);
+        delete lyr._unclusteredForMove;
+      }
     });
     activeMoveMarkers = [];
   }
@@ -113,6 +119,14 @@ const debouncedSetMode = debounce((mode, options = {}) => {
         (l.feature.geometry === 'point' || l.feature.geometry === 'text' || l.feature.kind === 'entry')
       );
       ptLayers.forEach(lyr => {
+        // Clustered pins have their icon detached from the DOM, so dragging.enable()
+        // would bind to nothing. Pull the pin out of the cluster and onto the map
+        // directly for the duration of move mode (restored in the cleanup block above).
+        if (lyr._isPoint && allLayers.hasLayer(lyr)) {
+          allLayers.removeLayer(lyr);
+          map.addLayer(lyr);
+          lyr._unclusteredForMove = true;
+        }
         const onDrag = () => {
           updateLabelsFor(lyr.feature.id);
         };

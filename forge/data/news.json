@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-79",
+    "date": "2026-07-18",
+    "title": "Alpha 6.79: Move Tool Now Drags Clustered Pins",
+    "tags": [
+      "Bugfix"
+    ],
+    "summary": "The move tool couldn't drag pins that had merged into a cluster bubble. It now pulls them out for the drag and re-clusters them afterward.",
+    "content": "<h4>Dragging pins near each other</h4><p>Any pin close enough to another to merge into a cluster bubble on the map had its icon hidden, so the move tool's drag couldn't grab it &mdash; only isolated pins were actually draggable. Move mode now un-clusters pins for the duration of the drag and restores clustering when you switch back to the pointer tool.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-78",
     "date": "2026-07-12",
     "title": "Alpha 6.78: Hands-On Tutorial for Phones",
