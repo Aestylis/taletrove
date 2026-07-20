@@ -165,7 +165,7 @@ function buildBacklinksSection(name, id, parentElement) {
       if (link.type === 'feature') {
         window.navigateAndPeek?.(link.id, 'feature');
       } else if (link.type === 'map') {
-        window.navigateToMap(link.id, { skipInfoPanel: true });
+        window.navigateToMap(link.id);
       } else {
         window.navigateAndPeek?.(link.id, 'encyclopedia');
       }
@@ -324,7 +324,18 @@ async function buildPinStyleSection(article, taxonomyItem, form, { onMap = true 
     const pinColorValue = article.iconColor || taxonomyItem?.iconColor || taxonomyItem?.color || '#639bff';
     const pinColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(pinColorValue)}` });
     const pinColorName = el('span', { text: pinColorValue.toUpperCase() });
-    const pinColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'iconColor') }, [pinColorSwatch, pinColorName]);
+    const pinColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'iconColor', (hexColor) => {
+      recordState();
+      article.iconColor = hexColor;
+      markEntityDirty('article', article.id);
+      render({ full: true });
+      if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(article);
+      debouncedSave();
+      // Rebuild the sheet from state — the swatch/label above were built once at open
+      // time and won't otherwise reflect the new color until the sheet is reopened.
+      const _sid = propertiesSheetId, _stype = propertiesSheetType;
+      if (_sid) window.openPropertiesSheet?.(_sid, _stype);
+    }) }, [pinColorSwatch, pinColorName]);
     form.appendChild(el('div', { class: 'form-label full-width', text: 'Pin Color' }));
     form.appendChild(el('div', { class: 'full-width' }, [pinColorBtn]));
   }
@@ -342,7 +353,18 @@ async function buildPinStyleSection(article, taxonomyItem, form, { onMap = true 
   const iconColorValue = article.pinIconColor || '#ffffff';
   const iconColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(iconColorValue) || '#ffffff'}` });
   const iconColorName = el('span', { text: iconColorValue.toUpperCase() });
-  const iconColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'pinIconColor') }, [iconColorSwatch, iconColorName]);
+  const iconColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'pinIconColor', (hexColor) => {
+    recordState();
+    article.pinIconColor = hexColor;
+    markEntityDirty('article', article.id);
+    render({ full: true });
+    if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(article);
+    debouncedSave();
+    // Rebuild the sheet from state — the swatch/label above were built once at open
+    // time and won't otherwise reflect the new color until the sheet is reopened.
+    const _sid = propertiesSheetId, _stype = propertiesSheetType;
+    if (_sid) window.openPropertiesSheet?.(_sid, _stype);
+  }) }, [iconColorSwatch, iconColorName]);
   form.appendChild(el('div', { class: 'form-label full-width', text: 'Icon Color' }));
   form.appendChild(el('div', { class: 'full-width' }, [iconColorBtn]));
 }
@@ -1802,7 +1824,7 @@ async function buildLinksSection(entity, entityType, parentElement) {
           nameSpan.onclick = () => {
             if (link.targetType === 'encyclopedia') window.navigateAndPeek?.(link.targetId, 'encyclopedia');
             else if (link.targetType === 'feature') window.navigateAndPeek?.(link.targetId, 'feature');
-            else if (link.targetType === 'map')     window.navigateToMap(link.targetId, { skipInfoPanel: true });
+            else if (link.targetType === 'map')     window.navigateToMap(link.targetId);
           };
         }
         chip.appendChild(nameSpan);
@@ -2812,7 +2834,7 @@ async function renderRelationshipTags(item, container) {
             style: 'border-color: var(--accent-orange); cursor: pointer; display: flex; align-items: center; gap: 4px;',
             onclick: (e) => {
               e.preventDefault();
-              if (state.maps.some(m => m.id === target.id)) navigateToMap(target.id, { skipInfoPanel: true });
+              if (state.maps.some(m => m.id === target.id)) navigateToMap(target.id);
               else navigateToFeature(target.id);
             }
           }, [

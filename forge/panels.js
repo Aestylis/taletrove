@@ -541,7 +541,7 @@ async function _buildAtlasFlatRowEl(rowDesc) {
       `<div class="folder-icon-default">${getIconHTMLSync('map-trifold', 'currentColor')}</div>` +
       `<div class="folder-icon-caret">${getIconHTMLSync(isCollapsed ? 'caret-right' : 'caret-down', 'currentColor')}</div>`;
     mapIconWrap.addEventListener('click', (e) => { e.stopPropagation(); toggleNodeCollapsed(mapData.id); });
-    rowEl = el('div', { class: `tree-row map-row`, 'data-map-id': mapData.id, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id, { skipInfoPanel: true }) });
+    rowEl = el('div', { class: `tree-row map-row`, 'data-map-id': mapData.id, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id) });
     const bannerUrl = await _resolveMapBannerUrl(mapData);
     if (bannerUrl) {
       rowEl.classList.add('has-banner');
@@ -1142,7 +1142,7 @@ async function _renderAtlasMapNode(ctx, mapData, parentElement) {
 
   const mapLabel = el('span', { class: 'tree-label', text: mapData.name });
 
-  const mapRow = el('div', { class: `tree-row map-row`, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id, { skipInfoPanel: true }) });
+  const mapRow = el('div', { class: `tree-row map-row`, tabindex: '0', role: 'button', onclick: () => navigateToMap(mapData.id) });
   if (ctx.query && !ctx.itemsToShow.has(mapData.id)) mapRow.classList.add('ghost');
 
   const bannerUrl = await _resolveMapBannerUrl(mapData);
@@ -2189,7 +2189,7 @@ function refreshBreadcrumbs() {
       if (isLast) {
         container.appendChild(el('span', { class: 'breadcrumb-current', text: map.name }));
       } else {
-        container.appendChild(el('a', { class: 'breadcrumb-link', href: '#', text: map.name, onclick: () => navigateToMap(map.id, { skipInfoPanel: true }) }));
+        container.appendChild(el('a', { class: 'breadcrumb-link', href: '#', text: map.name, onclick: () => navigateToMap(map.id) }));
       }
     });
   }

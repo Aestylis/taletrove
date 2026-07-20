@@ -183,6 +183,11 @@ function setLoadingState(isLoading, text = "Processing...") {
     // Safety: Auto-hide after 30 seconds in case an operation hangs (increased from 15 for large projects)
     clearTimeout(loadingTimeout);
     loadingTimeout = setTimeout(() => {
+      // Belt-and-suspenders: some call sites (e.g. navigateToMap) disarm via a deferred,
+      // task-counter-gated callback rather than a plain finally. If that bookkeeping is ever
+      // wrong, the overlay itself is still the source of truth — don't nag about an operation
+      // that visibly isn't running anymore just because a timer id didn't get cleared in time.
+      if (overlay.classList.contains('hidden')) return;
       setLoadingState(false);
       if (typeof showToast === 'function') {
         showToast('This is taking longer than expected — the operation may still be running.');
@@ -486,7 +491,7 @@ function initMobileNavBar() {
       // the top-level world map (also exits any open reading views).
       if (drawerAlreadyHidden) {
         const mainMap = state.maps.find(m => m.parentId === null);
-        if (mainMap) navigateToMap(mainMap.id, { skipInfoPanel: true });
+        if (mainMap) navigateToMap(mainMap.id);
       }
     } else if (dest === 'world') {
       toggleAsidePanel(false);

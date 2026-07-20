@@ -44,3 +44,22 @@ test('a failed (non-streaming) export disarms the watchdog and shows an error', 
   const nags = await page.locator('#toastContainer .toast-message', { hasText: NAG }).count();
   expect(nags, 'a failed export must not leave the watchdog armed').toBe(0);
 });
+
+// Belt-and-suspenders: some call sites (navigateToMap) disarm via a deferred,
+// task-counter-gated callback instead of a plain finally. If that bookkeeping is ever wrong
+// and the 30s timer never gets cleared, the overlay's own visibility is still checked before
+// nagging — a spinner that isn't showing anymore must never trigger the "still running" toast,
+// regardless of what caused the timer mismatch.
+test('watchdog does not nag if the overlay was already hidden by another path', async ({ page }) => {
+  await gotoApp(page);
+  await page.clock.install();
+  await page.evaluate(() => {
+    setLoadingState(true, 'Testing');
+    // Simulate the overlay being hidden without going through setLoadingState(false) —
+    // e.g. a disarm path that forgot to clearTimeout(loadingTimeout).
+    document.querySelector('#loadingOverlay').classList.add('hidden');
+  });
+  await page.clock.runFor(31000);
+  const nags = await page.locator('#toastContainer .toast-message', { hasText: NAG }).count();
+  expect(nags, 'overlay already hidden must suppress the watchdog toast').toBe(0);
+});

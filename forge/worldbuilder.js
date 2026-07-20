@@ -935,7 +935,7 @@ async function navigateAndPeek(id, type) {
     const feature = state.features.find(f => f.id === id);
     if (!feature) return;
     if (feature.mapId && feature.mapId !== state.activeMapId) {
-      await navigateToMap(feature.mapId, { skipInfoPanel: true });
+      await navigateToMap(feature.mapId);
     }
     window.expandToItem?.(id);
     window.highlightItemInAtlas?.(id);
@@ -970,7 +970,7 @@ async function navigateAndPeek(id, type) {
     const entry = state.encyclopedia.find(e => e.id === id);
     if (!entry) return;
     if (entry.mapId && entry.mapId !== state.activeMapId) {
-      await navigateToMap(entry.mapId, { skipInfoPanel: true });
+      await navigateToMap(entry.mapId);
     }
     window.expandToEncyclopediaItem?.(id);
     window.highlightItemInEncyclopedia?.(id);
@@ -1364,7 +1364,7 @@ async function createNewMap(newMapName) {
   state.maps.push(newMap);
   markEntityDirty('map', newMap.id);
   markEntityDirty('meta');
-  navigateToMap(newMap.id);
+  navigateToMap(newMap.id, { showInfoPanel: true });
 }
 
 function handleBulkUpdate(propertiesToUpdate, isDelete = false) {
@@ -1824,7 +1824,7 @@ async function navigateToMap(mapId, options = {}) {
 
   // Guard clause: If already on this map, do nothing to prevent reload
   if (selectedId === mapId && !options.force) {
-    if (!options.skipInfoPanel && !compactViewport) showInfoPanel(mapId, 'map');
+    if (options.showInfoPanel && !compactViewport) showInfoPanel(mapId, 'map');
     return;
   }
 
@@ -1906,7 +1906,7 @@ async function navigateToMap(mapId, options = {}) {
     debouncedSetMode('pointer');
 
     highlightItemInAtlas(mapId);
-    if (!options.skipInfoPanel && !compactViewport) {
+    if (options.showInfoPanel && !compactViewport) {
       showInfoPanel(mapId, 'map');
     }
 
@@ -3440,7 +3440,7 @@ function _initDocumentClickDelegate() {
       e.preventDefault();
       e.stopPropagation();
       const mainMap = state.maps.find(m => m.parentId === null);
-      if (mainMap) navigateToMap(mainMap.id, { skipInfoPanel: true });
+      if (mainMap) navigateToMap(mainMap.id);
       return;
     }
 

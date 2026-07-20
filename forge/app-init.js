@@ -122,7 +122,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     initUI();
     if (window.applyAppearance) await applyAppearance(state.appearance || {});
 
-    await navigateToMap(state.activeMapId, { skipInfoPanel: true });
+    await navigateToMap(state.activeMapId);
 
     initEventListeners();
     initUserChip();

@@ -1,5 +1,25 @@
 [
   {
+    "id": "alpha-6-82",
+    "date": "2026-07-19",
+    "title": "Alpha 6.82: Maps Open Without the Panel; Pin Colors Update Live",
+    "tags": [
+      "Bugfix"
+    ],
+    "summary": "Opening a map no longer auto-opens its info panel, and changing a pin's color in Properties now updates the swatch immediately instead of waiting for a refresh.",
+    "content": "<h4>Two properties/navigation fixes</h4><p>Opening a map (via the command palette, global search, or a wiki-link) used to auto-open that map's own info panel over your work. It now stays closed by default, matching how row clicks and breadcrumbs already behaved &mdash; creating a brand-new map still opens its panel, since you're about to edit it anyway.</p><p>Separately, changing Pin Color or Icon Color in a pin's Properties updated the pin on the map immediately, but the color swatch in the panel itself stayed stuck on the old color until you closed and reopened it. It now updates live.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
+    "id": "alpha-6-81",
+    "date": "2026-07-19",
+    "title": "Alpha 6.81: Hardened the Loading Watchdog Against False Alarms",
+    "tags": [
+      "Bugfix"
+    ],
+    "summary": "The \"taking longer than expected\" warning now double-checks that the loading spinner is actually still showing before it nags you.",
+    "content": "<h4>Belt and suspenders</h4><p>The 30-second \"still running\" warning is meant purely as a safety net for genuinely stuck operations. It now also checks that the loading spinner is actually still on screen before showing the toast — if the spinner's already gone, nothing pops up. This closes the door on any timing edge case that could otherwise leave the warning armed after an operation quietly finished.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-80",
     "date": "2026-07-19",
     "title": "Alpha 6.80: Export Failures No Longer Trigger a False \"Still Running\" Warning",
