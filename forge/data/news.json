@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-83",
+    "date": "2026-07-19",
+    "title": "Alpha 6.83: New Pins No Longer Go Invisible After Editing",
+    "tags": [
+      "Bugfix"
+    ],
+    "summary": "Renaming a pin right after creating it could leave it untracked on the map until a refresh. Also fixed the tutorial occasionally wiping a real pin's panel if you closed it and clicked a pin immediately after.",
+    "content": "<h4>Two timing bugs</h4><p>Creating a pin and then quickly editing its name could race the map's own layer-creation step, leaving the pin invisible on the map until you refreshed the page &mdash; the data was always saved correctly, it just wasn't rendering. Editing is now sequenced so this can't happen.</p><p>Separately, if you closed the tutorial and immediately clicked into a real pin, a leftover cleanup timer from the tutorial could occasionally wipe that pin's panel mid-edit, kicking you out of typing the name. That race is now closed.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-82",
     "date": "2026-07-19",
     "title": "Alpha 6.82: Maps Open Without the Panel; Pin Colors Update Live",

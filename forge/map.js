@@ -930,9 +930,22 @@ async function syncAllLayers() {
   window.syncMapEmptyState?.();
 }
 
+// Dedupes concurrent syncSingleLayer() creates for the same not-yet-tracked feature — e.g. the
+// unawaited render() fired by pin creation racing an unawaited syncSingleLayer() call from the
+// name field's per-keystroke handler. Without this, each concurrent call independently builds
+// and adds its own Leaflet layer for the same feature id; only the last layerById.set() wins,
+// leaving the others orphaned on the map (or the tracked layer itself detached from the map) —
+// the pin then renders as invisible until a hard reload rebuilds layerById from scratch.
+const _syncSingleLayerInFlight = new Map();
+
 // Updates a single layer in place (Smart Patching)
 async function syncSingleLayer(feature) {
   let layer = layerById.get(feature.id);
+
+  if (!layer && _syncSingleLayerInFlight.has(feature.id)) {
+    await _syncSingleLayerInFlight.get(feature.id);
+    layer = layerById.get(feature.id);
+  }
 
   if (layer) {
     // Text Label Updates
@@ -1004,13 +1017,21 @@ async function syncSingleLayer(feature) {
     updateLabelsFor(feature.id);
     updateCoaMarkerFor(feature.id);
 
-  } else {
-    const newLayer = await featureToLayer(feature);
-    if (newLayer) {
-      newLayer.addTo(allLayers);
-      layerById.set(feature.id, newLayer);
-      updateLabelsFor(feature.id);
-      updateCoaMarkerFor(feature.id);
+  } else if (!_syncSingleLayerInFlight.has(feature.id)) {
+    const creation = (async () => {
+      const newLayer = await featureToLayer(feature);
+      if (newLayer) {
+        newLayer.addTo(allLayers);
+        layerById.set(feature.id, newLayer);
+        updateLabelsFor(feature.id);
+        updateCoaMarkerFor(feature.id);
+      }
+    })();
+    _syncSingleLayerInFlight.set(feature.id, creation);
+    try {
+      await creation;
+    } finally {
+      _syncSingleLayerInFlight.delete(feature.id);
     }
   }
 }

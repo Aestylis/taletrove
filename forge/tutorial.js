@@ -195,6 +195,10 @@ function endTutorial() {
     if (mask) mask.classList.remove('is-visible');
 
     setTimeout(() => {
+        // Guard: if the user opened a real pin's info panel in the meantime (e.g. clicked a
+        // pin right as the tutorial closed), panel.is-visible is back on — don't hide/wipe
+        // their real content out from under them just to clean up the tutorial's own demo HTML.
+        if (panel.classList.contains('is-visible')) return;
         panel.classList.add('hidden');
         const contentEl = $('#contentContainer');
         if (contentEl) contentEl.innerHTML = '';
