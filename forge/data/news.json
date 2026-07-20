@@ -1,5 +1,15 @@
 [
   {
+    "id": "alpha-6-84",
+    "date": "2026-07-19",
+    "title": "Alpha 6.84: Deployment Sync",
+    "tags": [
+      "Maintenance"
+    ],
+    "summary": "Production was out of sync with recent fixes across several files. Everything is now current, and this release forces a clean cache refresh for everyone.",
+    "content": "<h4>Housekeeping</h4><p>A deployment gap meant several recent fixes weren't actually live in production, including the map-open info panel default and other navigation/properties fixes. Everything is now correctly synced, and this release bumps the cache version to make sure everyone gets the current files.</p><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-83",
     "date": "2026-07-19",
     "title": "Alpha 6.83: New Pins No Longer Go Invisible After Editing",
