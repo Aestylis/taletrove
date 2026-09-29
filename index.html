@@ -23,6 +23,9 @@
 <link rel="icon" type="image/svg+xml" href="forge/TaleTrove.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- The hero backdrop is a CSS background, which the browser only discovers after
+     parsing the style block — preload it so the largest paint starts immediately. -->
+<link rel="preload" as="image" href="art/Warrior_Tortoise.webp" type="image/webp">
 <style>
 /* ── tokens ─────────────────────────────────────────────
    ink: warm near-black · parchment: map-cream text
@@ -44,7 +47,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { background: var(--ink); color: var(--parchment); font-family: var(--sans); font-weight: 300; line-height: 1.6; }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; } /* height:auto keeps the width/height attrs as an aspect-ratio hint, not a fixed size */
 a { color: inherit; }
 h1, h2, .display { font-family: var(--serif); font-weight: 400; line-height: 1.05; }
 em { font-style: italic; color: var(--candle); }
@@ -67,7 +70,7 @@ header .btn { padding: 0.7em 1.3em; }
 
 /* ── hero: art backdrop, product lands on it ── */
 .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 5vw 0; overflow: hidden; }
-.hero-bg { position: absolute; inset: 0; background: url('art/Warrior_Tortoise.png') center 22% / cover no-repeat; }
+.hero-bg { position: absolute; inset: 0; background: url('art/Warrior_Tortoise.webp') center 22% / cover no-repeat; }
 .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(11,10,8,0.38) 0%, rgba(11,10,8,0.12) 34%, rgba(11,10,8,0.55) 70%, var(--ink) 97%); }
 .hero > :not(.hero-bg) { position: relative; } /* .hero-bg must stay absolute */
 .hero-copy { padding: 3rem 3.5rem 2.6rem; border-radius: 24px; background: radial-gradient(ellipse at center, rgba(11,10,8,0.72) 0%, rgba(11,10,8,0.5) 55%, transparent 78%); }
@@ -109,8 +112,8 @@ header .btn { padding: 0.7em 1.3em; }
 .shotcard img { width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1.4em; }
 .chips span { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.6em 1em; border: 1px solid var(--line); border-radius: 999px; color: var(--parchment-dim); }
-.art-atlas { background: linear-gradient(rgba(11,10,8,0.88), rgba(11,10,8,0.88)), url('art/valley.png') center / cover fixed; }
-.art-secrets { background: linear-gradient(rgba(11,10,8,0.9), rgba(11,10,8,0.9)), url('art/elf_fire_fern.png') center / cover fixed; }
+.art-atlas { background: linear-gradient(rgba(11,10,8,0.88), rgba(11,10,8,0.88)), url('art/valley.webp') center / cover fixed; }
+.art-secrets { background: linear-gradient(rgba(11,10,8,0.9), rgba(11,10,8,0.9)), url('art/elf_fire_fern.webp') center / cover fixed; }
 
 /* ── yours: the trust grid ── */
 .yours { text-align: center; }
@@ -140,7 +143,7 @@ header .btn { padding: 0.7em 1.3em; }
 
 /* ── final CTA ── */
 .final { position: relative; text-align: center; padding: 140px 6vw; overflow: hidden; }
-.final-bg { position: absolute; inset: 0; background: url('art/valley_town.png') center / cover no-repeat; }
+.final-bg { position: absolute; inset: 0; background: url('art/valley_town.webp') center / cover no-repeat; }
 .final-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(var(--ink) 0%, rgba(11,10,8,0.45) 35%, rgba(11,10,8,0.75) 100%); }
 .final > * { position: relative; }
 .final h2 { font-size: clamp(2.4rem, 5.5vw, 4.2rem); margin-bottom: 0.5em; }
@@ -189,7 +192,7 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--ember); outlin
 
   <div class="hero-frame">
     <div class="chrome"><i></i><i></i><i></i></div>
-    <div class="shot"><img src="art/app_workspace.jpg" alt="The TaleTrove workspace: the world tree beside the map of Aethermoor, with regions, pins, and lore"></div>
+    <div class="shot"><img src="art/app_workspace.webp" width="1600" height="1013" fetchpriority="high" decoding="async" alt="The TaleTrove workspace: the world tree beside the map of Aethermoor, with regions, pins, and lore"></div>
     <div class="pin-drop">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z" fill="#ff7a1a" stroke="#1a0d00" stroke-width="1.2"/><circle cx="12" cy="9" r="2.6" fill="#1a0d00"/></svg>
     </div>
@@ -215,7 +218,7 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--ember); outlin
       <div class="chips"><span>Custom maps</span><span>Fog of war</span><span>Lore pins</span><span>Spatial search</span></div>
       <a class="btn btn-ember" href="forge/">Drop a pin</a>
     </div>
-    <div class="shotcard"><img src="art/app_atlas.jpg" alt="A parchment world map with painted region overlays and labeled pins"></div>
+    <div class="shotcard"><img src="art/app_atlas.webp" width="1600" height="1013" loading="lazy" decoding="async" alt="A parchment world map with painted region overlays and labeled pins"></div>
   </section>
 </div>
 
@@ -230,7 +233,7 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--ember); outlin
       No player accounts needed.</p>
       <a class="btn btn-ember" href="forge/">Keep a secret</a>
     </div>
-    <div class="shotcard"><img src="art/app_peek.jpg" alt="Reading a lore article in the peek panel beside the map"></div>
+    <div class="shotcard"><img src="art/app_peek.webp" width="1600" height="1013" loading="lazy" decoding="async" alt="Reading a lore article in the peek panel beside the map"></div>
   </section>
 </div>
 
@@ -258,7 +261,7 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--ember); outlin
     <p>Prep on the big screen. Run the session from your hand.</p>
     <a class="btn btn-ember" href="forge/" style="margin-top:1.6em">Open it on your phone</a>
   </div>
-  <div class="phone-frame"><img src="art/app_phone.jpg" alt="The Aethermoor map on a phone with the bottom navigation bar"></div>
+  <div class="phone-frame"><img src="art/app_phone.webp" width="720" height="1561" loading="lazy" decoding="async" alt="The Aethermoor map on a phone with the bottom navigation bar"></div>
 </section>
 
 <!-- SHOWCASE / DEMO -->
