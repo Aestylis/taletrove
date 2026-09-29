@@ -40,9 +40,15 @@ const debouncedSetMode = debounce((mode, options = {}) => {
       if (lyr._moveModeOnDrag) { lyr.off('drag', lyr._moveModeOnDrag); delete lyr._moveModeOnDrag; }
       if (lyr._moveModeOnDragEnd) { lyr.off('dragend', lyr._moveModeOnDragEnd); delete lyr._moveModeOnDragEnd; }
       // Restore clustering for pins pulled out for move mode (see below).
+      // Only layers still tracked in layerById go back into allLayers: a layer that was
+      // deleted (deleteFeature) or orphaned by a map switch (initMap clears layerById)
+      // must not be re-added — stale layers render as ghost pins and corrupt the
+      // markercluster group's internal tree.
       if (lyr._unclusteredForMove) {
         map.removeLayer(lyr);
-        allLayers.addLayer(lyr);
+        if (lyr.feature && layerById.get(lyr.feature.id) === lyr) {
+          allLayers.addLayer(lyr);
+        }
         delete lyr._unclusteredForMove;
       }
     });

@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-85",
+    "date": "2026-09-28",
+    "title": "Alpha 6.85: Bug-Hunt Sweep — Stale Updates, Ghost Pins & Hidden-Dialog Fixes",
+    "tags": [
+      "Bugfix",
+      "Accessibility"
+    ],
+    "summary": "Updates now reliably reach everyone after a deploy, deleting or switching maps during Move mode no longer leaves ghost pins, and closed side panels are no longer reachable by keyboard or screen readers.",
+    "content": "<h4>Updates that actually update</h4><p>The offline cache could silently refill itself with old files from the browser's own cache after an update, leaving some users stuck on a months-old version no matter how many times they refreshed. The update process now always fetches fresh copies from the network.</p><h4>Move mode ghost pins</h4><p>Deleting a pin while the Move tool was active left the pin visible on the map &mdash; and clicking it opened a panel for the deleted entry. Switching maps mid-Move could even paint the previous map's pins onto the new one. Both are fixed: pins pulled out for Move mode are now tracked through deletion and map switches.</p><h4>Accessibility: invisible dialogs</h4><p>Seven side-sheet dialogs (help, icon picker, color picker, What's New and friends) stayed keyboard-reachable while closed &mdash; nearly a hundred invisible controls a screen reader or Tab key could land on. Closed sheets now fully leave the accessibility tree.</p><h4>Smaller fixes</h4><ul><li>Your Free Pan preference is no longer reset to the device default on every launch.</li><li>A failed demo-world load no longer arms the demo tour to start on your own world at the next reload.</li><li>A loading overlay dismissed just as another operation started could vanish mid-operation and suppress the &ldquo;taking longer than expected&rdquo; warning &mdash; both now behave.</li><li>The mobile tutorial's spotlight now follows its target when you rotate the phone or the keyboard opens.</li></ul><p>Questions or feedback: <a href=\"mailto:support@taletrove.app\">support@taletrove.app</a>.</p>"
+  },
+  {
     "id": "alpha-6-84",
     "date": "2026-07-19",
     "title": "Alpha 6.84: Deployment Sync",

@@ -6,6 +6,7 @@
 let _mtSteps = [];
 let _mtIndex = -1;
 let _mtAbort = null; // tears down the active step's listeners/observers
+let _mtRelayout = null; // viewport-change handler — spotlight/ripple track the target
 
 const MT_FIRST_RUN_STEPS = [
   {
@@ -144,6 +145,20 @@ function _mtBuildShell() {
   ]);
 
   document.body.append(scrim, ripple, sheet);
+
+  // Spotlight and ripple are measured from a one-shot getBoundingClientRect — rotation,
+  // collapsing browser chrome, or the on-screen keyboard would otherwise leave the
+  // "tap here" cutout pointing at empty space until the next step. Re-measure on any
+  // viewport change while a step is active (removed in _mtEnd).
+  _mtRelayout = () => {
+    if (_mtIndex >= 0 && _mtSteps[_mtIndex]) {
+      requestAnimationFrame(() => _mtSpotlight(_mtSteps[_mtIndex]));
+    }
+  };
+  window.addEventListener('resize', _mtRelayout);
+  window.addEventListener('orientationchange', _mtRelayout);
+  window.visualViewport?.addEventListener('resize', _mtRelayout);
+
   closeBtn.addEventListener('click', () => _mtEnd());
   sheet.querySelector('.mt-next').addEventListener('click', () => _mtGoTo(_mtIndex + 1));
   sheet.querySelector('.mt-skip-step').addEventListener('click', () => _mtGoTo(_mtIndex + 1));
@@ -245,6 +260,12 @@ function _mtBindAdvance(step) {
 
 function _mtEnd() {
   if (_mtAbort) { _mtAbort.abort(); _mtAbort = null; }
+  if (_mtRelayout) {
+    window.removeEventListener('resize', _mtRelayout);
+    window.removeEventListener('orientationchange', _mtRelayout);
+    window.visualViewport?.removeEventListener('resize', _mtRelayout);
+    _mtRelayout = null;
+  }
   _mtIndex = -1;
   saveLS('hasCompletedTutorial', true);
   const sheet = document.getElementById('mobileTutorialSheet');

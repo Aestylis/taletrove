@@ -364,11 +364,16 @@ function validateBundle(obj) {
   });
 }
 
+// Resolves to true only when the import committed (a reload is then imminent);
+// false when it failed with a modal already shown; undefined when the outcome is
+// deferred past this call (encrypted project awaiting a password). Callers that
+// arm state for "after the reload" (e.g. pendingDemoTour) must disarm it on any
+// non-true result — every failure path here returns normally, without throwing.
 async function handleImportFile(file) {
-  if (!file) return;
+  if (!file) return false;
   if (typeof JSZip === 'undefined') {
     showAlertModal('Dependency Missing', 'Cannot import project: JSZip library not loaded');
-    return;
+    return false;
   }
   try {
     setLoadingState(true, "Reading Project...");
@@ -389,13 +394,15 @@ async function handleImportFile(file) {
         });
       };
       showPasswordModal('Encrypted Project', 'Enter password...', attemptDecrypt, 'This project is password protected. Please enter the password to unlock it:');
+      return undefined; // outcome deferred to the password modal
     } else {
       // Plain ZIP project
-      processZip(buffer);
+      return await processZip(buffer);
     }
   } catch (err) {
     setLoadingState(false);
     showAlertModal('Import Failed', 'Failed to read project: ' + err.message);
+    return false;
   }
 
   async function processZip(data) {
@@ -408,7 +415,7 @@ async function handleImportFile(file) {
       setLoadingState(false);
       showAlertModal('Invalid File', 'Could not open the project archive. The file may be corrupted or is not a valid .trv file.');
       console.error('[import] ZIP load failed:', err);
-      return;
+      return false;
     }
 
     // Stage 2: read and parse world.json
@@ -419,7 +426,7 @@ async function handleImportFile(file) {
       if (!worldEntry) {
         setLoadingState(false);
         showAlertModal('Invalid Project', 'This doesn\'t appear to be a valid TaleTrove project — world.json is missing. Make sure you\'re opening a .trv file.');
-        return;
+        return false;
       }
       const jsonText = await worldEntry.async('string');
       obj = JSON.parse(jsonText);
@@ -431,7 +438,7 @@ async function handleImportFile(file) {
         showAlertModal('Import Failed', 'Failed to read project data: ' + err.message);
       }
       console.error('[import] world.json read failed:', err);
-      return;
+      return false;
     }
 
     // Stage 3: validate before touching anything — existing data stays safe on failure
@@ -442,7 +449,7 @@ async function handleImportFile(file) {
       setLoadingState(false);
       showAlertModal('Invalid Project', 'Project validation failed: ' + err.message + '\n\nYour existing world was not modified.');
       console.error('[import] validateBundle failed:', err);
-      return;
+      return false;
     }
 
     // Stage 4: commit — snapshot outgoing world, flush, clear, import assets
@@ -495,11 +502,13 @@ async function handleImportFile(file) {
       await window.flushSave();
       setLoadingState(false);
       window.location.reload();
+      return true;
 
     } catch (err) {
       setLoadingState(false);
       showAlertModal('Import Failed', 'An error occurred while saving the imported project: ' + err.message + '\n\nIf this keeps happening, try refreshing the page and importing again.');
       console.error('[import] commit stage failed:', err);
+      return false;
     }
   }
 

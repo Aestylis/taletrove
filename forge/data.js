@@ -25,6 +25,15 @@ async function loadCustomAssets() {
   CUSTOM_SHAPE_MANIFEST = allKeys.filter(key => key.startsWith('cs-')).sort();
 }
 
+// The three generic quick-create pin types — the single source for both creation
+// surfaces: the toolbar pin flyout (ui.js showPinFlyout) and the long-press radial
+// (map.js showPinTemplateRadial). Add or rename here and both stay in lockstep.
+const GENERIC_PIN_TYPES = [
+  { id: 'generic-person', name: 'Person', icon: 'person', color: '#ffd166' },
+  { id: 'generic-pin',    name: 'Place',  icon: 'pin',    color: '#ff7a1a' },
+  { id: 'generic-item',   name: 'Thing',  icon: 'chest',  color: '#ff3ea5' }
+];
+
 const getTaxonomyItem = (type) => TAXONOMY[type];
 
 const getDomainsForGeometry = (geometryType) => {

@@ -1,5 +1,5 @@
 
-const APP_VERSION = '0.6.84-alpha';
+const APP_VERSION = '0.6.85-alpha';
 let TAXONOMY = {};
 let NEWS_DATA = [];
 let ICON_MANIFEST = [];
@@ -30,6 +30,13 @@ if (settings.featureClickAction === undefined || settings.featureClickAction ===
 // Free pan defaults per form factor: on for the compact shell (phones want
 // unconstrained panning), off on desktop. An explicit toggle (freeMoveUserSet,
 // set in toggleFreeMove) always wins over the default.
+// Migration: freeMoveUserSet postdates the toggle itself. Before it existed the
+// default was false on every form factor, so a stored true can only mean the user
+// turned it on — honor that instead of clobbering it with the form-factor default
+// on every boot.
+if (settings.freeMoveUserSet === undefined && settings.freeMoveEnabled === true) {
+  settings.freeMoveUserSet = true;
+}
 if (!settings.freeMoveUserSet) {
   settings.freeMoveEnabled = window.matchMedia('(max-width: 599.98px)').matches;
 }

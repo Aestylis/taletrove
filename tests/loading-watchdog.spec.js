@@ -63,3 +63,23 @@ test('watchdog does not nag if the overlay was already hidden by another path', 
   const nags = await page.locator('#toastContainer .toast-message', { hasText: NAG }).count();
   expect(nags, 'overlay already hidden must suppress the watchdog toast').toBe(0);
 });
+
+// Regression: setLoadingState(false)'s 300ms anti-flicker hide timer was untracked. A
+// false→true sequence inside that window (an export completes, the user immediately opens
+// another map) let the stale timer hide the overlay mid-operation — and the hidden-overlay
+// guard above then silently disarmed the hang watchdog too: no spinner AND no toast on a
+// genuine hang. The true branch must cancel the pending hide timer.
+test('an operation started inside the 300ms hide window keeps its overlay and watchdog', async ({ page }) => {
+  await gotoApp(page);
+  await page.clock.install();
+  await page.evaluate(() => { setLoadingState(true, 'Op 1'); setLoadingState(false); });
+  await page.clock.runFor(50);
+  await page.evaluate(() => { setLoadingState(true, 'Op 2'); });
+  await page.clock.runFor(500);
+  const visible = await page.evaluate(() =>
+    !document.querySelector('#loadingOverlay').classList.contains('hidden'));
+  expect(visible, 'overlay must stay visible for the operation started inside the hide window').toBe(true);
+  // and if Op 2 genuinely hangs, the watchdog must still fire
+  await page.clock.runFor(30000);
+  await expect(page.locator('#toastContainer .toast-message', { hasText: NAG })).toHaveCount(1);
+});

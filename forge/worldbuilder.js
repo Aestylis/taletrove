@@ -523,7 +523,16 @@ async function _loadDemoWorld() {
     // here. Leave a timestamped flag instead — boot (app-init.js) consumes it
     // and starts the demo tour on the freshly loaded world.
     saveLS('pendingDemoTour', Date.now());
-    await window._handleImportFile(file);
+    // _handleImportFile swallows its own failures (invalid zip, missing
+    // world.json, failed validateBundle each show a modal and resolve normally)
+    // and resolves true only when the import committed. Disarm the tour flag on
+    // anything else, or the next reload starts the Aethermoor demo tour on the
+    // user's own untouched world.
+    const imported = await window._handleImportFile(file);
+    if (imported !== true) {
+      localStorage.removeItem('pendingDemoTour');
+      setLoadingState(false);
+    }
   } catch (err) {
     localStorage.removeItem('pendingDemoTour');
     setLoadingState(false);
@@ -1102,6 +1111,14 @@ function deleteFeature(id) {
   const l = window.layerById?.get(id);
   if (l) {
     window.allLayers?.removeLayer(l);
+    // A pin pulled out of the cluster group for move mode sits on the map directly, so the
+    // allLayers removal above is a no-op — detach it from the map and from move-mode
+    // tracking too, or it lingers as a clickable ghost and gets re-added on mode exit.
+    if (l._unclusteredForMove) {
+      map?.removeLayer(l);
+      delete l._unclusteredForMove;
+      activeMoveMarkers = activeMoveMarkers.filter(m => m !== l);
+    }
     if (l._nameMarker) window.labelLayer?.removeLayer(l._nameMarker);
     if (l._coaMarker) window.labelLayer?.removeLayer(l._coaMarker);
     window.layerById?.delete(id);

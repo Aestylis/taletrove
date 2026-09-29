@@ -13148,6 +13148,15 @@ button.drag-over { outline: 2px dashed var(--accent); }
     pointer-events: none;           /* non-blocking — map remains interactive */
 }
 
+/* Closed sheets stay display:flex (see above) but must leave the accessibility tree:
+   without this, all 7 side-sheet dialogs are screen-reader-perceivable and their ~98
+   controls remain keyboard-tabbable while invisible. Safe for the animations because
+   closeSideSheet only adds .hidden AFTER the exit transition completes (modals.js),
+   and removing .hidden flips visibility back instantly (no transition declared on it). */
+.modal-overlay.is-side-sheet.hidden {
+    visibility: hidden;
+}
+
 /* Scrim — signals importance without blocking map interaction */
 .modal-overlay.is-side-sheet.is-open {
     background: rgba(0, 0, 0, 0.08);

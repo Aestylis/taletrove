@@ -33,6 +33,7 @@ let atlasSortable = [];
 let encyclopediaSortable = [];
 const debouncedRefreshEncyclopediaView = debounce(() => refreshEncyclopediaView(), 500);
 let loadingTimeout;
+let loadingHideTimeout; // pending 300ms hide from setLoadingState(false) — cancelled by a new true call
 
 
 function initUI() {
@@ -180,6 +181,11 @@ function setLoadingState(isLoading, text = "Processing...") {
   if (isLoading) {
     textEl.textContent = text;
     overlay.classList.remove('hidden');
+    // Cancel a pending hide from a recent setLoadingState(false): without this, a
+    // false→true sequence inside the 300ms anti-flicker window hides the overlay
+    // mid-operation — and the watchdog's hidden-overlay guard below then silently
+    // disarms the hang toast too.
+    clearTimeout(loadingHideTimeout);
     // Safety: Auto-hide after 30 seconds in case an operation hangs (increased from 15 for large projects)
     clearTimeout(loadingTimeout);
     loadingTimeout = setTimeout(() => {
@@ -198,7 +204,8 @@ function setLoadingState(isLoading, text = "Processing...") {
     // toasts "taking longer than expected" 30 seconds after it started.
     clearTimeout(loadingTimeout);
     // Small delay to prevent flickering on fast operations
-    setTimeout(() => {
+    clearTimeout(loadingHideTimeout);
+    loadingHideTimeout = setTimeout(() => {
       overlay.classList.add('hidden');
     }, 300);
   }
@@ -923,11 +930,7 @@ async function showPinFlyout(x, y) {
   const existingFlyout = document.getElementById('pinFlyout');
   if (existingFlyout) existingFlyout.remove();
 
-  const options = [
-    { id: 'generic-person', name: 'Person', icon: 'person', color: '#ffd166' },
-    { id: 'generic-pin', name: 'Place', icon: 'pin', color: '#ff7a1a' },
-    { id: 'generic-item', name: 'Thing', icon: 'chest', color: '#ff3ea5' }
-  ];
+  const options = GENERIC_PIN_TYPES;
 
   const listItems = [];
   for (const opt of options) {

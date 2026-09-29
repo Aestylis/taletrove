@@ -77,3 +77,45 @@ test.describe('A11y basics', () => {
     expect(r.spaceFired, 'Space must activate a focused tree row').toBe(true);
   });
 });
+
+// Regression: side-sheet modals stay display:flex while closed (.hidden) so their CSS
+// transitions can fire, which left all 7 of them in the accessibility tree with ~98
+// keyboard-focusable controls inside invisible dialogs. Closed sheets must be
+// visibility:hidden (out of the a11y tree, unfocusable) and open ones must not be.
+test.describe('closed side-sheets leave the accessibility tree', () => {
+  test('hidden side-sheet controls are not focusable; open sheets are', async ({ page }) => {
+    await gotoApp(page);
+    const closed = await page.evaluate(() => {
+      let exposed = 0, focusable = 0, sheets = 0;
+      document.querySelectorAll('.modal-overlay.is-side-sheet.hidden').forEach((ov) => {
+        sheets++;
+        const cs = getComputedStyle(ov);
+        if (cs.display !== 'none' && cs.visibility !== 'hidden') exposed++;
+        ov.querySelectorAll('button, input, textarea, select, a[href]').forEach((el) => {
+          el.focus();
+          if (document.activeElement === el) focusable++;
+          el.blur();
+        });
+      });
+      return { sheets, exposed, focusable };
+    });
+    expect(closed.sheets, 'expected side-sheet modals to exist').toBeGreaterThan(0);
+    expect(closed.exposed, 'closed side-sheets must be visibility:hidden').toBe(0);
+    expect(closed.focusable, 'no control inside a closed side-sheet may take focus').toBe(0);
+
+    // Opening one must make it visible and focusable again.
+    const open = await page.evaluate(async () => {
+      window.openSideSheet(document.getElementById('helpModal'));
+      await new Promise((r) => setTimeout(r, 400));
+      const help = document.getElementById('helpModal');
+      const btn = help.querySelector('button');
+      btn.focus();
+      return {
+        visibility: getComputedStyle(help).visibility,
+        focusWorks: document.activeElement === btn,
+      };
+    });
+    expect(open.visibility).toBe('visible');
+    expect(open.focusWorks, 'controls in an open sheet must be focusable').toBe(true);
+  });
+});

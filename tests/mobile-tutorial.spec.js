@@ -106,3 +106,37 @@ test.describe('demo tour boot handoff (compact)', () => {
     await expect(page.locator('#tutorialOverlay')).toBeHidden();
   });
 });
+
+test.describe('spotlight relayout (compact)', () => {
+  test.use({ viewport: { width: 393, height: 852 }, hasTouch: true });
+
+  // Regression: spotlight/ripple were measured once per step via getBoundingClientRect and
+  // never updated, so rotation or a viewport resize left the "tap here" cutout pointing at
+  // empty space until the next step.
+  test('spotlight tracks its target across a viewport resize', async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => startTutorial());
+    await expect(page.locator('#mobileTutorialSheet')).toBeVisible();
+    // Step 2 ("Your map") spotlights #mapEmptyState.
+    await page.locator('#mobileTutorialSheet .mt-next').click();
+    await expect(page.locator('#mobileTutorialSheet .mt-title')).toHaveText('Your map');
+
+    const spotBefore = await page.locator('#mobileTutorialSpotlight').boundingBox();
+
+    // Viewport change that stays inside the compact shell (<600px wide) — e.g. browser
+    // chrome collapsing or the on-screen keyboard closing.
+    await page.setViewportSize({ width: 430, height: 650 });
+    await page.waitForTimeout(200);
+
+    const [spotAfter, targetAfter] = await Promise.all([
+      page.locator('#mobileTutorialSpotlight').boundingBox(),
+      page.locator('#mapEmptyState').boundingBox(),
+    ]);
+    expect(spotAfter, 'spotlight must move when the viewport changes').not.toEqual(spotBefore);
+    // The 8px-padded cutout must still be centered on the target.
+    const pad = 8;
+    expect(Math.abs(spotAfter.x + pad - targetAfter.x)).toBeLessThan(2);
+    expect(Math.abs(spotAfter.y + pad - targetAfter.y)).toBeLessThan(2);
+    expect(Math.abs(spotAfter.width - pad * 2 - targetAfter.width)).toBeLessThan(2);
+  });
+});

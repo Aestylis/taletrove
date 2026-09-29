@@ -1,6 +1,6 @@
 // Bump CACHE_NAME on every deploy (same cadence as ?v= strings in index.html).
 // Old caches with a different name are deleted on activate.
-const CACHE_NAME = 'taletrove-2026.07.19e';
+const CACHE_NAME = 'taletrove-2026.09.28a';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -53,7 +53,16 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Pre-caching static assets');
-      return cache.addAll(STATIC_ASSETS);
+      // Local assets MUST bypass the browser HTTP cache ({cache:'reload'}):
+      // STATIC_ASSETS URLs are unversioned, so the default fetch mode would fill
+      // a freshly-named cache with stale HTTP-cached copies — users then stay on
+      // the old app version despite CACHE_NAME/?v= bumps (observed 2026-09-28:
+      // cache taletrove-2026.07.19e serving 0.6.36 JS). Pinned-version CDN URLs
+      // are immutable, so they keep the default mode to avoid refetching on
+      // every SW install.
+      return cache.addAll(STATIC_ASSETS.map((url) =>
+        url.startsWith('./') ? new Request(url, { cache: 'reload' }) : url
+      ));
     })
   );
   self.skipWaiting();

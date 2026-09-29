@@ -324,18 +324,8 @@ async function buildPinStyleSection(article, taxonomyItem, form, { onMap = true 
     const pinColorValue = article.iconColor || taxonomyItem?.iconColor || taxonomyItem?.color || '#639bff';
     const pinColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(pinColorValue)}` });
     const pinColorName = el('span', { text: pinColorValue.toUpperCase() });
-    const pinColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'iconColor', (hexColor) => {
-      recordState();
-      article.iconColor = hexColor;
-      markEntityDirty('article', article.id);
-      render({ full: true });
-      if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(article);
-      debouncedSave();
-      // Rebuild the sheet from state — the swatch/label above were built once at open
-      // time and won't otherwise reflect the new color until the sheet is reopened.
-      const _sid = propertiesSheetId, _stype = propertiesSheetType;
-      if (_sid) window.openPropertiesSheet?.(_sid, _stype);
-    }) }, [pinColorSwatch, pinColorName]);
+    const pinColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'iconColor',
+      _applyPickedColor(article, (hex) => { article.iconColor = hex; })) }, [pinColorSwatch, pinColorName]);
     form.appendChild(el('div', { class: 'form-label full-width', text: 'Pin Color' }));
     form.appendChild(el('div', { class: 'full-width' }, [pinColorBtn]));
   }
@@ -353,22 +343,31 @@ async function buildPinStyleSection(article, taxonomyItem, form, { onMap = true 
   const iconColorValue = article.pinIconColor || '#ffffff';
   const iconColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(iconColorValue) || '#ffffff'}` });
   const iconColorName = el('span', { text: iconColorValue.toUpperCase() });
-  const iconColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'pinIconColor', (hexColor) => {
-    recordState();
-    article.pinIconColor = hexColor;
-    markEntityDirty('article', article.id);
-    render({ full: true });
-    if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(article);
-    debouncedSave();
-    // Rebuild the sheet from state — the swatch/label above were built once at open
-    // time and won't otherwise reflect the new color until the sheet is reopened.
-    const _sid = propertiesSheetId, _stype = propertiesSheetType;
-    if (_sid) window.openPropertiesSheet?.(_sid, _stype);
-  }) }, [iconColorSwatch, iconColorName]);
+  const iconColorBtn = el('button', { class: 'style-picker-btn', onclick: () => window.openColorPicker(article, 'pinIconColor',
+    _applyPickedColor(article, (hex) => { article.pinIconColor = hex; })) }, [iconColorSwatch, iconColorName]);
   form.appendChild(el('div', { class: 'form-label full-width', text: 'Icon Color' }));
   form.appendChild(el('div', { class: 'full-width' }, [iconColorBtn]));
 }
 
+
+// Shared apply-callback for the properties-sheet color pickers (pin color, icon color,
+// event color/text color). Commits the picked hex via `assign`, syncs the map when the
+// color renders there, persists, and rebuilds the sheet — the swatch/label were built
+// once at open time and won't otherwise reflect the new color until reopened.
+function _applyPickedColor(article, assign, { syncMap = true } = {}) {
+  return (hexColor) => {
+    recordState();
+    assign(hexColor);
+    markEntityDirty('article', article.id);
+    if (syncMap) {
+      render({ full: true });
+      if (window.updateSingleFeatureUI) window.updateSingleFeatureUI(article);
+    }
+    debouncedSave();
+    const _sid = propertiesSheetId, _stype = propertiesSheetType;
+    if (_sid) window.openPropertiesSheet?.(_sid, _stype);
+  };
+}
 
 function buildCoaBlock(article, silo, form) {
   const hasCoa     = !!(article.coatOfArms || article.coatOfArmsKey);
@@ -923,11 +922,13 @@ async function _buildEventPropertiesSection(article, form) {
   const colorValue = article.eventData?.color || '#ff3ea5';
   const colorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(colorValue)}` });
   const colorName = el('span', { text: 'Event Color' });
-  const colorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.color = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [colorSwatch, colorName]);
+  const colorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null,
+    _applyPickedColor(article, (hex) => { article.eventData.color = hex; }, { syncMap: false })); } }, [colorSwatch, colorName]);
   const textColorValue = article.eventData?.textColor || '#e8e9eb';
   const textColorSwatch = el('div', { class: 'style-picker-swatch', style: `background-color: ${safeCssColor(textColorValue)}` });
   const textColorName = el('span', { text: 'Text Color' });
-  const textColorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null, (hexColor) => { recordState(); article.eventData.textColor = hexColor; markEntityDirty('article', article.id); const _sid = propertiesSheetId; const _stype = propertiesSheetType; if (_sid) window.openPropertiesSheet?.(_sid, _stype); debouncedSave(); }); } }, [textColorSwatch, textColorName]);
+  const textColorBtn = el('button', { class: 'style-picker-btn', onclick: () => { openColorPicker(null, null,
+    _applyPickedColor(article, (hex) => { article.eventData.textColor = hex; }, { syncMap: false })); } }, [textColorSwatch, textColorName]);
   form.appendChild(el('div', { class: 'full-width two' }, [colorBtn, textColorBtn]));
 
   form.appendChild(el('hr', { class: 'form-divider' }));

@@ -75,9 +75,12 @@ const _PinShapeGroup = L.LayerGroup.extend({
   hasLayer(layer) {
     return this._clusterGroup.hasLayer(layer) || this._shapeGroup.hasLayer(layer);
   },
-  eachLayer(fn) {
-    this._clusterGroup.eachLayer(fn);
-    this._shapeGroup.eachLayer(fn);
+  eachLayer(fn, context) {
+    // Forward the context: Leaflet's base LayerGroup.getLayers() calls
+    // eachLayer(layers.push, layers) — dropping `context` makes markercluster invoke
+    // push.call(undefined, marker), so allLayers.getLayers() threw on any non-empty map.
+    this._clusterGroup.eachLayer(fn, context);
+    this._shapeGroup.eachLayer(fn, context);
     return this;
   },
   getBounds() {
@@ -99,7 +102,13 @@ async function initMap(mapObject) {
   }
   
   layerById.clear();
-  
+
+  // Discard move-mode state tied to the destroyed map. The debounced switch back to
+  // pointer mode fires AFTER this teardown; without this reset its cleanup would re-add
+  // the old map's _unclusteredForMove layers into the NEW map's cluster group (ghost
+  // pins + corrupted markercluster internals).
+  activeMoveMarkers = [];
+
   bounds = [
     [0, 0],
     [mapObject.height, mapObject.width]
@@ -1716,11 +1725,9 @@ async function showPinTemplateRadial(latlng, screenX, screenY) {
     debouncedSave();
   };
 
-  const buttons = [
-    { label: 'Person', icon: 'person', action: () => createTypedAtPoint('generic-person') },
-    { label: 'Place',  icon: 'pin',    action: () => createTypedAtPoint('generic-pin') },
-    { label: 'Thing',  icon: 'chest',  action: () => createTypedAtPoint('generic-item') },
-  ];
+  const buttons = GENERIC_PIN_TYPES.map(t => (
+    { label: t.name, icon: t.icon, action: () => createTypedAtPoint(t.id) }
+  ));
 
   await showCreationRadial(buttons, screenX, screenY);
 }
