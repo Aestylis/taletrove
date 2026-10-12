@@ -2438,7 +2438,7 @@ function showAtlasContextMenu(e, type, id, name) {
     duplicateItem.onclick = () => { closeMenu(); window.duplicateFeature(id); };
     const templateItem = el('li', { text: 'Save As Template' });
     templateItem.onclick = () => { closeMenu(); window.saveFeatureAsTemplate(id); };
-    const removeItem = el('li', { text: multiSelectedIds.has(id) ? `Remove ${multiSelectedIds.size} Features` : 'Remove' });
+    const removeItem = el('li', { text: multiSelectedIds.has(id) ? `Delete ${multiSelectedIds.size} Features` : 'Delete' });
     removeItem.onclick = () => {
       closeMenu();
       if (multiSelectedIds.has(id)) {
@@ -2451,7 +2451,7 @@ function showAtlasContextMenu(e, type, id, name) {
       } else {
         const feature = state.features.find(f => f.id === id);
         window.deleteFeature(id);
-        showToast(`Feature "${feature.title || '(untitled)'}" removed.`, () => undo());
+        showToast(`Feature "${feature.title || '(untitled)'}" deleted.`, () => undo());
       }
     };
     const items = [renameItem, visibilityItem, divider, duplicateItem, templateItem, removeItem];
@@ -2471,7 +2471,7 @@ function showAtlasContextMenu(e, type, id, name) {
     menuItems.push(propertiesItem, createFolderItem);
     const mapData = state.maps.find(m => m.id === id);
     if (mapData && mapData.parentId !== null) {
-      const removeItem = el('li', { text: 'Remove' });
+      const removeItem = el('li', { text: 'Delete' });
       removeItem.onclick = () => { closeMenu(); window.deleteMapWithConfirmation(id, name); };
       menuItems.push(removeItem);
     }
@@ -2480,7 +2480,7 @@ function showAtlasContextMenu(e, type, id, name) {
   if (type === 'folder') {
     const renameItem = el('li', { text: 'Rename' });
     renameItem.onclick = () => { closeMenu(); renameFolder(id); };
-    const removeItem = el('li', { text: 'Remove' });
+    const removeItem = el('li', { text: 'Delete' });
     removeItem.onclick = () => { closeMenu(); deleteFolder(id); };
     menuItems.push(renameItem, removeItem);
   }
@@ -2488,7 +2488,7 @@ function showAtlasContextMenu(e, type, id, name) {
   if (type === 'encyclopedia-folder') {
     const renameItem = el('li', { text: 'Rename' });
     renameItem.onclick = () => { closeMenu(); renameEncyclopediaFolder(id); };
-    const removeItem = el('li', { text: 'Remove' });
+    const removeItem = el('li', { text: 'Delete' });
     removeItem.onclick = () => { closeMenu(); deleteEncyclopediaFolder(id); };
     menuItems.push(renameItem, removeItem);
   }

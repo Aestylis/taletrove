@@ -1311,8 +1311,8 @@ async function buildArticlePropertiesInspector(article, container, silo) {
     form.appendChild(el('hr', { class: 'form-divider' }));
     form.appendChild(el('button', {
       class: 'ghost convert-silo-btn full-width',
-      title: 'Move this pin to the Encyclopedia',
-      text: 'Move to Encyclopedia',
+      title: 'Move this pin to Lore',
+      text: 'Move to Lore',
       onclick: () => window.convertFeatureToEntry(article.id)
     }));
   }
@@ -2404,7 +2404,9 @@ async function showInfoPanel(id, type = 'feature') {
       const emptyState = el('div', { class: 'inspector-empty-state' }, [
         el('div', { class: 'inspector-empty-icon inspector-empty-icon--note' }),
         el('p', { class: 'inspector-empty-heading', text: 'No content yet' }),
-        el('p', { class: 'inspector-empty-sub', text: 'Click the pencil icon to add blocks.' }),
+        el('p', { class: 'inspector-empty-sub', text: (typeof isContentEditMode !== 'undefined' && isContentEditMode)
+          ? 'Press + below, or type / in a text block, to add content.'
+          : 'Click Edit to add content.' }),
       ]);
 
       if (relevantTemplates.length > 0) {
@@ -2527,6 +2529,7 @@ async function showInfoPanel(id, type = 'feature') {
 
 async function enterArticleMode(id, type = 'feature') {
   preferredReadingLevel = 'article';
+  window.noteRecentArticle?.(id);
   // Exit peek mode if active
   if (peekViewMode) {
     peekViewMode = false;
@@ -2688,6 +2691,7 @@ window.closeBesidePanel = closeBesidePanel;
 async function enterPeekMode(id, type = 'feature', _tab = 'content') {
   peekTab = _tab;
   preferredReadingLevel = 'peek';
+  window.noteRecentArticle?.(id);
   // Exit full article mode if active
   if (articleViewMode) {
     articleViewMode = false;

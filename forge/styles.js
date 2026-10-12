@@ -290,9 +290,13 @@ async function buildEntityHeader(item, options = {}) {
 
   const iconNode = el('span', { innerHTML: iconHtml });
 
-  // Phase D: editable name span (GM only, not for maps)
+  // Phase D: editable name span (GM only, not for maps).
+  // Peek is read-only by the navigation law, with one exception: an article that was *just
+  // created* (window._pendingNameId) opens with its placeholder title focused and selected so
+  // the first thing the user types is its name — Kanka `N` / LegendKeeper "Create" behaviour.
   const nameSpan = el('span', { text: titleText });
-  if (role === 'gm' && type !== 'map' && !options.isPeek) {
+  const isNaming = options.isPeek && window._pendingNameId && window._pendingNameId === item.id;
+  if (role === 'gm' && type !== 'map' && (!options.isPeek || isNaming)) {
     nameSpan.contentEditable = 'true';
     nameSpan.spellcheck = false;
     nameSpan.setAttribute('data-no-lightbox', '');
@@ -304,15 +308,41 @@ async function buildEntityHeader(item, options = {}) {
       if (window.markEntityDirty) window.markEntityDirty('article', item.id);
       if (window.debouncedSave)   window.debouncedSave();
       if (window.syncSingleLayer) window.syncSingleLayer(item);
-      // Surgically update the sidebar label without a full panel refresh
-      const atlasRow = document.querySelector(`.feature-row[data-fid="${item.id}"] .tree-label`);
-      if (atlasRow) atlasRow.textContent = val;
-      const loreRow = document.querySelector(`.encyclopedia-item[data-entry-id="${item.id}"] .entry-name`);
-      if (loreRow)  loreRow.textContent  = val;
+      // Surgically update every sidebar label without a full panel refresh. An entry can be
+      // listed more than once (map's Lore sub-section + Lore root), so patch all matches.
+      const sel = `.feature-row[data-fid="${CSS.escape(item.id)}"] .tree-label, .encyclopedia-item[data-entry-id="${CSS.escape(item.id)}"] .entry-name`;
+      document.querySelectorAll(sel).forEach(label => { label.textContent = val; });
     });
     nameSpan.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); nameSpan.blur(); }
+      else if (e.key === 'Escape' && isNaming) {
+        // Abandon the rename: restore the placeholder and keep the peek open (stop the global
+        // Escape layering from also closing the sheet).
+        e.preventDefault();
+        e.stopPropagation();
+        nameSpan.textContent = titleText;
+        nameSpan.dispatchEvent(new Event('input'));
+        nameSpan.blur();
+      }
     });
+    if (isNaming) {
+      nameSpan.classList.add('is-naming');
+      nameSpan.addEventListener('blur', () => {
+        if (window._pendingNameId === item.id) window._pendingNameId = null;
+        nameSpan.classList.remove('is-naming');
+        if (!nameSpan.textContent.trim()) { nameSpan.textContent = titleText; nameSpan.dispatchEvent(new Event('input')); }
+      }, { once: true });
+      // The hero is built before it is attached to #infoPanel — wait for attachment, then focus
+      // and select the whole placeholder so typing replaces it.
+      let tries = 0;
+      const focusWhenAttached = () => {
+        if (!document.contains(nameSpan)) { if (tries++ < 20) setTimeout(focusWhenAttached, 25); return; }
+        nameSpan.focus();
+        const sel = window.getSelection();
+        if (sel) { const range = document.createRange(); range.selectNodeContents(nameSpan); sel.removeAllRanges(); sel.addRange(range); }
+      };
+      setTimeout(focusWhenAttached, 0);
+    }
   }
   const titleH3 = el('h3', {}, [iconNode, nameSpan]);
 

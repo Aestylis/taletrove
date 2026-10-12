@@ -166,7 +166,7 @@ function populateShortcutsModal() {
       label: 'Navigation',
       shortcuts: [
         { keys: ['1'], desc: 'Atlas Tab' },
-        { keys: ['2'], desc: 'Encyclopedia Tab' },
+        { keys: ['2'], desc: 'Lore Tab' },
         { keys: ['3'], desc: 'Assets Tab' },
         { keys: ['C'], desc: 'Center on Selection' },
         { keys: ['+'], desc: 'Zoom In' },
@@ -2616,7 +2616,7 @@ function showTemplateEditView(templateId) {
 /**
  * Renders the template list into the Templates settings pane.
  */
-const LAYOUT_TEMPLATE_TYPE_LABELS = { feature: 'Atlas', encyclopedia: 'Encyclopedia', map: 'Map' };
+const LAYOUT_TEMPLATE_TYPE_LABELS = { feature: 'Atlas', encyclopedia: 'Lore', map: 'Map' };
 
 function populateTemplatesSettings() {
   const listView = $('#templateListView');

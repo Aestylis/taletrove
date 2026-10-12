@@ -1,5 +1,17 @@
 [
   {
+    "id": "alpha-6-86",
+    "date": "2026-10-12",
+    "title": "Alpha 6.86: Fewer Clicks — Name-First Creation, Link Autocomplete & a Typing Fix",
+    "tags": [
+      "UX",
+      "Editor",
+      "Bugfix"
+    ],
+    "summary": "Typing in an article no longer triggers map shortcuts (and can no longer lose your text), new entries and pins open ready to be named, [[ and @ suggest links as you write, and placement tools show a crosshair, an on-canvas hint and a Keep-tool toggle.",
+    "content": "<h4>Typing fix</h4><p>While an article, peek or properties sheet was open, single-letter map shortcuts still fired inside text fields: an <em>i</em> re-rendered the panel and discarded what you had typed, an <em>n</em> switched to the pin tool, Tab collapsed the World panel. Fields now own every key except Escape, Ctrl+K and Ctrl+S, and text blocks save as you type.</p><h4>Name first</h4><p>A new entry or a freshly placed pin opens with its placeholder title selected, so the first thing you type is its name. Enter commits, Escape keeps the placeholder.</p><h4>Links while you write</h4><p>Type <code>[[</code> or <code>@</code> in a text block to get matching entries and pins; Enter inserts the link. No match? The last item creates the entry and links it without leaving your paragraph. Hovering a link now previews it.</p><h4>Placement tools</h4><p>Pin, area, line, text and measure show a crosshair and an on-canvas hint with a <strong>Keep tool</strong> toggle for rapid placement. Escape cancels the tool or closes the pin chooser. The visibility bar is now captioned <em>Show</em> so it reads as a layer control rather than a second toolbar.</p><h4>Smaller changes</h4><ul><li>One vocabulary: Lore, Entry and Delete everywhere (no more Encyclopedia / Article / Remove).</li><li>The World panel opens by default on desktop.</li><li>Ctrl+K shows your recently opened articles before you type.</li><li>Renaming an entry now updates every tree row that lists it.</li><li>Clicking Done right after typing no longer gets swallowed by a panel refresh.</li></ul>"
+  },
+  {
     "id": "alpha-6-85",
     "date": "2026-09-28",
     "title": "Alpha 6.85: Bug-Hunt Sweep — Stale Updates, Ghost Pins & Hidden-Dialog Fixes",

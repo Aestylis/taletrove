@@ -16,16 +16,26 @@ function initGlobalKeyboardShortcuts() {
       return;
     }
     const activeEl = document.activeElement;
+    const inEditable = !!activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' || activeEl.isContentEditable);
     const modeActive = document.body.classList.contains('article-mode') ||
       document.body.classList.contains('peek-mode') ||
       document.body.classList.contains('properties-sheet-open') ||
       document.getElementById('infoPanel')?.classList.contains('content-edit-mode');
-    if (!modeActive && activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT' || activeEl.isContentEditable)) {
-      return;
-    }
-
     const isCtrlCmd = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+
+    // While the user is typing in any field, the only app-level keys that may fire are Escape
+    // when a sheet/article is open (layered close, handled below) and the Ctrl chords that don't
+    // collide with native editing (Ctrl+K palette, Ctrl+S save). Everything else — single-letter
+    // tool shortcuts, Tab, +/-, Ctrl+Z/Y — belongs to the field. (Pre-0.6.86 this guard was
+    // skipped whenever an article, peek or properties sheet was open, i.e. exactly when people
+    // type: `i` re-rendered the info panel and dropped the textarea, `n` switched to the pin
+    // tool, Tab collapsed the atlas panel.)
+    if (inEditable) {
+      const allowed = (modeActive && key === 'escape') || (isCtrlCmd && (key === 'k' || key === 's'));
+      if (!allowed) return;
+    }
     if (isCtrlCmd && key === 'z' && !e.shiftKey) {
       e.preventDefault();
       undo();
@@ -96,6 +106,11 @@ function initGlobalKeyboardShortcuts() {
         break;
       }
       case 'escape': {
+        // An armed placement tool cancels first (Kanka/Foundry convention), before any sheet.
+        if (['add-marker', 'add-polygon', 'add-polyline', 'add-text', 'measure'].includes(window.uiMode)) {
+          debouncedSetMode('pointer');
+          break;
+        }
         const drawGroupPop = $('#drawGroupPopover');
         const overflowPop = $('#toolbarOverflowPopover');
         const overlayMenu = $('#overlayMenuPopover');

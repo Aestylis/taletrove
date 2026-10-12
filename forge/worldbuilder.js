@@ -393,7 +393,7 @@ function toggleFreeMove() {
 }
 
 function createNewEncyclopediaFolder() {
-  showInputModal('New Encyclopedia Folder', 'Folder name', 'New Folder', (folderName) => {
+  showInputModal('New Lore Folder', 'Folder name', 'New Folder', (folderName) => {
     recordState();
     state.folders.push({ id: 'efld-' + uid(), name: folderName, mapId: null });
     markEntityDirty('meta');
@@ -788,7 +788,9 @@ function showEntityPopover(id, type, anchorEl) {
   if (!entity) return;
 
   const name = entity.title || entity.name || 'Untitled';
-  const typeLabel = entity.featureType || entity.type || '';
+  const typeLabel = type === 'feature'
+    ? (window.getTaxonomyItem?.(entity.featureType)?.name || entity.type || '')
+    : (entity.type || '');
   const textBlock = (entity.blocks || []).find(b => b.type === 'TextField');
   let snippet = '';
   if (textBlock?.data?.content) {
@@ -832,7 +834,7 @@ function onMapClickForText(e) {
   selectFeature(newFeat.id);
   render({ full: true }); // This change forces the map to redraw
   debouncedSave();
-  debouncedSetMode('pointer')
+  debouncedSetMode(window.isToolLocked?.() ? 'add-text' : 'pointer');
 }
 
 /**
@@ -1708,7 +1710,7 @@ function convertFeatureToEntry(featureId) {
   if (!feature) return;
 
   if (feature.geometry !== 'point') {
-    showAlertModal('Cannot Convert', 'Only pin features can be moved to the Encyclopedia. Areas and lines must remain on the Atlas.');
+    showAlertModal('Cannot Convert', 'Only pins can be moved to Lore. Areas and lines must remain on the Atlas.');
     return;
   }
 
@@ -1952,6 +1954,12 @@ function updateBlockData(ownerId, blockId, newData) {
   const block = item?.blocks?.find(b => b.blockId === blockId);
   if (!block) return;
 
+  // No-op when nothing changed (the editor's `input` handler already wrote this value via
+  // updateBlockDataQuiet). Skipping the re-render matters: a blur-triggered rebuild of the panel
+  // used to replace the "Done" button under the pointer, so the click that blurred the textarea
+  // never landed.
+  if (Object.keys(newData).every(k => block.data[k] === newData[k])) return;
+
   recordState();
   Object.assign(block.data, newData);
 
@@ -1968,6 +1976,28 @@ function updateBlockData(ownerId, blockId, newData) {
     const videoId = getYoutubeVideoId(newData.url);
     if (videoId) _checkYouTubeVideo(item, block, videoId, ownerType);
   }
+}
+
+/**
+ * Persist block data WITHOUT re-rendering the info panel. Used by the text editor's `input`
+ * handler so every keystroke reaches state (and the debounced IDB save) while the textarea the
+ * user is typing in stays mounted. `updateBlockData` (the blur/`change` path) still does the
+ * full re-render so derived views (hero, backlinks, wiki-link styling) refresh once typing ends.
+ * Undo granularity is unchanged: the editor records state on focus, not per keystroke.
+ */
+function updateBlockDataQuiet(ownerId, blockId, newData) {
+  if (!ownerId || !blockId) return;
+  const item = state.features.find(f => f.id === ownerId) ||
+               state.encyclopedia.find(e => e.id === ownerId) ||
+               state.maps.find(m => m.id === ownerId);
+  const block = item?.blocks?.find(b => b.blockId === blockId);
+  if (!block) return;
+  Object.assign(block.data, newData);
+  let ownerType = 'feature';
+  if (state.encyclopedia.some(e => e.id === ownerId)) ownerType = 'encyclopedia';
+  else if (state.maps.some(m => m.id === ownerId)) ownerType = 'map';
+  markEntityDirty(ownerType, ownerId);
+  debouncedSave();
 }
 
 async function _checkYouTubeVideo(item, block, videoId, ownerType) {
@@ -2331,7 +2361,7 @@ function deleteEncyclopediaFolder(folderId) {
 
   showConfirmationModal(
     `Delete folder "${folder.name}"?`,
-    `This will not delete the ${entriesInFolder.length + childFolders.length} items inside. They will be moved to the root of the Encyclopedia.`,
+    `This will not delete the ${entriesInFolder.length + childFolders.length} items inside. They will be moved to the root of Lore.`,
     'Delete Folder',
     onConfirm
   );
@@ -2358,9 +2388,52 @@ function createNewEncyclopediaEntry() {
   markEntityDirty('article', newEntry.id);
 
   window.refreshAtlasTree?.();
+  beginNamingArticle(newEntry.id);
   selectEncyclopediaEntry(newEntry.id);
   debouncedSave();
 }
+
+/**
+ * Mark a just-created article so the next peek render opens with its placeholder title focused
+ * and selected (see buildEntityHero in styles.js). Cleared on blur; harmless if the peek never
+ * renders (the flag only matches that one id).
+ */
+function beginNamingArticle(id) {
+  window._pendingNameId = id;
+}
+window.beginNamingArticle = beginNamingArticle;
+
+/**
+ * Create a lore entry with a given name WITHOUT opening it — used by the `[[`/`@` link palette's
+ * "Create" item so a writer can mint the target of a link mid-sentence and keep typing.
+ * Returns the new entry (or the existing one if the name is already taken, case-insensitive).
+ */
+function createEntryNamed(rawName) {
+  const name = String(rawName || '').trim();
+  if (!name) return null;
+  const existing = state.articles.find(a => (a.title || a.name || '').toLowerCase() === name.toLowerCase());
+  if (existing) return existing;
+  recordState();
+  const newEntry = {
+    id: 'ent-' + uid(),
+    _silo: 'lore',
+    name, title: name,
+    type: 'Character',
+    mapId: null,
+    tags: [],
+    blocks: [],
+    heroImageKey: null,
+    iconClass: null,
+    visibleToPlayers: true
+  };
+  state.articles.push(newEntry);
+  syncArticleViews();
+  markEntityDirty('article', newEntry.id);
+  window.refreshAtlasTree?.();
+  debouncedSave();
+  return newEntry;
+}
+window.createEntryNamed = createEntryNamed;
 
 function createNewSession() {
   recordState();

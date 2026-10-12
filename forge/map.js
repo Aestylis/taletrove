@@ -226,8 +226,13 @@ async function initMap(mapObject) {
     else if (type === 'polygon') geometryType = 'polygon';
     else if (type === 'polyline') geometryType = 'polyline';
     const newFeat = addFeatureFromLayer(layer, geometryType, pendingTemplateId);
+    // Tool Lock: keep the same tool (and pin template) armed for rapid placement; the
+    // name-first focus is skipped then, since the user is dropping several in a row.
+    const locked = window.isToolLocked?.() && ['add-marker', 'add-polygon', 'add-polyline'].includes(window.uiMode);
+    const lockedTemplateId = pendingTemplateId;
     pendingTemplateId = null;
 
+    if (!locked) window.beginNamingArticle?.(newFeat.id);
     if (newFeat.kind === 'entry') {
       selectEncyclopediaEntry(newFeat.id);
     } else {
@@ -239,7 +244,13 @@ async function initMap(mapObject) {
 
     render({ full: true });
     debouncedSave();
-    debouncedSetMode('pointer');
+    if (locked) {
+      pendingTemplateId = lockedTemplateId;
+      const last = window._lastDrawTool;
+      debouncedSetMode(last?.mode || window.uiMode, last?.options || {});
+    } else {
+      debouncedSetMode('pointer');
+    }
   });
 
   const updateMeasurementText = (e) => {
@@ -1668,6 +1679,7 @@ async function showMapContextMenu(latlng, screenX, screenY) {
     const layer = L.marker(latlng);
     const feat = addFeatureFromLayer(layer, 'point', 'generic-person');
     render({ full: true });
+    window.beginNamingArticle?.(feat.id);
     if (feat.kind === 'entry') selectEncyclopediaEntry(feat.id);
     else window.enterPeekMode?.(feat.id, 'feature');
     debouncedSave();
@@ -1720,6 +1732,7 @@ async function showPinTemplateRadial(latlng, screenX, screenY) {
     const layer = L.marker(latlng);
     const feat = addFeatureFromLayer(layer, 'point', templateId);
     render({ full: true });
+    window.beginNamingArticle?.(feat.id);
     if (feat.kind === 'entry') selectEncyclopediaEntry(feat.id);
     else window.enterPeekMode?.(feat.id, 'feature');
     debouncedSave();

@@ -10,7 +10,7 @@
 
 const CP_COMMANDS = [
   // Create
-  { id: 'cmd-new-article',  label: 'New Article',             icon: 'plus',               group: 'Create',   shortcut: null },
+  { id: 'cmd-new-article',  label: 'New Entry',               icon: 'plus',               group: 'Create',   shortcut: null },
   { id: 'cmd-new-map',      label: 'New Map',                 icon: 'map-trifold',        group: 'Create',   shortcut: null },
   // Navigate
   { id: 'cmd-timeline',     label: 'Open Timeline',           icon: 'hourglass',          group: 'Navigate', shortcut: null },
@@ -32,6 +32,32 @@ const CP_COMMANDS = [
 let _cpActive = false;
 let _cpActiveIndex = -1;
 let _cpItems = [];
+
+// Recently opened articles (World Anvil / Notion / Obsidian convention: an empty palette shows
+// where you just were). Ids only, newest first, capped; resolved against state at render time
+// so renamed or deleted articles never show stale rows.
+const RECENT_ARTICLES_KEY = 'recentArticles';
+const RECENT_ARTICLES_MAX = 8;
+function noteRecentArticle(id) {
+  if (!id) return;
+  const list = (loadLS(RECENT_ARTICLES_KEY, []) || []).filter(x => x !== id);
+  list.unshift(id);
+  saveLS(RECENT_ARTICLES_KEY, list.slice(0, RECENT_ARTICLES_MAX));
+}
+window.noteRecentArticle = noteRecentArticle;
+
+function recentArticleResults(limit = 6) {
+  const ids = loadLS(RECENT_ARTICLES_KEY, []) || [];
+  const out = [];
+  for (const id of ids) {
+    const a = state.articles.find(x => x.id === id);
+    if (!a) continue;
+    const isLore = a._silo === 'lore';
+    out.push({ type: isLore ? 'encyclopedia' : 'feature', id: a.id, title: a.title || a.name || '(untitled)', context: isLore ? 'Lore' : 'Atlas' });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 function openCommandPalette() {
   const palette = document.getElementById('commandPalette');
@@ -63,6 +89,16 @@ function renderCpResults(query) {
   let html = '';
 
   if (!q) {
+    const recents = recentArticleResults();
+    if (recents.length) {
+      html += `<div class="cp-group-label">Recent</div>`;
+      for (const result of recents) {
+        const idx = _cpItems.length;
+        _cpItems.push({ kind: 'result', result });
+        html += buildCpItemHtml({ kind: 'result', result, index: idx });
+      }
+      html += `<div class="cp-divider"></div>`;
+    }
     const groups = ['Create', 'Navigate', 'Actions', 'Tools'];
     for (const group of groups) {
       const cmds = CP_COMMANDS.filter(c => c.group === group);

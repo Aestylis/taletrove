@@ -52,14 +52,7 @@ function _openSlashPalette(textarea, ownerId, ownerType) {
 }
 
 function _positionSlashPalette(textarea) {
-  if (!_slashPalette || !textarea) return;
-  const rect = textarea.getBoundingClientRect();
-  const paletteH = 280;
-  const spaceBelow = window.innerHeight - rect.bottom;
-  _slashPalette.style.left = rect.left + 'px';
-  _slashPalette.style.top = spaceBelow >= paletteH || rect.top < paletteH
-    ? (rect.bottom + 4) + 'px'
-    : (rect.top - paletteH - 4) + 'px';
+  _positionPalette(_slashPalette, textarea);
 }
 
 function _renderSlashPalette() {
@@ -117,7 +110,165 @@ function _insertSlashBlock(blockType) {
 
 document.addEventListener('mousedown', (e) => {
   if (_slashPalette && !_slashPalette.contains(e.target)) _closeSlashPalette();
+  if (_linkPalette && !_linkPalette.contains(e.target)) _closeLinkPalette();
 });
+
+// ── Link palette: `[[` / `@` autocomplete inside text blocks ──────────────────────────────
+// Mirrors the slash palette (same DOM/CSS classes). Driven from the textarea's `input` event so
+// it tracks pasted text and backspace too. Enter/Tab inserts `[[Name]]`; an unmatched query gets
+// a trailing "Create" item that mints a lore entry of that name without leaving the editor.
+let _linkPalette = null;
+let _linkCtx = null; // { textarea, trigger, query, start, items, idx }
+
+function _linkCandidates(query) {
+  const q = query.trim().toLowerCase();
+  const all = (state.articles || [])
+    .filter(a => a.geometry !== 'text')
+    .map(a => ({
+      kind: 'link', id: a.id, name: a.title || a.name || '',
+      type: a._silo === 'lore' ? 'encyclopedia' : 'feature',
+      sub: a._silo === 'lore' ? (a.type || 'Entry') : (window.getTaxonomyItem?.(a.featureType)?.name || a.featureType || 'Feature'),
+    }))
+    .filter(a => a.name);
+  const matches = q ? all.filter(a => a.name.toLowerCase().includes(q)) : all;
+  matches.sort((x, y) => {
+    const xs = x.name.toLowerCase().startsWith(q) ? 0 : 1;
+    const ys = y.name.toLowerCase().startsWith(q) ? 0 : 1;
+    return xs - ys || x.name.localeCompare(y.name);
+  });
+  const items = matches.slice(0, 8);
+  const exact = q && all.some(a => a.name.toLowerCase() === q);
+  if (q && !exact) items.push({ kind: 'create', name: query.trim(), sub: 'Create new entry' });
+  return items;
+}
+
+function _syncLinkPalette(textarea) {
+  const pos = textarea.selectionStart;
+  const before = textarea.value.slice(0, pos);
+  let m, trigger, query, start;
+  if ((m = /\[\[([^\[\]\n]*)$/.exec(before))) {
+    trigger = '[['; query = m[1]; start = pos - m[0].length;
+  } else if ((m = /(^|[\s(])@([^\n@\[\]]*)$/.exec(before))) {
+    trigger = '@'; query = m[2]; start = pos - m[2].length - 1;
+  } else { _closeLinkPalette(); return; }
+  // A bare "@" mid-sentence with a long tail is almost certainly prose, not a mention.
+  if (trigger === '@' && query.length > 40) { _closeLinkPalette(); return; }
+  const items = _linkCandidates(query);
+  if (!items.length) { _closeLinkPalette(); return; }
+  if (!_linkPalette) {
+    _linkPalette = el('div', { class: 'slash-palette link-palette', role: 'listbox', 'aria-label': 'Link to article' });
+    document.body.appendChild(_linkPalette);
+  }
+  const sameQuery = _linkCtx && _linkCtx.query === query && _linkCtx.trigger === trigger;
+  _linkCtx = { textarea, trigger, query, start, items, idx: sameQuery ? Math.min(_linkCtx.idx, items.length - 1) : 0 };
+  _renderLinkPalette();
+  _positionPalette(_linkPalette, textarea);
+}
+
+function _renderLinkPalette() {
+  if (!_linkPalette || !_linkCtx) return;
+  const { trigger, query, items, idx } = _linkCtx;
+  _linkPalette.innerHTML = '';
+  _linkPalette.appendChild(el('div', { class: 'slash-query-row' }, [
+    el('span', { class: 'slash-prompt', text: trigger }),
+    el('span', { class: 'slash-query-text', text: query }),
+    el('span', { class: 'slash-cursor', text: '|' })
+  ]));
+  const list = el('div', { class: 'slash-list' });
+  items.forEach((item, i) => {
+    const row = el('div', {
+      class: `slash-item${i === idx ? ' is-active' : ''}${item.kind === 'create' ? ' is-create' : ''}`,
+      role: 'option'
+    }, [
+      el('div', { class: 'slash-item-icon', innerHTML: getIconHTMLSync(item.kind === 'create' ? 'plus' : 'link', 'currentColor') }),
+      el('div', { class: 'slash-item-body' }, [
+        el('span', { class: 'slash-item-label', text: item.kind === 'create' ? `Create "${item.name}"` : item.name }),
+        el('span', { class: 'slash-item-desc', text: item.sub })
+      ])
+    ]);
+    row.addEventListener('mousedown', (e) => { e.preventDefault(); _commitLinkItem(i); });
+    list.appendChild(row);
+  });
+  _linkPalette.appendChild(list);
+  list.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' });
+}
+
+function _commitLinkItem(i) {
+  if (!_linkCtx) return;
+  const { textarea, start, items } = _linkCtx;
+  const item = items[i];
+  if (!item) return;
+  let name = item.name;
+  if (item.kind === 'create') {
+    const created = window.createEntryNamed?.(name);
+    if (created) name = created.name;
+  }
+  const pos = textarea.selectionStart;
+  const insert = `[[${name}]]`;
+  textarea.value = textarea.value.slice(0, start) + insert + textarea.value.slice(pos);
+  const caret = start + insert.length;
+  _closeLinkPalette();
+  textarea.focus();
+  textarea.setSelectionRange(caret, caret);
+  textarea.dispatchEvent(new Event('input', { bubbles: true })); // autosave + auto-expand
+}
+
+function _closeLinkPalette() {
+  if (_linkPalette) { _linkPalette.remove(); _linkPalette = null; }
+  _linkCtx = null;
+}
+
+/** Keydown routing while the link palette is open. Returns true when the key was consumed. */
+function _handleLinkPaletteKey(e) {
+  if (!_linkPalette || !_linkCtx) return false;
+  const n = _linkCtx.items.length;
+  switch (e.key) {
+    case 'ArrowDown': e.preventDefault(); _linkCtx.idx = (_linkCtx.idx + 1) % n; _renderLinkPalette(); return true;
+    case 'ArrowUp':   e.preventDefault(); _linkCtx.idx = (_linkCtx.idx - 1 + n) % n; _renderLinkPalette(); return true;
+    case 'Enter':
+    case 'Tab':       e.preventDefault(); _commitLinkItem(_linkCtx.idx); return true;
+    case 'Escape':    e.preventDefault(); e.stopPropagation(); _closeLinkPalette(); return true;
+    default: return false;
+  }
+}
+
+function _positionPalette(paletteEl, textarea) {
+  if (!paletteEl || !textarea) return;
+  const rect = textarea.getBoundingClientRect();
+  const paletteH = 280;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  paletteEl.style.left = rect.left + 'px';
+  paletteEl.style.top = spaceBelow >= paletteH || rect.top < paletteH
+    ? (rect.bottom + 4) + 'px'
+    : (rect.top - paletteH - 4) + 'px';
+}
+
+// ── Wiki-link hover preview ────────────────────────────────────────────────────────────────
+function _resolveWikiTarget(name) {
+  const lowerName = String(name || '').toLowerCase();
+  const entry = state.encyclopedia.find(en => (en.name || '').toLowerCase() === lowerName);
+  if (entry) return { id: entry.id, type: 'encyclopedia' };
+  const feature = state.features.find(f => (f.title || f.name || '').toLowerCase() === lowerName);
+  if (feature) return { id: feature.id, type: 'feature' };
+  return null;
+}
+
+let _linkPreviewCloseTimer = null;
+function _scheduleLinkPreviewClose() {
+  clearTimeout(_linkPreviewCloseTimer);
+  _linkPreviewCloseTimer = setTimeout(() => {
+    const pop = document.getElementById('entity-quick-popover');
+    if (pop && !pop.matches(':hover')) pop.remove();
+  }, 250);
+}
+function _showLinkPreview(target, anchor) {
+  if (!window.showEntityPopover) return;
+  window.showEntityPopover(target.id, target.type, anchor);
+  const pop = document.getElementById('entity-quick-popover');
+  if (!pop) return;
+  pop.addEventListener('mouseenter', () => clearTimeout(_linkPreviewCloseTimer));
+  pop.addEventListener('mouseleave', _scheduleLinkPreviewClose);
+}
 
 // The _build*BlockEditor helpers below each render one block type's edit-mode editor into
 // `wrapper`. Dispatch guards live in renderBlock's switch; `ctx = { ownerId, ownerType,
@@ -206,13 +357,21 @@ async function _wireBlockViewMode(block, wrapper) {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const name = link.dataset.wikiName;
-      const lowerName = name.toLowerCase();
-      const entry = state.encyclopedia.find(en => en.name.toLowerCase() === lowerName);
-      if (entry) { window.navigateToEncyclopediaEntry(entry.id); return; }
-      const feature = state.features.find(f => (f.title || f.name || '').toLowerCase() === lowerName);
-      if (feature) { window.navigateToFeature(feature.id); return; }
+      const target = _resolveWikiTarget(name);
+      if (target?.type === 'encyclopedia') { window.navigateToEncyclopediaEntry(target.id); return; }
+      if (target?.type === 'feature') { window.navigateToFeature(target.id); return; }
       window.showAlertModal('Not Found', `No entry or feature named "${escapeHtml(name)}" was found.`);
     });
+    // Hover preview (Obsidian / LegendKeeper convention): short dwell, then the quick popover.
+    let hoverTimer = null;
+    link.addEventListener('mouseenter', () => {
+      clearTimeout(_linkPreviewCloseTimer);
+      hoverTimer = setTimeout(() => {
+        const target = _resolveWikiTarget(link.dataset.wikiName);
+        if (target) _showLinkPreview(target, link);
+      }, 350);
+    });
+    link.addEventListener('mouseleave', () => { clearTimeout(hoverTimer); _scheduleLinkPreviewClose(); });
   });
 }
 
@@ -223,6 +382,7 @@ async function _buildTextFieldEditor(block, wrapper, ctx) {
     value: block.data.label || '', onfocus: () => recordState(),
     onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { label: e.target.value })
   });
+  labelInput.addEventListener('input', (e) => updateBlockDataQuiet(ctx.ownerId, block.blockId, { label: e.target.value }));
   labelInput.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     showGeneratorMenu(e, labelInput);
@@ -274,11 +434,15 @@ async function _buildTextFieldEditor(block, wrapper, ctx) {
     text: block.data.content || '', onfocus: () => recordState(),
     onchange: (e) => updateBlockData(ctx.ownerId, block.blockId, { content: e.target.value })
   });
+  // Keystroke-level persistence: a panel re-render between keystrokes must never lose text.
+  contentInput.addEventListener('input', (e) => updateBlockDataQuiet(ctx.ownerId, block.blockId, { content: e.target.value }));
   contentInput.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     showGeneratorMenu(e, contentInput);
   });
   contentInput.addEventListener('keydown', (e) => {
+    // Link palette open — arrows/Enter/Tab/Escape belong to it; other keys keep typing.
+    if (_handleLinkPaletteKey(e)) return;
     // Palette open — route all keys to palette navigation
     if (_slashPalette) {
       const q = _slashQuery.toLowerCase();
@@ -412,7 +576,8 @@ async function _buildTextFieldEditor(block, wrapper, ctx) {
     el('div', { class: 'generator-icon', innerHTML: await getIconHTML('dice-six') })
   ]);
 
-  contentInput.addEventListener('input', () => _autoExpand(contentInput));
+  contentInput.addEventListener('input', () => { _autoExpand(contentInput); _syncLinkPalette(contentInput); });
+  contentInput.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== contentInput) _closeLinkPalette(); }, 150));
 
   wrapper.append(labelWrapper, snippetBar, contentWrapper);
   setTimeout(() => {
@@ -678,7 +843,7 @@ function _buildTimelineBlockEditor(block, wrapper, ctx) {
     let titleWidget;
     if (event.source === 'linked') {
       const options = [
-        { value: '', text: 'Pick Encyclopedia Event...' },
+        { value: '', text: 'Pick Lore Event...' },
         ...state.encyclopedia.filter(e => e.type?.toLowerCase() === 'event').map(e => ({ value: e.id, text: e.name }))
       ];
       titleWidget = createSearchableSelect(options, event.linkedId, (val) => {
@@ -686,7 +851,7 @@ function _buildTimelineBlockEditor(block, wrapper, ctx) {
         event.linkedId = val;
         window.showInfoPanel(ctx.ownerId, ctx.ownerType);
         debouncedSave();
-      }, 'Pick Encyclopedia Event...');
+      }, 'Pick Lore Event...');
     } else {
       titleWidget = el('input', {
         type: 'text', placeholder: 'Event Title', value: event.title || '',

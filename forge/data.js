@@ -97,7 +97,7 @@ function performGlobalSearch(query) {
 
     const isAtlas = article._silo === 'atlas';
     const name = article.name || article.title || '';
-    const siloLabel = isAtlas ? 'Atlas' : 'Encyclopedia';
+    const siloLabel = isAtlas ? 'Atlas' : 'Lore';
     const resultType = isAtlas ? 'feature' : 'entry';
 
     if (normalizeForSearch(name).includes(q)) {

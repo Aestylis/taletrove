@@ -37,7 +37,9 @@ let loadingHideTimeout; // pending 300ms hide from setLoadingState(false) — ca
 
 
 function initUI() {
-  asideHidden = loadLS('asideHidden', true);
+  // Desktop starts with the World panel open (the tree, "+" buttons and Lore live there);
+  // compact viewports keep it tucked away behind the handle. The user's own toggle persists.
+  asideHidden = loadLS('asideHidden', window.innerWidth <= 900);
   rightPanelHidden = loadLS('rightPanelHidden', true);
   siteTheme = loadLS('siteTheme', 'dark');
   showCats = loadLS('showCats', true);
@@ -961,8 +963,16 @@ async function showPinFlyout(x, y) {
 
   const closeFlyout = () => {
     flyout.remove();
-    document.removeEventListener('click', closeFlyout);
+    document.removeEventListener('click', closeFlyout, { capture: true });
+    document.removeEventListener('keydown', onFlyoutKey, { capture: true });
+    if (window.closePinFlyout === closeFlyout) window.closePinFlyout = null;
   };
+  // Escape dismisses the chooser (it is not focusable, so listen at document level).
+  const onFlyoutKey = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeFlyout(); }
+  };
+  document.addEventListener('keydown', onFlyoutKey, { capture: true });
+  window.closePinFlyout = closeFlyout;
 
   document.body.appendChild(flyout);
 
@@ -982,6 +992,41 @@ async function showPinFlyout(x, y) {
     document.addEventListener('click', closeFlyout, { once: true, capture: true });
   }, 0);
 }
+
+/**
+ * On-canvas mode hint (Roll20/Owlbear convention: the active tool must be visible on the canvas,
+ * not only as a highlighted toolbar button). Shows what the current placement tool expects and
+ * hosts the Tool Lock toggle (LegendKeeper "Tool Lock" / Kanka "Rapid"): when on, draw tools
+ * stay armed after each shape instead of dropping back to the pointer.
+ */
+const MODE_HINTS = {
+  'add-marker':   'Click the map to place the pin',
+  'add-polygon':  'Click to add corners, double-click to finish the area',
+  'add-polyline': 'Click to add points, double-click to finish the line',
+  'add-text':     'Click the map to place a text label',
+  'measure':      'Click two or more points to measure',
+};
+let toolLock = loadLS('toolLock', false);
+function isToolLocked() { return !!toolLock; }
+function updateModeHint(mode) {
+  const hint = $('#modeHint');
+  if (!hint) return;
+  const text = MODE_HINTS[mode];
+  if (!text || role === 'player') { hint.classList.add('hidden'); return; }
+  $('#modeHintText').textContent = `${text} · Esc cancels`;
+  const lock = $('#modeHintLock');
+  if (lock) lock.checked = !!toolLock;
+  hint.classList.toggle('bottom', toolbarPos === 'bottom');
+  hint.classList.remove('hidden');
+}
+window.isToolLocked = isToolLocked;
+window.updateModeHint = updateModeHint;
+document.addEventListener('DOMContentLoaded', () => {
+  const lock = $('#modeHintLock');
+  if (!lock) return;
+  lock.checked = !!toolLock;
+  lock.addEventListener('change', () => { toolLock = lock.checked; saveLS('toolLock', toolLock); });
+});
 
 function hideInfoPanel(persist = true) {
   $('#infoPanel').classList.remove('is-visible');

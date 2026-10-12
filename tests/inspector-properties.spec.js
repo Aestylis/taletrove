@@ -76,7 +76,7 @@ test.describe('C4 — article properties inspector sections', () => {
             case 'cip-point':
               out[article.id] = {
                 labelSection: has('#labelColorIn'),
-                convert: text('.convert-silo-btn').some(t => t.includes('Move to Encyclopedia')),
+                convert: text('.convert-silo-btn').some(t => t.includes('Move to Lore')),
               };
               break;
             case 'cip-event':

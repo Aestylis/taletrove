@@ -21,7 +21,7 @@ const debouncedSetMode = debounce((mode, options = {}) => {
     editTooltip.remove();
   }
   const mapWrap = $('.map-wrap');
-  const CURSOR_CLASSES = ['cursor-add-polyline', 'cursor-add-polygon', 'cursor-add-text'];
+  const CURSOR_CLASSES = ['cursor-add-marker', 'cursor-add-polyline', 'cursor-add-polygon', 'cursor-add-text', 'cursor-measure'];
   CURSOR_CLASSES.forEach(c => mapWrap.classList.remove(c));
 
   if (uiMode === 'move' && activeDraw) {
@@ -58,6 +58,12 @@ const debouncedSetMode = debounce((mode, options = {}) => {
 
   uiMode = mode;
   saveLS('uiMode', window.uiMode);
+
+  // Placement modes get a crosshair (the classes existed but were never applied) and remember
+  // their options so Tool Lock can re-arm the same tool after each shape.
+  if (CURSOR_CLASSES.includes(`cursor-${mode}`)) mapWrap.classList.add(`cursor-${mode}`);
+  if (mode.startsWith('add-') || mode === 'measure') window._lastDrawTool = { mode, options };
+  window.updateModeHint?.(mode);
 
   if (window.syncFogPointerEvents) window.syncFogPointerEvents();
 
