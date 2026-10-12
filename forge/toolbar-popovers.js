@@ -209,10 +209,48 @@ function initToolbarPopoverListeners() {
       }
     }
   }
-  $('#drawGroupBtn').addEventListener('click', (e) => { e.stopPropagation(); openDrawGroupPopover(e.currentTarget); });
-  // Close draw popover when a tool inside it is selected
+  // The Draw▾ trigger remembers the last sub-tool (Roll20's praised "icon mirrors the sub-mode"
+  // pattern): its icon shows that tool, a click on the icon re-arms it directly, and the caret
+  // (or right-click, or a click when nothing was used yet) opens the menu.
+  const DRAW_SUBTOOLS = {
+    modeAreaBtn:    { icon: 'area',          label: 'Draw Area' },
+    modeLineBtn:    { icon: 'line-segments', label: 'Draw Line' },
+    modeTextBtn:    { icon: 'text-t',        label: 'Add Text Label' },
+    modeMeasureBtn: { icon: 'ruler',         label: 'Measure Distance' },
+  };
+  let lastDrawSubTool = loadLS('lastDrawSubTool', null);
+  if (!DRAW_SUBTOOLS[lastDrawSubTool]) lastDrawSubTool = null;
+  function syncDrawGroupIcon() {
+    const btn = $('#drawGroupBtn');
+    const icon = btn?.querySelector('.icon-container:not(.draw-caret)');
+    if (!btn || !icon) return;
+    const tool = DRAW_SUBTOOLS[lastDrawSubTool];
+    const name = tool ? tool.icon : 'pencil';
+    icon.style.webkitMaskImage = `url('ui-icons/${name}.svg')`;
+    icon.style.maskImage = `url('ui-icons/${name}.svg')`;
+    const label = tool ? `${tool.label} (caret: more draw tools)` : 'Draw Tools';
+    btn.dataset.tooltip = label;
+    btn.setAttribute('aria-label', label);
+  }
+  syncDrawGroupIcon();
+  $('#drawGroupBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const onCaret = !!e.target.closest('.draw-caret');
+    const lastBtn = lastDrawSubTool && $('#' + lastDrawSubTool);
+    if (!onCaret && lastBtn) {
+      _closeDrawGroupPopover();
+      lastBtn.click();
+      return;
+    }
+    openDrawGroupPopover(e.currentTarget);
+  });
+  $('#drawGroupBtn').addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openDrawGroupPopover(e.currentTarget); });
+  // Close draw popover when a tool inside it is selected, and remember that tool
   $('#drawGroupPopover').addEventListener('click', (e) => {
-    if (e.target.closest('button')) _closeDrawGroupPopover();
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (DRAW_SUBTOOLS[btn.id]) { lastDrawSubTool = btn.id; saveLS('lastDrawSubTool', btn.id); syncDrawGroupIcon(); }
+    _closeDrawGroupPopover();
   });
 
   // --- TOOLBAR OVERFLOW POPOVER ---

@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-87",
+    "date": "2026-10-12",
+    "title": "Alpha 6.87: Draw Button Remembers Your Tool",
+    "tags": [
+      "UX",
+      "Map"
+    ],
+    "summary": "The Draw button now shows and re-arms the sub-tool you used last (the caret opens the full menu), and the sample world's play session now appears under Sessions.",
+    "content": "<h4>Draw button memory</h4><p>Pick Area, Line, Text or Measure once and the Draw button takes on that tool's icon. Clicking the icon re-arms it straight away; the caret (or a right-click) opens the full menu. Your choice is remembered between visits.</p><h4>Sample world</h4><p>Aethermoor's <em>Session 1 — Arrival at Ironhold</em> is now a proper Session entry, so it shows up under Sessions instead of hiding in a Lore folder.</p>"
+  },
+  {
     "id": "alpha-6-86",
     "date": "2026-10-12",
     "title": "Alpha 6.86: Fewer Clicks — Name-First Creation, Link Autocomplete & a Typing Fix",
