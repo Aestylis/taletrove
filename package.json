@@ -19,5 +19,8 @@
   },
   "dependencies": {
     "canvas": "^3.2.1"
+  },
+  "overrides": {
+    "compression": "^1.8.2"
   }
 }
