@@ -1,5 +1,16 @@
 [
   {
+    "id": "alpha-6-88",
+    "date": "2026-11-02",
+    "title": "Alpha 6.88: Dice Rolls No Longer Freeze the App",
+    "tags": [
+      "Dice",
+      "Bugfix"
+    ],
+    "summary": "Clicking an inline dice roll no longer locks up the app, and every dice theme in Settings now actually loads. Thanks to DJLProjects for the report!",
+    "content": "<h4>Dice roller fix</h4><p>Rolling an inline dice button (like <code>{{1d20}}</code>) could leave an invisible layer over the app that blocked every click until you reloaded, and even a normal roll locked the app for a few seconds. The dice now animate over the app without ever getting in the way, and the result toast always appears.</p><h4>All dice themes work</h4><p>Wooden, Gemstone, Rust and the other themes in Settings → Dice failed to load, which is what triggered the freeze. They now load correctly; if one ever can't, the roll falls back to the default theme instead of failing.</p><p>Thanks to <strong>DJLProjects</strong> for the detailed report and for working on a fix in their fork.</p>"
+  },
+  {
     "id": "alpha-6-87",
     "date": "2026-10-12",
     "title": "Alpha 6.87: Draw Button Remembers Your Tool",
