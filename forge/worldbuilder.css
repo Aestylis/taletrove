@@ -827,7 +827,7 @@ body.has-map-bg #map {
 
 #dice-box.is-visible {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none; /* visual-only overlay: never block the app (issue #2) */
 }
 
 #dice-box canvas {
